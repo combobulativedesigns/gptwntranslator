@@ -1,0 +1,40 @@
+# .gitignore
+
+# Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyc.gh-orig
+*.egg-info/
+dist/
+build/
+*.egg
+*.so
+*.dylib
+
+# Virtual environment
+.venv/
+
+# Configuration files
+config/*.yaml
+
+# Logs
+logs/
+
+# Visual Studio Code settings
+.vscode/
+
+# macOS-specific files
+.DS_Store
+__MACOSX/
+
+# Windows-specific files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux-specific files
+*~
+.directory
+.Trash-*
