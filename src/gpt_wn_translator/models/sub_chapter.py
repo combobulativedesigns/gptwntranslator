@@ -2,7 +2,7 @@ from src.gpt_wn_translator.models.chunk import Chunk
 
 
 class SubChapter:
-    def __init__(self, sub_chapter_index, chapter_index, name, translated_name, link, release_date, contents, translation, chunks):
+    def __init__(self, sub_chapter_index, chapter_index, name, translated_name, link, release_date, contents, translation, summary):
         if not isinstance(sub_chapter_index, int):
             raise TypeError("Index must be an integer")
         if not isinstance(chapter_index, int):
@@ -19,8 +19,8 @@ class SubChapter:
             raise TypeError("Contents must be a string")
         if not isinstance(translation, str):
             raise TypeError("Translation must be a string")
-        if not isinstance(chunks, list(Chunk)):
-            raise TypeError("Chunks must be a list of Chunk objects")
+        if not isinstance(summary, str):
+            raise TypeError("Summary must be a string")
         
         self.sub_chapter_index = sub_chapter_index
         self.chapter_index = chapter_index
@@ -30,7 +30,7 @@ class SubChapter:
         self.release_date = release_date
         self.contents = contents
         self.translation = translation
-        self.chunks = chunks
+        self.summary = summary
 
     def __str__(self):
         return f"Sub-chapter {self.sub_chapter_index} from chapter {self.chapter_index}"

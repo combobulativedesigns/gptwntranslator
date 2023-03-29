@@ -1,6 +1,9 @@
 import openai
 import tiktoken
 
+class OpenAI_APIException(Exception):
+    pass
+
 def set_api_key(api_key):
     openai.api_key = api_key
 
@@ -48,13 +51,7 @@ def get_messages_token_count(messages, model="gpt-3.5-turbo", encoding=None):
     num_tokens += 2
     return num_tokens
 
-def call_api(messages, model="gpt-3.5-turbo", encoding=None, **kwargs):
-    if encoding is None:
-        try:
-            encoding = tiktoken.encoding_for_model(model)
-        except KeyError:
-            encoding = tiktoken.get_encoding("cl100k_base")
-    
+def call_api(messages, model="gpt-3.5-turbo"):    
     response = None
     try_count = 0
     while response is None:
@@ -66,6 +63,6 @@ def call_api(messages, model="gpt-3.5-turbo", encoding=None, **kwargs):
         except openai.error.APIConnectionError:
             try_count += 1
             if try_count > 5:
-                raise openai.error.APIConnectionError
+                raise OpenAI_APIException("API Connection attempts exceeded 5.")
             
     return response

@@ -30,7 +30,6 @@ class JsonEncoder(json.JSONEncoder):
                 "combined_terms": o.combined_terms,
                 "prev_summary": o.prev_summary,
                 "current_chunk": o.current_chunk,
-                "current_translation": o.current_translation,
                 "tokens": o.tokens,
                 "_type": "TermSheet"
             }
@@ -58,7 +57,7 @@ class JsonEncoder(json.JSONEncoder):
                 "release_date": o.release_date,
                 "contents": o.contents,
                 "translation": o.translation,
-                "chunks": o.chunks,
+                "summary": o.summary,
                 "_type": "SubChapter"
             }
         

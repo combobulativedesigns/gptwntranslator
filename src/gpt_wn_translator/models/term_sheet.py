@@ -6,14 +6,13 @@ from janome.tokenizer import Tokenizer
 from src.gpt_wn_translator.models.term import Term
 
 class TermSheet:
-    def __init__(self, new_terms, old_terms="", prev_summary="", current_chunk="", current_translation=""):
+    def __init__(self, new_terms, old_terms="", prev_summary="", current_chunk="", tokens=[]):
         self.old_terms = dict()
         self.new_terms = dict()
         self.combined_terms = dict()
         self.prev_summary = prev_summary
         self.current_chunk = current_chunk
-        self.current_translation = current_translation
-        self.tokens = []
+        self.tokens = tokens
 
         self.parse_existing_term_list_str(old_terms)
         self.parse_term_list_str(new_terms)
@@ -179,13 +178,6 @@ class TermSheet:
             for ent in doc.ents:
                 if ent.text in self.combined_terms.keys():
                     self.combined_terms[ent.text].ner = 1
-
-            nlp = spacy.load("en_core_web_sm")
-            doc = nlp(self.current_translation)
-            for term in self.combined_terms.values():
-                for ent in doc.ents:
-                    if term.en_term == ent.text:
-                        self.combined_terms[term.jp_term].ner = 1
         except Exception as e:
             raise Exception(f"Error calculating term NER: {e}")
 
@@ -225,7 +217,7 @@ class TermSheet:
         top_terms = self.get_top_terms()
         
         for term in top_terms:
-            terms += f"{term.en_term}\n"
+            terms += f"{term.for_api()}\n"
 
         return terms
 

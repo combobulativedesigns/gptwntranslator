@@ -37,7 +37,7 @@ def generic_object_hook(dct):
                 dct['release_date'], 
                 dct['contents'], 
                 dct['translation'], 
-                dct['chunks'])
+                dct['summary'])
         
         elif dct['_type'] == 'Chunk':
             return Chunk(
@@ -57,7 +57,6 @@ def generic_object_hook(dct):
                 dct['combined_terms'], 
                 dct['prev_summary'], 
                 dct['current_chunk'], 
-                dct['current_translation'], 
                 dct['tokens'])
         
         elif dct['_type'] == 'Term':
