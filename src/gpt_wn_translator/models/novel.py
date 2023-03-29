@@ -19,7 +19,7 @@ class Novel:
             raise TypeError("Description must be a string")
         if not isinstance(description_translation, str):
             raise TypeError("Description translation must be a string")
-        if not isinstance(chapters, list(Chapter)):
+        if not isinstance(chapters, list):
             raise TypeError("Chapters must be a list of Chapter objects")
         
         self.novel_code = novel_code
@@ -30,7 +30,7 @@ class Novel:
         self.author_link = author_link
         self.description = description
         self.description_translation = description_translation
-        self.chapters = []
+        self.chapters = chapters
 
     def __str__(self):
         return f"Novel {self.novel_code}"

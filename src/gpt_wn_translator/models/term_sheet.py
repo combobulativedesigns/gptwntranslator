@@ -14,12 +14,12 @@ class TermSheet:
         self.current_chunk = current_chunk
         self.tokens = tokens
 
-        self.parse_existing_term_list_str(old_terms)
-        self.parse_term_list_str(new_terms)
-        self.init_tokens()
-        self.calc_dimensions()
+        self._parse_existing_term_list_str(old_terms)
+        self._parse_term_list_str(new_terms)
+        self._init_tokens()
+        self._calc_dimensions()
 
-    def init_tokens(self):
+    def _init_tokens(self):
         tokenizer = Tokenizer()
 
         try:
@@ -27,20 +27,20 @@ class TermSheet:
         except Exception as e:
             raise Exception(f"Error while tokenizing: {e}")
     
-    def calc_dimensions(self):
+    def _calc_dimensions(self):
         try:
             # Calculate dimensions
-            self.calc_term_chunk_frequencies()
-            self.calc_term_document_frequencies()
-            self.calc_term_summary_consistency()
-            self.calc_term_prev_chunk_frequencies()
-            self.calc_term_context_relevance()
-            self.calc_term_ner()
-            self.calc_term_novelty()
+            self._calc_term_chunk_frequencies()
+            self._calc_term_document_frequencies()
+            self._calc_term_summary_consistency()
+            self._calc_term_prev_chunk_frequencies()
+            self._calc_term_context_relevance()
+            self._calc_term_ner()
+            self._calc_term_novelty()
         except Exception as e:
             raise Exception(f"Error calculating dimensions: {e}")
 
-    def parse_term_list_str(self, term_list_str=""):
+    def _parse_term_list_str(self, term_list_str=""):
         lines = term_list_str.splitlines()
 
         # Parse the cheat sheet
@@ -64,7 +64,7 @@ class TermSheet:
             if japanese_term not in self.combined_terms:
                 self.combined_terms[japanese_term] = Term(japanese_term, romaji, english_term, 0, 0, 0, 0, 0, 0, 0)
     
-    def parse_existing_term_list_str(self, term_list_str=""):
+    def _parse_existing_term_list_str(self, term_list_str=""):
         lines = term_list_str.splitlines()
 
         # Parse the cheat sheet
@@ -88,7 +88,7 @@ class TermSheet:
             if japanese_term not in self.combined_terms:
                 self.combined_terms[japanese_term] = Term(japanese_term, romaji, english_term, int(chunk_frequency), int(document_frequency), int(summary_consistency), int(prev_chunk_frequency), int(context_relevance), int(ner), int(novelty))
 
-    def calc_term_chunk_frequencies(self):
+    def _calc_term_chunk_frequencies(self):
         try: 
             # for token in self.tokens:
             #     if token.surface in self.new_terms.keys():
@@ -98,7 +98,7 @@ class TermSheet:
         except Exception as e:
             raise Exception(f"Error calculating term chunk frequencies: {e}")
 
-    def calc_term_document_frequencies(self):
+    def _calc_term_document_frequencies(self):
         try:    
             # for token in self.tokens:
             #     if token.surface in self.new_terms.keys():
@@ -111,7 +111,7 @@ class TermSheet:
         except Exception as e:
             raise Exception(f"Error calculating term document frequencies: {e}")
 
-    def calc_term_summary_consistency(self):
+    def _calc_term_summary_consistency(self):
         try:
             # for token in self.tokens:
             #     if token.surface in self.combined_terms:
@@ -127,7 +127,7 @@ class TermSheet:
         except Exception as e:
             raise Exception(f"Error calculating term summary consistency: {e}")
 
-    def calc_term_prev_chunk_frequencies(self):
+    def _calc_term_prev_chunk_frequencies(self):
         try:
             # for token in self.tokens:
             #     if token.surface in self.combined_terms:
@@ -140,7 +140,7 @@ class TermSheet:
         except Exception as e:
             raise Exception(f"Error calculating term previous chunk frequencies: {e}")
 
-    def calc_term_context_relevance(self, window_size=5):
+    def _calc_term_context_relevance(self, window_size=5):
         try:
             # token_surfaces = [token.surface for token in self.tokens]
             # num_tokens = len(token_surfaces)
@@ -171,7 +171,7 @@ class TermSheet:
         except Exception as e:
             raise Exception(f"Error calculating term context relevance: {e}")
 
-    def calc_term_ner(self):
+    def _calc_term_ner(self):
         try:
             nlp = spacy.load("ja_core_news_sm")
             doc = nlp(self.current_chunk)
@@ -181,7 +181,7 @@ class TermSheet:
         except Exception as e:
             raise Exception(f"Error calculating term NER: {e}")
 
-    def calc_term_novelty(self):
+    def _calc_term_novelty(self):
         try:
             # for term in self.combined_terms:
             #     old_document_frequency = self.old_terms[term].document_frequency if term in self.old_terms else 0
@@ -194,7 +194,7 @@ class TermSheet:
         except Exception as e:
             raise Exception(f"Error calculating term novelty: {e}")
 
-    def get_top_terms(self, num_terms=15):
+    def _get_top_terms(self, num_terms=15):
         if self.combined_terms:
             if len(self.combined_terms) > num_terms:
                 return sorted(self.combined_terms.values(), reverse=True)[:num_terms]
@@ -205,7 +205,7 @@ class TermSheet:
     
     def __str__(self):
         terms_str = ""
-        top_terms = self.get_top_terms()
+        top_terms = self._get_top_terms()
         
         for term in top_terms:
             terms_str += f"{term.__str__()}\n"
@@ -214,7 +214,7 @@ class TermSheet:
     
     def for_api(self):
         terms = ""
-        top_terms = self.get_top_terms()
+        top_terms = self._get_top_terms()
         
         for term in top_terms:
             terms += f"{term.for_api()}\n"

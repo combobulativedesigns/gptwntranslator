@@ -9,7 +9,7 @@ class Chapter:
             raise TypeError("Name must be a string")
         if not isinstance(translated_name, str):
             raise TypeError("Translated name must be a string")
-        if not isinstance(sub_chapters, list(SubChapter)):
+        if not isinstance(sub_chapters, list):
             raise TypeError("Sub-chapters must be a list of SubChapter objects")
         
         self.chapter_index = chapter_index

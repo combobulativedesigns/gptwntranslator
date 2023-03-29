@@ -1,4 +1,5 @@
 
+import re
 from src.gpt_wn_translator.api.openai_api import OpenAI_APIException, call_api, get_line_token_count
 from src.gpt_wn_translator.models.chunk import Chunk
 from src.gpt_wn_translator.models.term_sheet import TermSheet
@@ -31,7 +32,7 @@ def _estimate_costs(line_token_counts):
 
     term_cost_per_token = 0.03
     translation_cost_per_token = 0.002
-    summary_cost_per_token = 0.03
+    summary_cost_per_token = 0.002
 
     return term_cost_per_token, translation_cost_per_token, summary_cost_per_token
 
@@ -75,15 +76,59 @@ def _greedy_find_optimal_configuration(line_token_counts):
 
     return best_combination
 
+def _greedy_find_max_optimal_configuration(line_token_counts):
+    total_lines = len(line_token_counts)
+
+    models = dict()
+    # models["gpt-4"] = {
+    #     "name" : "gpt-4",
+    #     "cost_per_token" : 0.03,
+    #     "max_tokens" : 7000,
+    # }
+    models["gpt-3.5-turbo"] = {
+        "name" : "gpt-3.5-turbo",
+        "cost_per_token" : 0.002,
+        "max_tokens" : 3000,
+    }
+
+    min_cost = float('inf')
+    best_combination = None
+
+    try:
+        term_model = models['gpt-4']
+    except KeyError:
+        term_model = models['gpt-3.5-turbo']
+
+    for translation_model in models.values():
+        for summary_model in models.values():
+            for term_division in range(term_model["max_tokens"] // 2, term_model["max_tokens"] // 4, -term_model["max_tokens"] // 4):
+                for summary_division in range(summary_model["max_tokens"] // 2, summary_model["max_tokens"] // 4, -summary_model["max_tokens"] // 4):
+                    for translation_division in _factors(min(term_division, summary_division)):
+                        if summary_division == translation_division:
+                            term_chunks = _estimate_chunks(total_lines, term_division, line_token_counts)
+                            translation_chunks = term_chunks * _estimate_chunks(term_division, translation_division, line_token_counts)
+                            summary_chunks = _estimate_chunks(translation_chunks * translation_division, summary_division, line_token_counts)
+
+                            term_cost = term_chunks * term_division * term_model["cost_per_token"]
+                            translation_cost = translation_chunks * translation_division * translation_model["cost_per_token"]
+                            summary_cost = summary_chunks * summary_division * summary_model["cost_per_token"]
+
+                            total_cost = term_cost + translation_cost + summary_cost
+
+                            if total_cost < min_cost:
+                                min_cost = total_cost
+                                best_combination = (term_division, translation_division, summary_division, term_model['name'], translation_model['name'], summary_model['name'])
+    return best_combination
+
 def _calculate_line_token_counts(text):
     lines = text.splitlines()
     line_token_counts = [get_line_token_count(line) for line in lines]
 
     return line_token_counts
 
-def _perform_relevant_terms_action(chunks):
+def _perform_relevant_terms_action(chunks, model):
     # Call the API to perform the relevant terms action on each chunk
-    if not isinstance(chunks, list(Chunk)):
+    if not isinstance(chunks, list):
         raise JpToEnTranslatorException("Chunks must be a list of Chunk objects")
 
     terms_list = None
@@ -92,11 +137,11 @@ def _perform_relevant_terms_action(chunks):
                 {"role": "system", "content": "You are a Japanese to English translator that creates list of proper nouns and other relevant terms in a given japanese text."},
                 {"role": "system", "name": "example_user", "content": "Generate a term list for the text I'm about to provide. Mantain japanese web novel translation format convetions. Follow the format \"- japanese_term (rōmaji_for_japanese_term) - english_term\""},
                 {"role": "system", "name": "example_assistant", "content": "Understood. Please provide the text."},
-                {"role": "user", "content": chunk.content}
+                {"role": "user", "content": chunk.contents}
         ]
 
         try:
-            response = call_api(messages)
+            response = call_api(messages, model)
             response = response['choices'][0]['message']['content']
         except OpenAI_APIException as e:
             raise JpToEnTranslatorException("Error calling OpenAI API: " + str(e))
@@ -108,13 +153,13 @@ def _perform_relevant_terms_action(chunks):
         else:
             old_terms = ''
 
-        new_term_list = TermSheet(response, old_terms=old_terms, current_chunk=chunk.content)
+        new_term_list = TermSheet(response, old_terms=old_terms, current_chunk=chunk.contents)
 
         terms_list = new_term_list
 
     return terms_list
 
-def _perform_translation_action(chunk, term_lists, summary):
+def _perform_translation_action(chunk, term_lists, summary, translation_model):
     # Call the API to perform the translation action on each chunk using the term lists and summary
     if not isinstance(chunk, Chunk):
         raise JpToEnTranslatorException("Chunk must be a Chunk object")
@@ -150,10 +195,10 @@ def _perform_translation_action(chunk, term_lists, summary):
 
     messages.append({"role": "system", "name": "example_user", "content": term_lists.for_api()})
     messages.append({"role": "system", "name": "example_assistant", "content": "Understood. Please provide the text."})
-    messages.append({"role": "user", "content": chunk})
+    messages.append({"role": "user", "content": chunk.contents})
 
     try:
-        response = call_api(messages)
+        response = call_api(messages, model=translation_model)
         response = response['choices'][0]['message']['content']
     except OpenAI_APIException as e:
         raise JpToEnTranslatorException("Error calling OpenAI API: " + str(e))
@@ -162,7 +207,7 @@ def _perform_translation_action(chunk, term_lists, summary):
         
     return response
 
-def _perform_summary_action(translated_chunk, previous_summary):
+def _perform_summary_action(translated_chunk, previous_summary, summarization_model):
     # Call the API to perform the summary action on the translated_chunks and update the previous_summary
     if not isinstance(translated_chunk, str):
         raise JpToEnTranslatorException("Translated chunk must be a string")
@@ -184,7 +229,7 @@ def _perform_summary_action(translated_chunk, previous_summary):
     messages.append({"role": "user", "content": translated_chunk})
 
     try:
-        response = call_api(messages)
+        response = call_api(messages, model=summarization_model)
         response = response['choices'][0]['message']['content']
     except OpenAI_APIException as e:
         raise JpToEnTranslatorException("Error calling OpenAI API: " + str(e))
@@ -193,8 +238,8 @@ def _perform_summary_action(translated_chunk, previous_summary):
     
     return response
 
-def _perform_translation_and_summarization_action(chunks, term_lists, summary):
-    if not isinstance(chunks, list(Chunk)):
+def _perform_translation_and_summarization_action(chunks, term_lists, summary, translation_model, summarization_model):
+    if not isinstance(chunks, list):
         raise JpToEnTranslatorException("Chunks must be a list of Chunk objects")
     if not isinstance(term_lists, TermSheet):
         raise JpToEnTranslatorException("Term lists must be a TermSheet object")
@@ -202,8 +247,8 @@ def _perform_translation_and_summarization_action(chunks, term_lists, summary):
     updated_summary = summary
     translated_chunks = []
     for chunk in chunks:
-        translated_chunk = _perform_translation_action(chunk, term_lists, updated_summary)
-        updated_summary = _perform_summary_action(translated_chunk, updated_summary)
+        translated_chunk = _perform_translation_action(chunk, term_lists, updated_summary, translation_model)
+        updated_summary = _perform_summary_action(translated_chunk, updated_summary, summarization_model)
         translated_chunks.append(translated_chunk)
     
     return translated_chunks, updated_summary
@@ -254,14 +299,14 @@ def translate_sub_chapter(novel, chapter_index, sub_chapter_index):
     prev_summary = prev_sub_chapter.summary if prev_sub_chapter else None
 
     line_token_counts = _calculate_line_token_counts(sub_chapter.contents)
-    term_division, translation_division, summary_division = _greedy_find_optimal_configuration(line_token_counts)
+    term_division, translation_division, summary_division, term_model, translation_model, summary_model = _greedy_find_max_optimal_configuration(line_token_counts)
 
     # Perform the relevant terms action
     terms_chunks = _split_text_into_chunks(sub_chapter.contents, term_division, line_token_counts)
-    terms_chunks_objects = list(Chunk)
+    terms_chunks_objects = list()
     for i, chunk in enumerate(terms_chunks):
-        chunk_prev_line = prev_line if i == 0 else terms_chunks[i - 1].contents.splitlines()[-1]
-        chunk_next_line = next_line if i == len(terms_chunks) - 1 else terms_chunks[i + 1].contents.splitlines()[0]
+        chunk_prev_line = prev_line if i == 0 else terms_chunks[i - 1].splitlines()[-1]
+        chunk_next_line = next_line if i == len(terms_chunks) - 1 else terms_chunks[i + 1].splitlines()[0]
 
         terms_chunks_objects.append(Chunk(
             i,
@@ -271,16 +316,16 @@ def translate_sub_chapter(novel, chapter_index, sub_chapter_index):
             "",
             chunk_prev_line,
             chunk_next_line))
-    terms_list = _perform_relevant_terms_action(terms_chunks_objects)
+    terms_list = _perform_relevant_terms_action(terms_chunks_objects, term_model)
 
     new_summary = None
     translation_chunks = []
     for i, term_chunk in enumerate(terms_chunks):
         sub_chunks = _split_text_into_chunks(term_chunk, translation_division, line_token_counts)
-        sub_chunk_objects = list(Chunk)
+        sub_chunk_objects = list()
         for j, chunk in enumerate(sub_chunks):
-            chunk_prev_line = prev_line if j == 0 else sub_chunks[j - 1].contents.splitlines()[-1]
-            chunk_next_line = next_line if j == len(sub_chunks) - 1 else sub_chunks[j + 1].contents.splitlines()[0]
+            chunk_prev_line = prev_line if j == 0 else sub_chunks[j - 1].splitlines()[-1]
+            chunk_next_line = next_line if j == len(sub_chunks) - 1 else sub_chunks[j + 1].splitlines()[0]
 
             sub_chunk_objects.append(Chunk(
                 j,
@@ -290,16 +335,40 @@ def translate_sub_chapter(novel, chapter_index, sub_chapter_index):
                 "",
                 chunk_prev_line,
                 chunk_next_line))
-        translated_sub_chunks, new_summary = _perform_translation_and_summarization_action(sub_chunk_objects, terms_list[i], prev_summary)
+        translated_sub_chunks, new_summary = _perform_translation_and_summarization_action(sub_chunk_objects, terms_list, prev_summary, translation_model, summary_model)
         translation_chunks.extend(translated_sub_chunks)
 
     sub_chapter.translation = '\n'.join(translation_chunks)
     sub_chapter.summary = new_summary
 
+def fix_linebreaks(translated_text, original_text):
+    def count_sentences(text):
+        return len(re.findall(r'[。！？]', text))
 
+    original_lines = original_text.split("\n")
+    original_lines = [line.strip() for line in original_lines if line.strip()]
+    translated_sentences = re.split(r'(?<=[.!?])\s+', translated_text)
+    translated_sentences = [sentence.strip() for sentence in translated_sentences if sentence.strip()]
 
+    fixed_translation = []
+    
+    for original_line in original_lines:
+        num_sentences = count_sentences(original_line)
+        current_line = []
 
+        for _ in range(num_sentences):
+            if translated_sentences:
+                current_line.append(translated_sentences.pop(0))
+            else:
+                break
 
+        fixed_translation.append(" ".join(current_line))
+
+    # Add any remaining sentences, just in case
+    if translated_sentences:
+        fixed_translation.append(" ".join(translated_sentences))
+
+    fixed_translation = [line.strip() for line in fixed_translation if line.strip()]
 
 
 

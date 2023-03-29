@@ -28,6 +28,9 @@ class JsonEncoder(json.JSONEncoder):
                 "old_terms": o.old_terms,
                 "new_terms": o.new_terms,
                 "combined_terms": o.combined_terms,
+                # "old_terms": [json.dumps(term, ensure_ascii=False, cls=JsonEncoder) for term in o.old_terms],
+                # "new_terms": [json.dumps(term, ensure_ascii=False, cls=JsonEncoder) for term in o.new_terms],
+                # "combined_terms": [json.dumps(term, ensure_ascii=False, cls=JsonEncoder) for term in o.combined_terms],
                 "prev_summary": o.prev_summary,
                 "current_chunk": o.current_chunk,
                 "tokens": o.tokens,
@@ -66,6 +69,7 @@ class JsonEncoder(json.JSONEncoder):
                 "chapter_index": o.chapter_index,
                 "name": o.name,
                 "translated_name": o.translated_name,
+                #"sub_chapters": [json.dumps(sub_chapter, ensure_ascii=False, cls=JsonEncoder) for sub_chapter in o.sub_chapters],
                 "sub_chapters": o.sub_chapters,
                 "_type": "Chapter"
             }
@@ -80,6 +84,7 @@ class JsonEncoder(json.JSONEncoder):
                 "author_link": o.author_link,
                 "description": o.description,
                 "description_translation": o.description_translation,
+                #"chapters": [json.dumps(chapter, ensure_ascii=False, cls=JsonEncoder) for chapter in o.chapters],
                 "chapters": o.chapters,
                 "_type": "Novel"
             }

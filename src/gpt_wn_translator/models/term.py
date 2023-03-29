@@ -11,7 +11,7 @@ class Term:
         self.ner = ner
         self.term_novelty = term_novelty
 
-    def get_weight(self):
+    def _get_weight(self):
         # Define weights for each property
         w_chunk_frequency = 1
         w_document_frequency = 1
@@ -45,16 +45,16 @@ class Term:
         return hash(self.jp_term)
     
     def __lt__(self, other):
-        return self.get_weight() < other.get_weight()
+        return self._get_weight() < other._get_weight()
     
     def __gt__(self, other):
-        return self.get_weight() > other.get_weight()
+        return self._get_weight() > other._get_weight()
     
     def __le__(self, other):
-        return self.get_weight() <= other.get_weight()
+        return self._get_weight() <= other._get_weight()
     
     def __ge__(self, other):
-        return self.get_weight() >= other.get_weight()
+        return self._get_weight() >= other._get_weight()
     
     def __ne__(self, other):
         return self.jp_term != other.jp_term
