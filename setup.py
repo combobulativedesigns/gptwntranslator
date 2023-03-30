@@ -26,7 +26,8 @@ setup(
         "PyYAML==6.0",
         "setuptools==58.1.0",
         "spacy==3.5.1",
-        "tiktoken==0.3.2"
+        "tiktoken==0.3.2",
+        "ja_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/ja_core_news_sm-3.5.0/ja_core_news_sm-3.5.0-py3-none-any.whl",
     ],
     extras_require={
         "dev": [
