@@ -119,8 +119,6 @@ gptwntranslator /home/user/Novels/ 123456 -st -c 1
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-Please make sure to update tests as appropriate.
-
 Or just fork the repository and do whatever you want with it. I'm not your mom.
 
 ## License
