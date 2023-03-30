@@ -16,8 +16,8 @@ build/
 # Virtual environment
 .venv/
 
-# Configuration files
-config/*.yaml
+# Local configuration
+config/config.yaml
 
 # Logs
 logs/

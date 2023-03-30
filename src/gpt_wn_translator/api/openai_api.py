@@ -1,11 +1,22 @@
 import openai
 import tiktoken
 
+AVAILABLE_MODELS = None
+
 class OpenAI_APIException(Exception):
     pass
 
-def set_api_key(api_key):
+def initialize(api_key, available_models):
+    global AVAILABLE_MODELS
+    AVAILABLE_MODELS = available_models
     openai.api_key = api_key
+
+def get_model(model):
+    if AVAILABLE_MODELS is None:
+        raise OpenAI_APIException("OpenAI API not initialized")
+    if model not in AVAILABLE_MODELS:
+        raise OpenAI_APIException(f"Model {model} not available")
+    return AVAILABLE_MODELS[model]
 
 def get_line_token_count(line, model="gpt-3.5-turbo", encoding=None):
     if encoding is None:

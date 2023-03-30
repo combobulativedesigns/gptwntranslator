@@ -2,14 +2,14 @@ import json
 import traceback
 import yaml
 import argparse
-from src.gpt_wn_translator.api.openai_api import set_api_key
+from src.gpt_wn_translator.api.openai_api import initialize as initialize_openai_api
 from src.gpt_wn_translator.encoders.json_encoder import JsonEncoder
 from src.gpt_wn_translator.helpers.args_helper import parse_chapters
 from src.gpt_wn_translator.helpers.file_helper import read_file, write_file, write_md_as_epub
 from src.gpt_wn_translator.helpers.text_helper import make_printable, txt_to_md
 from src.gpt_wn_translator.hooks.object_hook import generic_object_hook
 from src.gpt_wn_translator.scrapers.soyetsu_scraper import process_novel
-from src.gpt_wn_translator.translators.jp_en_translator import fix_linebreaks, translate_sub_chapter
+from src.gpt_wn_translator.translators.jp_en_translator import fix_linebreaks, translate_sub_chapter, initialize as initialize_jp_en_translator
 
 def main():
     parser = argparse.ArgumentParser()
@@ -41,7 +41,21 @@ def main():
     novel_epub_output_path = f"{args.directory}/{args.novel_code}/novel.epub"
 
     config = yaml.safe_load(read_file("config/config.yaml", args.verbose))
-    set_api_key(config["openai"]["api_key"])
+
+    api_key = config['config']['openai']['api_key']
+    available_models = list(config['config']['openai']['models'].items())
+    available_models = {k: {
+        'name': v['name'],
+        'cost_per_1k_tokens': v['cost_per_1k_tokens'],
+        'max_tokens': v['max_tokens']
+    } for k, v in available_models if v['enabled']}
+    initialize_openai_api(api_key, available_models)
+
+    term_models = config['config']['translator']['api']['terms_list']['models']
+    translation_models = config['config']['translator']['api']['translation']['models']
+    summary_models = config['config']['translator']['api']['summary']['models']
+    
+    initialize_jp_en_translator(term_models, translation_models, summary_models)
 
     novel = None
 

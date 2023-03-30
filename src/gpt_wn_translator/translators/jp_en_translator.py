@@ -1,11 +1,21 @@
 
 import re
-from src.gpt_wn_translator.api.openai_api import OpenAI_APIException, call_api, get_line_token_count
+from src.gpt_wn_translator.api.openai_api import get_model, OpenAI_APIException, call_api, get_line_token_count
 from src.gpt_wn_translator.models.chunk import Chunk
 from src.gpt_wn_translator.models.term_sheet import TermSheet
 
+TERMS_MODELS = None
+TRANSLATION_MODELS = None
+SUMMARY_MODELS = None
+
 class JpToEnTranslatorException(Exception):
     pass
+
+def initialize(terms_models, translation_models, summary_models):
+    global TERMS_MODELS, TRANSLATION_MODELS, SUMMARY_MODELS
+    TERMS_MODELS = terms_models
+    TRANSLATION_MODELS = translation_models
+    SUMMARY_MODELS = summary_models
 
 def _split_text_into_chunks(text, division_size, line_token_counts):
     chunks = []
@@ -95,52 +105,51 @@ def _japanese_token_limit_worst_case(N, worst_case_ratio=1.125, safety_factor=0.
 def _greedy_find_max_optimal_configuration(line_token_counts):
     total_lines = len(line_token_counts)
 
-    models = dict()
-    # models["gpt-4"] = {
-    #     "name" : "gpt-4",
-    #     "cost_per_token" : 0.03,
-    #     "max_tokens" : 8000,
+    # models = dict()
+    # # models["gpt-4"] = {
+    # #     "name" : "gpt-4",
+    # #     "cost_per_token" : 0.03,
+    # #     "max_tokens" : 8000,
+    # # }
+    # models["gpt-3.5-turbo"] = {
+    #     "name" : "gpt-3.5-turbo",
+    #     "cost_per_token" : 0.002,
+    #     "max_tokens" : 4000,
     # }
-    models["gpt-3.5-turbo"] = {
-        "name" : "gpt-3.5-turbo",
-        "cost_per_token" : 0.002,
-        "max_tokens" : 4000,
-    }
 
     min_cost = float('inf')
     best_combination = None
 
-    try:
-        term_model = models['gpt-4']
-    except KeyError:
-        term_model = models['gpt-3.5-turbo']
-    term_model_limit = _japanese_token_limit_worst_case(term_model["max_tokens"])
-    # reduce limit to nearest multiple of 4
-    term_model_limit = term_model_limit - (term_model_limit % 4)
+    terms_models = [get_model(model) for model in TERMS_MODELS]
+    translation_models = [get_model(model) for model in TRANSLATION_MODELS]
+    summary_models = [get_model(model) for model in SUMMARY_MODELS]
 
-    for translation_model in models.values():
-        translation_model_limit = _japanese_token_limit_worst_case(translation_model
-        ["max_tokens"])
-        translation_model_limit = translation_model_limit - (translation_model_limit % 4)
-        for summary_model in models.values():
-            summary_model_limit = _japanese_token_limit_worst_case(summary_model["max_tokens"])
-            summary_model_limit = summary_model_limit - (summary_model_limit % 4)
-            for term_division in range(term_model_limit // 1, term_model_limit // 2, -4):
-                for translation_division in range(translation_model_limit // 1, translation_model_limit // 2, -4):
-                    if term_division % translation_division == 0:
-                        term_chunks = _estimate_chunks(total_lines, term_division, line_token_counts)
-                        translation_chunks = term_chunks * _estimate_chunks(term_division, translation_division, line_token_counts)
-                        summary_chunks = _estimate_chunks(translation_chunks * translation_division, translation_division, line_token_counts)
+    for term_model in terms_models:
+        print(term_model)
+        term_model_limit = _japanese_token_limit_worst_case(term_model["max_tokens"])
+        term_model_limit = term_model_limit - (term_model_limit % 4)
+        for translation_model in translation_models:
+            translation_model_limit = _japanese_token_limit_worst_case(translation_model["max_tokens"])
+            translation_model_limit = translation_model_limit - (translation_model_limit % 4)
+            for summary_model in summary_models:
+                summary_model_limit = _japanese_token_limit_worst_case(summary_model["max_tokens"])
+                summary_model_limit = summary_model_limit - (summary_model_limit % 4)
+                for term_division in range(term_model_limit // 1, term_model_limit // 2, -4):
+                    for translation_division in range(translation_model_limit // 1, translation_model_limit // 2, -4):
+                        if term_division % translation_division == 0:
+                            term_chunks = _estimate_chunks(total_lines, term_division, line_token_counts)
+                            translation_chunks = term_chunks * _estimate_chunks(term_division, translation_division, line_token_counts)
+                            summary_chunks = _estimate_chunks(translation_chunks * translation_division, translation_division, line_token_counts)
 
-                        term_cost = term_chunks * term_division * term_model["cost_per_token"]
-                        translation_cost = translation_chunks * translation_division * translation_model["cost_per_token"]
-                        summary_cost = summary_chunks * translation_division * summary_model["cost_per_token"]
+                            term_cost = term_chunks * term_division * term_model["cost_per_1k_tokens"]
+                            translation_cost = translation_chunks * translation_division * translation_model["cost_per_1k_tokens"]
+                            summary_cost = summary_chunks * translation_division * summary_model["cost_per_1k_tokens"]
 
-                        total_cost = term_cost + translation_cost + summary_cost
+                            total_cost = term_cost + translation_cost + summary_cost
 
-                        if total_cost < min_cost:
-                            min_cost = total_cost
-                            best_combination = (term_division, translation_division, term_model['name'], translation_model['name'], summary_model['name'])
+                            if total_cost < min_cost:
+                                min_cost = total_cost
+                                best_combination = (term_division, translation_division, term_model['name'], translation_model['name'], summary_model['name'])
     return best_combination
 
 def _calculate_line_token_counts(text):
