@@ -8,7 +8,7 @@ from gptwntranslator.helpers.args_helper import parse_chapters
 from gptwntranslator.helpers.file_helper import read_file, write_file, write_md_as_epub
 from gptwntranslator.helpers.text_helper import make_printable, txt_to_md
 from gptwntranslator.hooks.object_hook import generic_object_hook
-from gptwntranslator.scrapers.soyetsu_scraper import process_novel
+from gptwntranslator.scrapers.syosetu_scraper import process_novel
 from gptwntranslator.translators.jp_en_translator import fix_linebreaks, translate_sub_chapter, initialize as initialize_jp_en_translator
 
 def main():
