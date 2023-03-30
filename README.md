@@ -111,7 +111,6 @@ gptwntranslator /home/user/Novels/ 123456 -st -c 1
 ## Current Limitations (or Future Improvements?)
 
 - The tool only works with Japanese web novels from Syosetu.
-- The tool crawls the entire index for the novel, regardless of the -c argument, and scrapes their contents. On long novels, this might take a while. (FIRST THING TO CORRECT!!!)
 - The tool doesn't translate:
     - Chapter titles
     - Subchapter titles
