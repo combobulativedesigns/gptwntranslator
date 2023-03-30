@@ -38,3 +38,6 @@ Desktop.ini
 *~
 .directory
 .Trash-*
+
+# Proyect output
+output/

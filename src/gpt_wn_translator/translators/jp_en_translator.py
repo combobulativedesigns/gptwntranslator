@@ -76,6 +76,22 @@ def _greedy_find_optimal_configuration(line_token_counts):
 
     return best_combination
 
+def japanese_token_limit_worst_case(N, worst_case_ratio=1.125, safety_factor=0.8):
+    """
+    Calculate the token limit for a Japanese text so that the combined token count
+    of the Japanese text and its English translation does not exceed N in the worst-case scenario.
+
+    Args:
+        N (int): The maximum combined token count.
+        worst_case_ratio (float, optional): The worst-case ratio between Japanese token count and English translation token count. Defaults to 3.
+        safety_factor (float, optional): The safety factor to avoid exceeding the limit in worst-case scenarios. Defaults to 0.8.
+
+    Returns:
+        int: The token limit for the Japanese text.
+    """
+    token_limit = N * safety_factor / (1 + worst_case_ratio)
+    return int(token_limit)
+
 def _greedy_find_max_optimal_configuration(line_token_counts):
     total_lines = len(line_token_counts)
 
@@ -83,12 +99,12 @@ def _greedy_find_max_optimal_configuration(line_token_counts):
     # models["gpt-4"] = {
     #     "name" : "gpt-4",
     #     "cost_per_token" : 0.03,
-    #     "max_tokens" : 7000,
+    #     "max_tokens" : 8000,
     # }
     models["gpt-3.5-turbo"] = {
         "name" : "gpt-3.5-turbo",
         "cost_per_token" : 0.002,
-        "max_tokens" : 3000,
+        "max_tokens" : 4000,
     }
 
     min_cost = float('inf')
@@ -98,27 +114,89 @@ def _greedy_find_max_optimal_configuration(line_token_counts):
         term_model = models['gpt-4']
     except KeyError:
         term_model = models['gpt-3.5-turbo']
+    term_model_limit = japanese_token_limit_worst_case(term_model["max_tokens"])
+    # reduce limit to nearest multiple of 4
+    term_model_limit = term_model_limit - (term_model_limit % 4)
 
     for translation_model in models.values():
+        translation_model_limit = japanese_token_limit_worst_case(translation_model
+        ["max_tokens"])
+        translation_model_limit = translation_model_limit - (translation_model_limit % 4)
         for summary_model in models.values():
-            for term_division in range(term_model["max_tokens"] // 2, term_model["max_tokens"] // 4, -term_model["max_tokens"] // 4):
-                for summary_division in range(summary_model["max_tokens"] // 2, summary_model["max_tokens"] // 4, -summary_model["max_tokens"] // 4):
-                    for translation_division in _factors(min(term_division, summary_division)):
-                        if summary_division == translation_division:
-                            term_chunks = _estimate_chunks(total_lines, term_division, line_token_counts)
-                            translation_chunks = term_chunks * _estimate_chunks(term_division, translation_division, line_token_counts)
-                            summary_chunks = _estimate_chunks(translation_chunks * translation_division, summary_division, line_token_counts)
+            summary_model_limit = japanese_token_limit_worst_case(summary_model["max_tokens"])
+            summary_model_limit = summary_model_limit - (summary_model_limit % 4)
+            for term_division in range(term_model_limit // 1, term_model_limit // 2, -4):
+                for translation_division in range(translation_model_limit // 1, translation_model_limit // 2, -4):
+                    if term_division % translation_division == 0:
+                        term_chunks = _estimate_chunks(total_lines, term_division, line_token_counts)
+                        translation_chunks = term_chunks * _estimate_chunks(term_division, translation_division, line_token_counts)
+                        summary_chunks = _estimate_chunks(translation_chunks * translation_division, translation_division, line_token_counts)
 
-                            term_cost = term_chunks * term_division * term_model["cost_per_token"]
-                            translation_cost = translation_chunks * translation_division * translation_model["cost_per_token"]
-                            summary_cost = summary_chunks * summary_division * summary_model["cost_per_token"]
+                        term_cost = term_chunks * term_division * term_model["cost_per_token"]
+                        translation_cost = translation_chunks * translation_division * translation_model["cost_per_token"]
+                        summary_cost = summary_chunks * translation_division * summary_model["cost_per_token"]
 
-                            total_cost = term_cost + translation_cost + summary_cost
+                        total_cost = term_cost + translation_cost + summary_cost
 
-                            if total_cost < min_cost:
-                                min_cost = total_cost
-                                best_combination = (term_division, translation_division, summary_division, term_model['name'], translation_model['name'], summary_model['name'])
+                        if total_cost < min_cost:
+                            min_cost = total_cost
+                            best_combination = (term_division, translation_division, term_model['name'], translation_model['name'], summary_model['name'])
     return best_combination
+
+# def _greedy_find_max_optimal_configuration(line_token_counts):
+#     total_lines = len(line_token_counts)
+
+#     models = dict()
+#     models["gpt-4"] = {
+#         "name" : "gpt-4",
+#         "cost_per_token" : 0.03,
+#         "max_tokens" : 8000,
+#     }
+#     models["gpt-3.5-turbo"] = {
+#         "name" : "gpt-3.5-turbo",
+#         "cost_per_token" : 0.002,
+#         "max_tokens" : 4000,
+#     }
+
+#     min_cost = float('inf')
+#     best_combination = None
+
+#     try:
+#         term_model = models['gpt-4']
+#     except KeyError:
+#         term_model = models['gpt-3.5-turbo']
+#     term_model_limit = japanese_token_limit_worst_case(term_model["max_tokens"])
+#     # reduce limit to nearest multiple of 4
+#     term_model_limit = term_model_limit - (term_model_limit % 4)
+
+#     for translation_model in models.values():
+#         translation_model_limit = japanese_token_limit_worst_case(translation_model
+#         ["max_tokens"])
+#         translation_model_limit = translation_model_limit - (translation_model_limit % 4)
+#         for summary_model in models.values():
+#             summary_model_limit = japanese_token_limit_worst_case(summary_model["max_tokens"])
+#             summary_model_limit = summary_model_limit - (summary_model_limit % 4)
+#             for term_division in range(term_model_limit // 2, term_model_limit // 4, -4):
+#                 for summary_division in range(summary_model_limit // 2, summary_model_limit // 4, -4):
+#                     for translation_division in range(translation_model_limit // 2, translation_model_limit // 4, -4):
+#                         factors = _factors(min(term_division, summary_division))
+#                         if summary_division == translation_division and translation_division in factors:
+#                             term_chunks = _estimate_chunks(total_lines, term_division, line_token_counts)
+#                             translation_chunks = term_chunks * _estimate_chunks(term_division, translation_division, line_token_counts)
+#                             summary_chunks = _estimate_chunks(translation_chunks * translation_division, summary_division, line_token_counts)
+
+#                             term_cost = term_chunks * term_division * term_model["cost_per_token"]
+#                             translation_cost = translation_chunks * translation_division * translation_model["cost_per_token"]
+#                             summary_cost = summary_chunks * summary_division * summary_model["cost_per_token"]
+
+#                             total_cost = term_cost + translation_cost + summary_cost
+
+#                             if total_cost < min_cost:
+#                                 min_cost = total_cost
+#                                 best_combination = (term_division, translation_division, summary_division, term_model['name'], translation_model['name'], summary_model['name'])
+#     print(best_combination)
+#     text = input()
+#     return best_combination
 
 def _calculate_line_token_counts(text):
     lines = text.splitlines()
@@ -141,8 +219,11 @@ def _perform_relevant_terms_action(chunks, model):
         ]
 
         try:
+            print()
+            print(messages)
             response = call_api(messages, model)
             response = response['choices'][0]['message']['content']
+            print(response)
         except OpenAI_APIException as e:
             raise JpToEnTranslatorException("Error calling OpenAI API: " + str(e))
         except Exception as e:
@@ -168,7 +249,7 @@ def _perform_translation_action(chunk, term_lists, summary, translation_model):
 
     messages = [
         {"role": "system", "content": "You are a Japanese to English translator that translates a given japanese text."},
-        {"role": "system", "name": "example_user", "content": "Translate the chunk of text I'm about to provide. Mantain japanese web novel translation format convetions. As context, I'll provide the immediate previous line of the text, the immediate next line of the text, the summary of the text so far, and a list of relevant terms and their translations to use."},
+        {"role": "system", "name": "example_user", "content": "Translate the chunk of text I'm about to provide. Mantain japanese web novel translation format convetions. As context, I'll provide the immediate previous line of the text, the immediate next line of the text, the summary of the text so far, and a list of relevant terms and their translations to use. Do not repeat the japanese text before the translation, nor clarify your actions."},
         {"role": "system", "name": "example_assistant", "content": "Understood. Please provide the previous line."}
     ]
 
@@ -198,8 +279,11 @@ def _perform_translation_action(chunk, term_lists, summary, translation_model):
     messages.append({"role": "user", "content": chunk.contents})
 
     try:
+        print()
+        print(messages)
         response = call_api(messages, model=translation_model)
         response = response['choices'][0]['message']['content']
+        print(response)
     except OpenAI_APIException as e:
         raise JpToEnTranslatorException("Error calling OpenAI API: " + str(e))
     except Exception as e:
@@ -229,8 +313,11 @@ def _perform_summary_action(translated_chunk, previous_summary, summarization_mo
     messages.append({"role": "user", "content": translated_chunk})
 
     try:
+        print()
+        print(messages)
         response = call_api(messages, model=summarization_model)
         response = response['choices'][0]['message']['content']
+        print(response)
     except OpenAI_APIException as e:
         raise JpToEnTranslatorException("Error calling OpenAI API: " + str(e))
     except Exception as e:
@@ -294,12 +381,12 @@ def translate_sub_chapter(novel, chapter_index, sub_chapter_index):
     except IndexError:
         raise JpToEnTranslatorException("Invalid chapter or sub chapter index")
     
-    prev_line = prev_sub_chapter.contents if prev_sub_chapter else None
-    next_line = next_sub_chapter.contents if next_sub_chapter else None
-    prev_summary = prev_sub_chapter.summary if prev_sub_chapter else None
+    prev_line = prev_sub_chapter.contents.splitlines()[-1] if prev_sub_chapter else ""
+    next_line = next_sub_chapter.contents.splitlines()[0] if next_sub_chapter else ""
+    prev_summary = prev_sub_chapter.summary if prev_sub_chapter else ""
 
     line_token_counts = _calculate_line_token_counts(sub_chapter.contents)
-    term_division, translation_division, summary_division, term_model, translation_model, summary_model = _greedy_find_max_optimal_configuration(line_token_counts)
+    term_division, translation_division, term_model, translation_model, summary_model = _greedy_find_max_optimal_configuration(line_token_counts)
 
     # Perform the relevant terms action
     terms_chunks = _split_text_into_chunks(sub_chapter.contents, term_division, line_token_counts)
@@ -368,7 +455,9 @@ def fix_linebreaks(translated_text, original_text):
     if translated_sentences:
         fixed_translation.append(" ".join(translated_sentences))
 
-    fixed_translation = [line.strip() for line in fixed_translation if line.strip()]
+    fixed_translation = "\n".join([line.strip() for line in fixed_translation if line.strip()])
+
+    return fixed_translation
 
 
 

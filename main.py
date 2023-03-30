@@ -9,7 +9,7 @@ from src.gpt_wn_translator.helpers.file_helper import read_file, write_file, wri
 from src.gpt_wn_translator.helpers.text_helper import make_printable, txt_to_md
 from src.gpt_wn_translator.hooks.object_hook import generic_object_hook
 from src.gpt_wn_translator.scrapers.soyetsu_scraper import process_novel
-from src.gpt_wn_translator.translators.jp_to_en_translator import fix_linebreaks, translate_sub_chapter
+from src.gpt_wn_translator.translators.jp_en_translator import fix_linebreaks, translate_sub_chapter
 
 def main():
     parser = argparse.ArgumentParser()
@@ -30,6 +30,9 @@ def main():
         print("Can't create epub without translating the novel after a fresh scraping.")
         return
     
+    # Clear console
+    print("\033c", end="")
+
     translation_targets = None
     if args.chapters:
         translation_targets = parse_chapters(args.chapters)
@@ -82,7 +85,7 @@ def main():
                 
                 try:
                     print(f"Translating chapter {target_chapter}, subchapter {target_sub_chapter}.") if args.verbose else None
-                    translate_sub_chapter(novel, target_chapter, target_sub_chapter)
+                    translate_sub_chapter(novel, target_chapter - 1, target_sub_chapter - 1)
                 except Exception as e:
                     traceback.print_exc()
                     print(f"Error: {e}")
@@ -122,14 +125,7 @@ def main():
 
                     print(f"Compiling chunks of chapter {target_chapter}, subchapter {target_sub_chapter}.") if args.verbose else None
                     sub_chapter_text = sub_chapter.name + "\n\n"
-
-                    for chunk in sub_chapter.chunks:
-                        print(f"Chunk {chunk} of {target_sub_chapter} of {target_chapter}... ", end="") if args.verbose else None
-                        english = chunk.translation
-                        japanese = chunk.context
-                        fixed_english = fix_linebreaks(english, japanese)
-                        sub_chapter_text += f"{fixed_english}\n\n"
-                        print("Done") if args.verbose else None
+                    sub_chapter_text += fix_linebreaks(sub_chapter.translation, sub_chapter.contents)
 
                     sub_chapter_md = txt_to_md(sub_chapter_text)
                     sub_chapters_md.append(sub_chapter_md)
@@ -143,14 +139,7 @@ def main():
 
                     print(f"Compiling chunks of chapter {target_chapter}, subchapter {target_sub_chapter}.") if args.verbose else None
                     sub_chapter_text = sub_chapter.name + "\n\n"
-
-                    for chunk in sub_chapter.chunks:
-                        print(f"Chunk {chunk} of {target_sub_chapter} of {target_chapter}... ", end="") if args.verbose else None
-                        english = chunk.translation
-                        japanese = chunk.context
-                        fixed_english = fix_linebreaks(english, japanese)
-                        sub_chapter_text += f"{fixed_english}\n\n"
-                        print("Done") if args.verbose else None
+                    sub_chapter_text += fix_linebreaks(sub_chapter.translation, sub_chapter.contents)
 
                     sub_chapter_md = txt_to_md(sub_chapter_text)
                     sub_chapters_md.append(sub_chapter_md)
