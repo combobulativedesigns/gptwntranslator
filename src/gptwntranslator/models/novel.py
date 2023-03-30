@@ -1,4 +1,4 @@
-from src.gpt_wn_translator.models.chapter import Chapter
+from gptwntranslator.models.chapter import Chapter
 
 
 class Novel:

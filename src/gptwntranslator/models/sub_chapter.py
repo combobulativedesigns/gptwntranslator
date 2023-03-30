@@ -1,4 +1,4 @@
-from src.gpt_wn_translator.models.chunk import Chunk
+from gptwntranslator.models.chunk import Chunk
 
 
 class SubChapter:

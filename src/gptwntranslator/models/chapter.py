@@ -1,4 +1,4 @@
-from src.gpt_wn_translator.models.sub_chapter import SubChapter
+from gptwntranslator.models.sub_chapter import SubChapter
 
 
 class Chapter:

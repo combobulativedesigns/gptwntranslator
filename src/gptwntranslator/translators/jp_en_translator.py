@@ -1,8 +1,8 @@
 
 import re
-from src.gpt_wn_translator.api.openai_api import get_model, OpenAI_APIException, call_api, get_line_token_count
-from src.gpt_wn_translator.models.chunk import Chunk
-from src.gpt_wn_translator.models.term_sheet import TermSheet
+from gptwntranslator.api.openai_api import get_model, OpenAI_APIException, call_api, get_line_token_count
+from gptwntranslator.models.chunk import Chunk
+from gptwntranslator.models.term_sheet import TermSheet
 
 TERMS_MODELS = None
 TRANSLATION_MODELS = None

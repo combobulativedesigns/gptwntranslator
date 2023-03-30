@@ -2,10 +2,10 @@ from chunk import Chunk
 from urllib.request import urlopen
 from bs4 import BeautifulSoup as bs
 
-import src.gpt_wn_translator.api.openai_api as openai_api
-from src.gpt_wn_translator.models.chapter import Chapter
-from src.gpt_wn_translator.models.novel import Novel
-from src.gpt_wn_translator.models.sub_chapter import SubChapter
+import gptwntranslator.api.openai_api as openai_api
+from gptwntranslator.models.chapter import Chapter
+from gptwntranslator.models.novel import Novel
+from gptwntranslator.models.sub_chapter import SubChapter
 
 def _get_soup(url):
     html = urlopen(url)

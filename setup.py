@@ -6,7 +6,7 @@ with open("README.md", "r") as readme_file:
     long_description = readme_file.read()
 
 setup(
-    name="gpt-wn-translator",
+    name="gptwntranslator",
     version="0.1.0",
     author="Rodrigo S. Jauregui",
     author_email="ro.sjda42@gmail.com",
@@ -14,8 +14,9 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/CombobulativeDesigns/GPTWebNovelTranslator",
-    packages=find_packages("src"),
+    packages=find_packages(where="src"),
     package_dir={"": "src"},
+    py_modules=["main"],
     install_requires=[
         "beautifulsoup4==4.12.0",
         "Janome==0.4.2",
@@ -43,7 +44,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "gpt-wn-translator = gpt_wn_translator.main:main",
+            "gptwntranslator = gptwntranslator.main:main",
         ],
     },
     python_requires=">=3.10",

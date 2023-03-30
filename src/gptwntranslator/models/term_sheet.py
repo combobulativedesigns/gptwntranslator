@@ -3,7 +3,7 @@ import re
 
 from janome.tokenizer import Tokenizer
 
-from src.gpt_wn_translator.models.term import Term
+from gptwntranslator.models.term import Term
 
 class TermSheet:
     def __init__(self, new_terms, old_terms="", prev_summary="", current_chunk="", tokens=[]):

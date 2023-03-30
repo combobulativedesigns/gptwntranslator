@@ -1,9 +1,9 @@
-from src.gpt_wn_translator.models.chapter import Chapter
-from src.gpt_wn_translator.models.chunk import Chunk
-from src.gpt_wn_translator.models.novel import Novel
-from src.gpt_wn_translator.models.sub_chapter import SubChapter
-from src.gpt_wn_translator.models.term import Term
-from src.gpt_wn_translator.models.term_sheet import TermSheet
+from gptwntranslator.models.chapter import Chapter
+from gptwntranslator.models.chunk import Chunk
+from gptwntranslator.models.novel import Novel
+from gptwntranslator.models.sub_chapter import SubChapter
+from gptwntranslator.models.term import Term
+from gptwntranslator.models.term_sheet import TermSheet
 
 
 def generic_object_hook(dct):

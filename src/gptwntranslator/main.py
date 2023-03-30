@@ -2,14 +2,14 @@ import json
 import traceback
 import yaml
 import argparse
-from src.gpt_wn_translator.api.openai_api import initialize as initialize_openai_api
-from src.gpt_wn_translator.encoders.json_encoder import JsonEncoder
-from src.gpt_wn_translator.helpers.args_helper import parse_chapters
-from src.gpt_wn_translator.helpers.file_helper import read_file, write_file, write_md_as_epub
-from src.gpt_wn_translator.helpers.text_helper import make_printable, txt_to_md
-from src.gpt_wn_translator.hooks.object_hook import generic_object_hook
-from src.gpt_wn_translator.scrapers.soyetsu_scraper import process_novel
-from src.gpt_wn_translator.translators.jp_en_translator import fix_linebreaks, translate_sub_chapter, initialize as initialize_jp_en_translator
+from gptwntranslator.api.openai_api import initialize as initialize_openai_api
+from gptwntranslator.encoders.json_encoder import JsonEncoder
+from gptwntranslator.helpers.args_helper import parse_chapters
+from gptwntranslator.helpers.file_helper import read_file, write_file, write_md_as_epub
+from gptwntranslator.helpers.text_helper import make_printable, txt_to_md
+from gptwntranslator.hooks.object_hook import generic_object_hook
+from gptwntranslator.scrapers.soyetsu_scraper import process_novel
+from gptwntranslator.translators.jp_en_translator import fix_linebreaks, translate_sub_chapter, initialize as initialize_jp_en_translator
 
 def main():
     parser = argparse.ArgumentParser()
@@ -36,24 +36,38 @@ def main():
     translation_targets = None
     if args.chapters:
         translation_targets = parse_chapters(args.chapters)
+
     novel_object_output_path = f"{args.directory}/{args.novel_code}/novel.json"
     novel_md_output_path = f"{args.directory}/{args.novel_code}/novel.md"
     novel_epub_output_path = f"{args.directory}/{args.novel_code}/novel.epub"
 
-    config = yaml.safe_load(read_file("config/config.yaml", args.verbose))
+    try:
+        config = yaml.safe_load(read_file("config/config.yaml", args.verbose))
+    except Exception as e:
+        print(f"Error: Failed to load config file: {e}")
+        return
 
-    api_key = config['config']['openai']['api_key']
-    available_models = list(config['config']['openai']['models'].items())
-    available_models = {k: {
-        'name': v['name'],
-        'cost_per_1k_tokens': v['cost_per_1k_tokens'],
-        'max_tokens': v['max_tokens']
-    } for k, v in available_models if v['enabled']}
+    try:
+        api_key = config['config']['openai']['api_key']
+        available_models = list(config['config']['openai']['models'].items())
+        available_models = {k: {
+            'name': v['name'],
+            'cost_per_1k_tokens': v['cost_per_1k_tokens'],
+            'max_tokens': v['max_tokens']
+        } for k, v in available_models if v['enabled']}
+    except Exception as e:
+        print(f"Error: Failed to load OpenAI API config: {e}")
+        return
+    
     initialize_openai_api(api_key, available_models)
 
-    term_models = config['config']['translator']['api']['terms_list']['models']
-    translation_models = config['config']['translator']['api']['translation']['models']
-    summary_models = config['config']['translator']['api']['summary']['models']
+    try:
+        term_models = config['config']['translator']['api']['terms_list']['models']
+        translation_models = config['config']['translator']['api']['translation']['models']
+        summary_models = config['config']['translator']['api']['summary']['models']
+    except Exception as e:
+        print(f"Error: Failed to load translator API config: {e}")
+        return
     
     initialize_jp_en_translator(term_models, translation_models, summary_models)
 
@@ -67,14 +81,14 @@ def main():
             novel_printable = make_printable(json.dumps(novel, ensure_ascii=False, cls=JsonEncoder), args.verbose)
             write_file(novel_object_output_path, novel_printable, args.verbose)
         except Exception as e:
-            print(e)
+            print(f"Error: Failed to scrape novel: {e}")
             return
         novel = json.loads(novel_printable, object_hook=generic_object_hook)
     else:
         try:
             novel = json.loads(read_file(novel_object_output_path, args.verbose), object_hook=generic_object_hook)
         except Exception as e:
-            print(e)
+            print(f"Error: Failed to load novel object: {e}")
             return
         
     # ========================

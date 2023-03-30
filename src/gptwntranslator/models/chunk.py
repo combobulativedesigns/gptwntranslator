@@ -1,4 +1,4 @@
-from src.gpt_wn_translator.models.term_sheet import TermSheet
+from gptwntranslator.models.term_sheet import TermSheet
 
 class Chunk:
     def __init__(self, chunk_index, chapter_index, sub_chapter_index, contents, translation, prev_line, next_line):
