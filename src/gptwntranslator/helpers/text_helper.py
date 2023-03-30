@@ -7,12 +7,9 @@ def make_printable(s, verbose=False):
     }
 
     try:
-        print(f"Removing non-printable characters... ", end="") if verbose else None
         new_str = s.translate(NOPRINT_TRANS_TABLE)
-        print("Done") if verbose else None
         return new_str
     except Exception as e:
-        print("Failed") if verbose else None
         raise Exception(f"Error: {e}")
     
 def txt_to_md(input_txt):

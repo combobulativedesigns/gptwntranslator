@@ -1,4 +1,5 @@
 from chunk import Chunk
+import sys
 from urllib.request import urlopen
 from bs4 import BeautifulSoup as bs
 
@@ -142,7 +143,7 @@ def _get_sub_chapter_contents(soup):
 
     return sub_chapter_text_contents
 
-def process_novel(novel_code, verbose=False):
+def process_novel(novel_code, targets, verbose=False):
     # Initialize
     base_url = 'https://ncode.syosetu.com'
 
@@ -151,6 +152,7 @@ def process_novel(novel_code, verbose=False):
 
     try:
         print("Scraping " + url + "... ", end="") if verbose else None
+        sys.stdout.flush()
         
         # Get soup
         soup = _get_soup(url)
@@ -178,24 +180,34 @@ def process_novel(novel_code, verbose=False):
     chapters.sort()
     for chapter in chapters:
         chapter.sub_chapters.sort()
-        for sub_chapter in chapter.sub_chapters:
-            try:
-                print("Scraping " + base_url + sub_chapter.link + "... ", end="") if verbose else None
+
+        if targets is not None:
+            if str(chapter.chapter_index) not in targets:
+                continue
+
+            sub_chapter_targets = targets[str(chapter.chapter_index)]
+            for sub_chapter in chapter.sub_chapters:
+                if len(sub_chapter_targets) > 0 and str(sub_chapter.sub_chapter_index) not in sub_chapter_targets:
+                    continue
+
+                try:
+                    print("Scraping " + base_url + sub_chapter.link + "... ", end="") if verbose else None
+                    sys.stdout.flush()
+                    
+                    # Get soup
+                    soup = _get_soup(base_url + sub_chapter.link)
+
+                    # Get sub chapter contents
+                    sub_chapter_contents = _get_sub_chapter_contents(soup)
+
+                    # Set sub chapter contents
+                    sub_chapter.contents = sub_chapter_contents
+
+                    print("Done") if verbose else None
+                except Exception as e:
+                    print("Failed") if verbose else None
+                    raise Exception("Failed to scrape " + base_url + sub_chapter.link + ": " + str(e))
                 
-                # Get soup
-                soup = _get_soup(base_url + sub_chapter.link)
-
-                # Get sub chapter contents
-                sub_chapter_contents = _get_sub_chapter_contents(soup)
-
-                # Set sub chapter contents
-                sub_chapter.contents = sub_chapter_contents
-
-                print("Done") if verbose else None
-            except Exception as e:
-                print("Failed") if verbose else None
-                raise Exception("Failed to scrape " + base_url + sub_chapter.link + ": " + str(e))
-            
     return Novel(
         novel_code,
         title,

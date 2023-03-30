@@ -1,4 +1,5 @@
 import json
+import sys
 import traceback
 import yaml
 import argparse
@@ -77,7 +78,7 @@ def main():
     
     if not args.skip_scraping:
         try:
-            novel = process_novel(args.novel_code, args.verbose)
+            novel = process_novel(args.novel_code, translation_targets, args.verbose)
             novel_printable = make_printable(json.dumps(novel, ensure_ascii=False, cls=JsonEncoder), args.verbose)
             write_file(novel_object_output_path, novel_printable, args.verbose)
         except Exception as e:
@@ -112,8 +113,10 @@ def main():
                     return
                 
                 try:
-                    print(f"Translating chapter {target_chapter}, subchapter {target_sub_chapter}.") if args.verbose else None
-                    translate_sub_chapter(novel, target_chapter - 1, target_sub_chapter - 1)
+                    print(f"Translating chapter {target_chapter}, subchapter {target_sub_chapter}... ", end="") if args.verbose else None
+                    sys.stdout.flush()
+                    translate_sub_chapter(novel, target_chapter - 1, target_sub_chapter - 1, args.verbose)
+                    print("Done") if args.verbose else None
                 except Exception as e:
                     traceback.print_exc()
                     print(f"Error: {e}")
@@ -151,13 +154,15 @@ def main():
                         return
                     sub_chapter = chapter.sub_chapters[target_sub_chapter - 1]
 
-                    print(f"Compiling chunks of chapter {target_chapter}, subchapter {target_sub_chapter}.") if args.verbose else None
+                    print(f"Compiling chunks of chapter {target_chapter}, subchapter {target_sub_chapter}... ", end="") if args.verbose else None
+                    sys.stdout.flush()
                     sub_chapter_text = sub_chapter.name + "\n\n"
                     sub_chapter_text += fix_linebreaks(sub_chapter.translation, sub_chapter.contents)
 
                     sub_chapter_md = txt_to_md(sub_chapter_text)
                     sub_chapters_md.append(sub_chapter_md)
                     sub_chapter.translation = sub_chapter_text
+                    print("Done") if args.verbose else None
             else:
                 # If no subchapters are specified, translate all of them
                 chapter = novel.chapters[target_chapter - 1]
@@ -165,13 +170,15 @@ def main():
                 for target_sub_chapter in range(1, len(chapter.sub_chapters) + 1):
                     sub_chapter = chapter.sub_chapters[target_sub_chapter - 1]
 
-                    print(f"Compiling chunks of chapter {target_chapter}, subchapter {target_sub_chapter}.") if args.verbose else None
+                    print(f"Compiling chunks of chapter {target_chapter}, subchapter {target_sub_chapter}...", end="") if args.verbose else None
+                    sys.stdout.flush() 
                     sub_chapter_text = sub_chapter.name + "\n\n"
                     sub_chapter_text += fix_linebreaks(sub_chapter.translation, sub_chapter.contents)
 
                     sub_chapter_md = txt_to_md(sub_chapter_text)
                     sub_chapters_md.append(sub_chapter_md)
                     sub_chapter.translation = sub_chapter_text
+                    print("Done") if args.verbose else None
 
         # Write the novel object to file
         try:
@@ -181,8 +188,23 @@ def main():
             print(f"Error: {e}")
             return
 
-        write_md_as_epub(sub_chapters_md, novel_epub_output_path, args.verbose)
-        write_file(novel_md_output_path, '\n\n'.join(sub_chapters_md), args.verbose)
+        try:
+            print("Writing epub... ", end="") if args.verbose else None
+            sys.stdout.flush() 
+            write_md_as_epub(sub_chapters_md, novel_epub_output_path, args.verbose)
+            print("Done") if args.verbose else None
+        except Exception as e:
+            print(f"Error: {e}")
+            return
+        
+        try:
+            print("Writing markdown... ", end="") if args.verbose else None
+            sys.stdout.flush()
+            write_file(novel_md_output_path, '\n\n'.join(sub_chapters_md), args.verbose)
+            print("Done") if args.verbose else None
+        except Exception as e:
+            print(f"Error: {e}")
+            return
 
 
 if __name__ == "__main__":

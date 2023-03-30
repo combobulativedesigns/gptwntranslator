@@ -1,4 +1,5 @@
 import os
+import sys
 
 import pypandoc
 
@@ -8,6 +9,7 @@ def write_file(file_path, contents, verbose=False):
 
     try:
         print(f"Writing file {file_path}... ", end="") if verbose else None
+        sys.stdout.flush()
 
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
 
