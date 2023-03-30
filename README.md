@@ -14,6 +14,10 @@ GPT-WN-Translator is a web novel translation tool that utilizes OpenAI's GPT mod
 
 Syosetu's robots.txt doesn't specify anything about random user agents. When there are no rules specified for a user agent, it implies that any other user agent (web crawlers, search engines, or bots) is allowed to crawl the entire website without any restrictions or crawl delays. I'll still ask you not to multibox this thing and scrape the entire site, pretty please.
 
+### Cost
+
+This tool is free by itself, but it does depend on OpenAI's paid API. I suggest performing your own tests with a small sub-chapter count and setting usage limits on your OpenAI account.
+
 ## Installation
 
 Clone the repository and install the package using the following commands:
