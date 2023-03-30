@@ -10,6 +10,10 @@ GPT-WN-Translator is a web novel translation tool that utilizes OpenAI's GPT mod
 - Customizable translation by specifying chapters or sub-chapters.
 - Skipping specific steps (scraping, translating, or generating epub) as needed.
 
+### Aclaration on Crawling
+
+Syosetu's robots.txt doesn't specify anything about random user agents. When there are no rules specified for a user agent, it implies that any other user agent (web crawlers, search engines, or bots) is allowed to crawl the entire website without any restrictions or crawl delays. I'll still ask you not to multibox this thing and scrape the entire site, pretty please.
+
 ## Installation
 
 Clone the repository and install the package using the following commands:
@@ -103,6 +107,7 @@ gptwntranslator /home/user/Novels/ 123456 -st -c 1
 ## Current Limitations (or Future Improvements?)
 
 - The tool only works with Japanese web novels from Syosetu.
+- The tool crawls the entire index for the novel, regardless of the -c argument, and scrapes their contents. On long novels, this might take a while. (FIRST THING TO CORRECT!!!)
 - The tool doesn't translate:
     - Chapter titles
     - Subchapter titles
