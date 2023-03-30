@@ -41,3 +41,6 @@ Desktop.ini
 
 # Proyect output
 output/
+
+# Pipreqs files
+requirements.in
