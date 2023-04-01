@@ -104,6 +104,10 @@ def main():
                 print(f"Error: Chapter {target_chapter} not found in novel object")
                 return
             
+            # If no subchapters are specified, translate all of them
+            if len(target_sub_chapters) == 0:
+                target_sub_chapters = range(1, len(novel.chapters[target_chapter - 1].sub_chapters) + 1)
+            
             chapter = novel.chapters[target_chapter - 1]
             # iterate over subchapters
             for target_sub_chapter in target_sub_chapters:
@@ -144,41 +148,28 @@ def main():
                 print(f"Error: Chapter {target_chapter} not found in novel object")
                 return
             
-            if len(target_sub_chapters) > 0:
-                chapter = novel.chapters[target_chapter - 1]
-                # iterate over subchapters
-                for target_sub_chapter in target_sub_chapters:
-                    target_sub_chapter = int(target_sub_chapter)
-                    if target_sub_chapter not in range(1, len(chapter.sub_chapters) + 1):
-                        print(f"Error: SubChapter {target_sub_chapter} not found in novel object")
-                        return
-                    sub_chapter = chapter.sub_chapters[target_sub_chapter - 1]
+            # If no subchapters are specified, convert all of them
+            if len(target_sub_chapters) == 0:
+                target_sub_chapters = range(1, len(novel.chapters[target_chapter - 1].sub_chapters) + 1)
+            
+            chapter = novel.chapters[target_chapter - 1]
+            # iterate over subchapters
+            for target_sub_chapter in target_sub_chapters:
+                target_sub_chapter = int(target_sub_chapter)
+                if target_sub_chapter not in range(1, len(chapter.sub_chapters) + 1):
+                    print(f"Error: SubChapter {target_sub_chapter} not found in novel object")
+                    return
+                sub_chapter = chapter.sub_chapters[target_sub_chapter - 1]
 
-                    print(f"Compiling chunks of chapter {target_chapter}, subchapter {target_sub_chapter}... ", end="") if args.verbose else None
-                    sys.stdout.flush()
-                    sub_chapter_text = sub_chapter.name + "\n\n"
-                    sub_chapter_text += fix_linebreaks(sub_chapter.translation, sub_chapter.contents)
+                print(f"Compiling chunks of chapter {target_chapter}, subchapter {target_sub_chapter}... ", end="") if args.verbose else None
+                sys.stdout.flush()
+                sub_chapter_text = sub_chapter.name + "\n\n"
+                sub_chapter_text += fix_linebreaks(sub_chapter.translation, sub_chapter.contents)
 
-                    sub_chapter_md = txt_to_md(sub_chapter_text)
-                    sub_chapters_md.append(sub_chapter_md)
-                    sub_chapter.translation = sub_chapter_text
-                    print("Done") if args.verbose else None
-            else:
-                # If no subchapters are specified, translate all of them
-                chapter = novel.chapters[target_chapter - 1]
-                # iterate over subchapters
-                for target_sub_chapter in range(1, len(chapter.sub_chapters) + 1):
-                    sub_chapter = chapter.sub_chapters[target_sub_chapter - 1]
-
-                    print(f"Compiling chunks of chapter {target_chapter}, subchapter {target_sub_chapter}...", end="") if args.verbose else None
-                    sys.stdout.flush() 
-                    sub_chapter_text = sub_chapter.name + "\n\n"
-                    sub_chapter_text += fix_linebreaks(sub_chapter.translation, sub_chapter.contents)
-
-                    sub_chapter_md = txt_to_md(sub_chapter_text)
-                    sub_chapters_md.append(sub_chapter_md)
-                    sub_chapter.translation = sub_chapter_text
-                    print("Done") if args.verbose else None
+                sub_chapter_md = txt_to_md(sub_chapter_text)
+                sub_chapters_md.append(sub_chapter_md)
+                sub_chapter.translation = sub_chapter_text
+                print("Done") if args.verbose else None
 
         # Write the novel object to file
         try:
