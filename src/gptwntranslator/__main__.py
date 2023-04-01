@@ -46,6 +46,7 @@ def main():
         config = yaml.safe_load(read_file("config/config.yaml", args.verbose))
     except Exception as e:
         print(f"Error: Failed to load config file: {e}")
+        traceback.print_exc()
         return
 
     try:
@@ -58,6 +59,7 @@ def main():
         } for k, v in available_models if v['enabled']}
     except Exception as e:
         print(f"Error: Failed to load OpenAI API config: {e}")
+        traceback.print_exc()
         return
     
     initialize_openai_api(api_key, available_models)
@@ -68,9 +70,10 @@ def main():
         summary_models = config['config']['translator']['api']['summary']['models']
     except Exception as e:
         print(f"Error: Failed to load translator API config: {e}")
+        traceback.print_exc()
         return
     
-    initialize_jp_en_translator(term_models, translation_models, summary_models)
+    initialize_jp_en_translator(available_models, term_models, translation_models, summary_models)
 
     novel = None
 
@@ -83,6 +86,7 @@ def main():
             write_file(novel_object_output_path, novel_printable, args.verbose)
         except Exception as e:
             print(f"Error: Failed to scrape novel: {e}")
+            traceback.print_exc()
             return
         novel = json.loads(novel_printable, object_hook=generic_object_hook)
     else:
@@ -90,6 +94,7 @@ def main():
             novel = json.loads(read_file(novel_object_output_path, args.verbose), object_hook=generic_object_hook)
         except Exception as e:
             print(f"Error: Failed to load novel object: {e}")
+            traceback.print_exc()
             return
         
     # ========================
@@ -103,6 +108,10 @@ def main():
             if target_chapter not in range(1, len(novel.chapters) + 1):
                 print(f"Error: Chapter {target_chapter} not found in novel object")
                 return
+            
+            # If no subchapters are specified, translate all of them
+            if len(target_sub_chapters) == 0:
+                target_sub_chapters = range(1, len(novel.chapters[target_chapter - 1].sub_chapters) + 1)
             
             chapter = novel.chapters[target_chapter - 1]
             # iterate over subchapters
@@ -128,6 +137,7 @@ def main():
             write_file(novel_object_output_path, novel_printable, args.verbose)
         except Exception as e:
             print(f"Error: {e}")
+            traceback.print_exc()
             return
         novel = json.loads(novel_printable, object_hook=generic_object_hook)
 
@@ -144,41 +154,28 @@ def main():
                 print(f"Error: Chapter {target_chapter} not found in novel object")
                 return
             
-            if len(target_sub_chapters) > 0:
-                chapter = novel.chapters[target_chapter - 1]
-                # iterate over subchapters
-                for target_sub_chapter in target_sub_chapters:
-                    target_sub_chapter = int(target_sub_chapter)
-                    if target_sub_chapter not in range(1, len(chapter.sub_chapters) + 1):
-                        print(f"Error: SubChapter {target_sub_chapter} not found in novel object")
-                        return
-                    sub_chapter = chapter.sub_chapters[target_sub_chapter - 1]
+            # If no subchapters are specified, convert all of them
+            if len(target_sub_chapters) == 0:
+                target_sub_chapters = range(1, len(novel.chapters[target_chapter - 1].sub_chapters) + 1)
+            
+            chapter = novel.chapters[target_chapter - 1]
+            # iterate over subchapters
+            for target_sub_chapter in target_sub_chapters:
+                target_sub_chapter = int(target_sub_chapter)
+                if target_sub_chapter not in range(1, len(chapter.sub_chapters) + 1):
+                    print(f"Error: SubChapter {target_sub_chapter} not found in novel object")
+                    return
+                sub_chapter = chapter.sub_chapters[target_sub_chapter - 1]
 
-                    print(f"Compiling chunks of chapter {target_chapter}, subchapter {target_sub_chapter}... ", end="") if args.verbose else None
-                    sys.stdout.flush()
-                    sub_chapter_text = sub_chapter.name + "\n\n"
-                    sub_chapter_text += fix_linebreaks(sub_chapter.translation, sub_chapter.contents)
+                print(f"Compiling chunks of chapter {target_chapter}, subchapter {target_sub_chapter}... ", end="") if args.verbose else None
+                sys.stdout.flush()
+                sub_chapter_text = sub_chapter.name + "\n\n"
+                sub_chapter_text += fix_linebreaks(sub_chapter.translation, sub_chapter.contents)
 
-                    sub_chapter_md = txt_to_md(sub_chapter_text)
-                    sub_chapters_md.append(sub_chapter_md)
-                    sub_chapter.translation = sub_chapter_text
-                    print("Done") if args.verbose else None
-            else:
-                # If no subchapters are specified, translate all of them
-                chapter = novel.chapters[target_chapter - 1]
-                # iterate over subchapters
-                for target_sub_chapter in range(1, len(chapter.sub_chapters) + 1):
-                    sub_chapter = chapter.sub_chapters[target_sub_chapter - 1]
-
-                    print(f"Compiling chunks of chapter {target_chapter}, subchapter {target_sub_chapter}...", end="") if args.verbose else None
-                    sys.stdout.flush() 
-                    sub_chapter_text = sub_chapter.name + "\n\n"
-                    sub_chapter_text += fix_linebreaks(sub_chapter.translation, sub_chapter.contents)
-
-                    sub_chapter_md = txt_to_md(sub_chapter_text)
-                    sub_chapters_md.append(sub_chapter_md)
-                    sub_chapter.translation = sub_chapter_text
-                    print("Done") if args.verbose else None
+                sub_chapter_md = txt_to_md(sub_chapter_text)
+                sub_chapters_md.append(sub_chapter_md)
+                sub_chapter.translation = sub_chapter_text
+                print("Done") if args.verbose else None
 
         # Write the novel object to file
         try:
@@ -186,6 +183,7 @@ def main():
             write_file(novel_object_output_path, novel_printable, args.verbose)
         except Exception as e:
             print(f"Error: {e}")
+            traceback.print_exc()
             return
 
         try:
@@ -195,6 +193,7 @@ def main():
             print("Done") if args.verbose else None
         except Exception as e:
             print(f"Error: {e}")
+            traceback.print_exc()
             return
         
         try:
@@ -204,6 +203,7 @@ def main():
             print("Done") if args.verbose else None
         except Exception as e:
             print(f"Error: {e}")
+            traceback.print_exc()
             return
 
 
