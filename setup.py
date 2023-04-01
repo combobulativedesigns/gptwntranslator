@@ -7,7 +7,7 @@ with open("README.md", "r") as readme_file:
 
 setup(
     name="gptwntranslator",
-    version="0.1.0",
+    version="1.1.1",
     author="Rodrigo S. Jauregui",
     author_email="ro.sjda42@gmail.com",
     description="A web novel translator using gpt-3.5-turbo and gpt-4",
