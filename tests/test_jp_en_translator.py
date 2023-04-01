@@ -174,7 +174,7 @@ class TestEstimateChunks(unittest.TestCase):
 
     def test_estimate_chunks_invalid_line_token_counts(self):
         with self.assertRaises(ValueError):
-            _estimate_chunks(self.total_lines, self.division_size, [0, 1, 3, 2, 1])
+            _estimate_chunks(self.total_lines, self.division_size, [0, -1, 3, 2, 1])
 
     def test_estimate_chunks_mismatched_line_token_counts(self):
         with self.assertRaises(ValueError):
