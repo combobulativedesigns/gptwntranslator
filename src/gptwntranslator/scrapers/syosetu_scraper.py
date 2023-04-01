@@ -21,9 +21,19 @@ def _get_title(soup):
 
 def _get_author(soup):
     # Find element that contains the author
-    # It's found at div#novel_contents > div#novel_color > div.novel_writername > a
-    author = soup.find('div', id='novel_contents').find('div', id='novel_color').find('div', class_='novel_writername').find('a').text
-    link = soup.find('div', id='novel_contents').find('div', id='novel_color').find('div', class_='novel_writername').find('a')['href']
+    # It's found at div#novel_contents > div#novel_color > div.novel_writername
+    author_soup = soup.find('div', id='novel_contents').find('div', id='novel_color').find('div', class_='novel_writername')
+
+    # Check if the author is a link
+    if author_soup.find('a') is None:
+        # The author is not a link
+        author = author_soup.text
+        link = ""
+    else:
+        # The author is a link
+        author = author_soup.find('a').text
+        link = author_soup.find('a').get('href')
+
     return author, link
 
 def _get_description(soup):
@@ -53,10 +63,11 @@ def _process_index(index):
     # Initialize chapter number
     chapter_number = 1
 
-    # Find sub chapters relevant to each chapter
-    for chapter_name in chapter_names:
-        # Get chapter name
-        chapter_name_str = chapter_name.text
+    if len(chapter_names) == 0:
+        # The novel doesn't group sub chapters into chapters, so it's just one big chapter
+
+        # Make chapter name
+        chapter_name = "Chapters"
 
         # Get sub chapters
         sub_chapters = list()
@@ -65,58 +76,105 @@ def _process_index(index):
         sub_chapter_number = 1
 
         # Find sub chapters
-        while True:
-            # Get next element
-            next_element = chapter_name.next_sibling
+        for sub_chapter in index.find_all('dl', class_='novel_sublist2'):
+            # Get sub chapter name
+            sub_chapter_name = sub_chapter.find('dd', class_='subtitle').find('a').text
 
-            # If it's None, it's the end of the index, so break
-            if next_element is None:
-                break
+            # Get sub chapter link
+            sub_chapter_link = sub_chapter.find('dd', class_='subtitle').find('a')['href']
 
-            # If it's a div element, it's a chapter name, so break
-            if next_element.name == 'div':
-                break
+            # Get sub chapter release date
+            sub_chapter_release_date = sub_chapter.find('dt', class_='long_update').text
 
-            # If it's a dl element, it's a sub chapter
-            if next_element.name == 'dl':
-                # Get sub chapter name
-                sub_chapter_name = next_element.find('dd', class_='subtitle').find('a').text
+            # Append sub chapter
+            sub_chapters.append(
+                SubChapter(
+                sub_chapter_number, 
+                chapter_number,
+                sub_chapter_name,
+                "",
+                sub_chapter_link,
+                sub_chapter_release_date,
+                "",
+                "",
+                ""))
 
-                # Get sub chapter link
-                sub_chapter_link = next_element.find('dd', class_='subtitle').find('a')['href']
-
-                # Get sub chapter release date
-                sub_chapter_release_date = next_element.find('dt', class_='long_update').text
-
-                # Append sub chapter
-                sub_chapters.append(
-                    SubChapter(
-                    sub_chapter_number, 
-                    chapter_number,
-                    sub_chapter_name,
-                    "",
-                    sub_chapter_link,
-                    sub_chapter_release_date,
-                    "",
-                    "",
-                    ""))
-
-                # Increment sub chapter number
-                sub_chapter_number += 1
-                
-            # Set next element as current element
-            chapter_name = next_element
+            # Increment sub chapter number
+            sub_chapter_number += 1
 
         # Append chapter
         chapters.append(
             Chapter(
-            chapter_number, 
-            chapter_name_str, 
-            "", 
+            chapter_number,
+            chapter_name,
+            "",
             sub_chapters))
 
-        # Increment chapter number
-        chapter_number += 1
+    else:
+        # Find sub chapters relevant to each chapter
+        for chapter_name in chapter_names:
+            # Get chapter name
+            chapter_name_str = chapter_name.text
+
+            # Get sub chapters
+            sub_chapters = list()
+
+            # Initialize sub chapter number
+            sub_chapter_number = 1
+
+            # Find sub chapters
+            while True:
+                # Get next element
+                next_element = chapter_name.next_sibling
+
+                # If it's None, it's the end of the index, so break
+                if next_element is None:
+                    break
+
+                # If it's a div element, it's a chapter name, so break
+                if next_element.name == 'div':
+                    break
+
+                # If it's a dl element, it's a sub chapter
+                if next_element.name == 'dl':
+                    # Get sub chapter name
+                    sub_chapter_name = next_element.find('dd', class_='subtitle').find('a').text
+
+                    # Get sub chapter link
+                    sub_chapter_link = next_element.find('dd', class_='subtitle').find('a')['href']
+
+                    # Get sub chapter release date
+                    sub_chapter_release_date = next_element.find('dt', class_='long_update').text
+
+                    # Append sub chapter
+                    sub_chapters.append(
+                        SubChapter(
+                        sub_chapter_number, 
+                        chapter_number,
+                        sub_chapter_name,
+                        "",
+                        sub_chapter_link,
+                        sub_chapter_release_date,
+                        "",
+                        "",
+                        ""))
+
+                    # Increment sub chapter number
+                    sub_chapter_number += 1
+                    
+                # Set next element as current element
+                chapter_name = next_element
+
+            # Append chapter
+            chapters.append(
+                Chapter(
+                chapter_number, 
+                chapter_name_str, 
+                "", 
+                sub_chapters))
+
+            # Increment chapter number
+            chapter_number += 1
         
     return chapters
 

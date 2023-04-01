@@ -46,6 +46,7 @@ def main():
         config = yaml.safe_load(read_file("config/config.yaml", args.verbose))
     except Exception as e:
         print(f"Error: Failed to load config file: {e}")
+        traceback.print_exc()
         return
 
     try:
@@ -58,6 +59,7 @@ def main():
         } for k, v in available_models if v['enabled']}
     except Exception as e:
         print(f"Error: Failed to load OpenAI API config: {e}")
+        traceback.print_exc()
         return
     
     initialize_openai_api(api_key, available_models)
@@ -68,6 +70,7 @@ def main():
         summary_models = config['config']['translator']['api']['summary']['models']
     except Exception as e:
         print(f"Error: Failed to load translator API config: {e}")
+        traceback.print_exc()
         return
     
     initialize_jp_en_translator(available_models, term_models, translation_models, summary_models)
@@ -83,6 +86,7 @@ def main():
             write_file(novel_object_output_path, novel_printable, args.verbose)
         except Exception as e:
             print(f"Error: Failed to scrape novel: {e}")
+            traceback.print_exc()
             return
         novel = json.loads(novel_printable, object_hook=generic_object_hook)
     else:
@@ -90,6 +94,7 @@ def main():
             novel = json.loads(read_file(novel_object_output_path, args.verbose), object_hook=generic_object_hook)
         except Exception as e:
             print(f"Error: Failed to load novel object: {e}")
+            traceback.print_exc()
             return
         
     # ========================
@@ -132,6 +137,7 @@ def main():
             write_file(novel_object_output_path, novel_printable, args.verbose)
         except Exception as e:
             print(f"Error: {e}")
+            traceback.print_exc()
             return
         novel = json.loads(novel_printable, object_hook=generic_object_hook)
 
@@ -177,6 +183,7 @@ def main():
             write_file(novel_object_output_path, novel_printable, args.verbose)
         except Exception as e:
             print(f"Error: {e}")
+            traceback.print_exc()
             return
 
         try:
@@ -186,6 +193,7 @@ def main():
             print("Done") if args.verbose else None
         except Exception as e:
             print(f"Error: {e}")
+            traceback.print_exc()
             return
         
         try:
@@ -195,6 +203,7 @@ def main():
             print("Done") if args.verbose else None
         except Exception as e:
             print(f"Error: {e}")
+            traceback.print_exc()
             return
 
 
