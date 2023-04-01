@@ -24,7 +24,6 @@ setup(
         "pypandoc==1.11",
         "pypandoc_binary==1.11",
         "PyYAML==6.0",
-        "setuptools==58.1.0",
         "spacy==3.5.1",
         "tiktoken==0.3.2",
         "ja_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/ja_core_news_sm-3.5.0/ja_core_news_sm-3.5.0-py3-none-any.whl",
@@ -45,7 +44,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "gptwntranslator = gptwntranslator.main:main",
+            "gptwntranslator = gptwntranslator.__main__:main",
         ],
     },
     python_requires=">=3.10",
