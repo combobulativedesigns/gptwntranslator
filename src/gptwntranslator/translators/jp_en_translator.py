@@ -1,6 +1,7 @@
 """This module contains the Japanese to English translator functions"""
 
 import re
+import signal
 import sys
 from gptwntranslator.api.openai_api import OpenAI_APIException, call_api, get_line_token_count, validate_model
 from gptwntranslator.models.novel import Novel
@@ -764,8 +765,11 @@ def translate_sub_chapter(novel: Novel, chapter_index: int, sub_chapter_index: i
     print("Terms... ", end="") if verbose else None
     sys.stdout.flush()
 
-    # Perform the terms sheet API action
-    terms_list = _perform_relevant_terms_action(terms_chunks_objects, term_model)
+    try:
+        # Perform the terms sheet API action
+        terms_list = _perform_relevant_terms_action(terms_chunks_objects, term_model)
+    except Exception as e:
+        raise JpToEnTranslatorException("Error while performing terms sheet API action") from e
 
     # --------------------- Translation and Summary --------------------- #
 
@@ -794,12 +798,15 @@ def translate_sub_chapter(novel: Novel, chapter_index: int, sub_chapter_index: i
                 "",
                 chunk_prev_line,
                 chunk_next_line))
-            
-        # Perform the translation and summarization API action
-        translated_sub_chunks, new_summary = _perform_translation_and_summarization_action(sub_chunk_objects, terms_list, prev_summary, translation_model, summary_model, verbose)
 
-        # Add the translated sub chunks to the translation chunks
-        translation_chunks.extend(translated_sub_chunks)
+        try:    
+            # Perform the translation and summarization API action
+            translated_sub_chunks, new_summary = _perform_translation_and_summarization_action(sub_chunk_objects, terms_list, prev_summary, translation_model, summary_model, verbose)
+
+            # Add the translated sub chunks to the translation chunks
+            translation_chunks.extend(translated_sub_chunks)
+        except Exception as e:
+            raise JpToEnTranslatorException("Error while performing translation and summarization API action") from e
 
     # Save the translation and summary to the novel object
     sub_chapter.translation = '\n'.join(translation_chunks)
