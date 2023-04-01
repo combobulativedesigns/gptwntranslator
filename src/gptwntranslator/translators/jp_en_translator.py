@@ -124,7 +124,7 @@ def _split_text_into_chunks(text: str, division_size: int, line_token_counts: li
         raise TypeError("Line token counts must be a list")
     if not all(isinstance(line_token_count, int) for line_token_count in line_token_counts):
         raise TypeError("Line token counts must be a list of integers")
-    if not all(line_token_count > 0 for line_token_count in line_token_counts):
+    if not all(line_token_count >= 0 for line_token_count in line_token_counts):
         raise ValueError("Line token counts must be a list of positive integers")
     
     # Initialize some variables
@@ -203,7 +203,7 @@ def _estimate_chunks(total_lines: int, division_size: int, line_token_counts: li
         raise TypeError("line_token_counts must be a list.")
     if not all(isinstance(token_count, int) for token_count in line_token_counts):
         raise TypeError("line_token_counts must be a list of integers.")
-    if not all(token_count > 0 for token_count in line_token_counts):
+    if not all(token_count >= 0 for token_count in line_token_counts):
         raise ValueError("line_token_counts must be a list of positive integers.")
     if len(line_token_counts) != total_lines:
         raise ValueError("line_token_counts must have the same length as total_lines.")
@@ -280,7 +280,7 @@ def _greedy_find_max_optimal_configuration(line_token_counts: list[int]) -> tupl
         raise TypeError("line_token_counts must be a list.")
     if not all(isinstance(token_count, int) for token_count in line_token_counts):
         raise TypeError("line_token_counts must be a list of integers.")
-    if not all(token_count > 0 for token_count in line_token_counts):
+    if not all(token_count >= 0 for token_count in line_token_counts):
         raise ValueError("line_token_counts must be a list of positive integers.")
 
     # Initialize some values
@@ -379,7 +379,7 @@ def _perform_relevant_terms_action(chunks: list[Chunk], model: str) -> TermSheet
         raise JpToEnTranslatorException("Translator has not been initialized")
 
     # Validate input
-    available_models = [model['name'] for model in TERMS_MODELS]
+    available_models = [_get_translation_model(model)['name'] for model in TERMS_MODELS]
     if not isinstance(chunks, list):
         raise TypeError("Chunks must be a list")
     if not all(isinstance(chunk, Chunk) for chunk in chunks):
@@ -448,7 +448,7 @@ def _perform_translation_action(chunk: Chunk, term_lists: TermSheet, summary: st
         raise JpToEnTranslatorException("Translator has not been initialized")
 
     # Validate inputs
-    available_models = [model['name'] for model in TRANSLATION_MODELS]
+    available_models = [_get_translation_model(model)['name'] for model in TRANSLATION_MODELS]
     if not isinstance(chunk, Chunk):
         raise TypeError("Chunk must be a Chunk object")
     if not isinstance(term_lists, TermSheet):
@@ -523,7 +523,7 @@ def _perform_summary_action(translated_chunk: str, previous_summary: str, summar
         raise JpToEnTranslatorException("Translator has not been initialized")
 
     # Validate parameters
-    available_models = [model['name'] for model in SUMMARY_MODELS]
+    available_models = [_get_translation_model(model)['name'] for model in SUMMARY_MODELS]
     if not isinstance(translated_chunk, str):
         raise TypeError("Translated chunk must be a string")
     if not isinstance(previous_summary, str):
@@ -587,8 +587,8 @@ def _perform_translation_and_summarization_action(chunks: list[Chunk], term_list
         raise JpToEnTranslatorException("Translator has not been initialized")
 
     # Validate the provided arguments
-    available_translation_models = [model['name'] for model in TRANSLATION_MODELS]
-    available_summarization_models = [model['name'] for model in SUMMARY_MODELS]
+    available_translation_models = [_get_translation_model(model)['name'] for model in TRANSLATION_MODELS]
+    available_summarization_models = [_get_translation_model(model)['name'] for model in SUMMARY_MODELS]
     if not isinstance(chunks, list):
         raise TypeError("Chunks must be a list of Chunk objects")
     if not all(isinstance(chunk, Chunk) for chunk in chunks):
@@ -600,11 +600,11 @@ def _perform_translation_and_summarization_action(chunks: list[Chunk], term_list
     if not isinstance(translation_model, str):
         raise TypeError("Translation model must be a string")
     if translation_model not in available_translation_models:
-        raise ValueError(f"Translation model must be a valid model. Available models: {', '.join(available_translation_models)}")
+        raise ValueError(f"Translation model must be a valid model. Available models: {', '.join(available_translation_models)}. Value provided: {translation_model}")
     if not isinstance(summarization_model, str):
         raise TypeError("Summarization model must be a string")
     if summarization_model not in available_summarization_models:
-        raise ValueError(f"Summarization model must be a valid model. Available models: {', '.join(available_summarization_models)}")
+        raise ValueError(f"Summarization model must be a valid model. Available models: {', '.join(available_summarization_models)}. Value provided: {summarization_model}")
     
     # Initialize the updated summary to the provided summary
     updated_summary = summary
