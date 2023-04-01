@@ -7,13 +7,13 @@ with open("README.md", "r") as readme_file:
 
 setup(
     name="gptwntranslator",
-    version="1.1.1",
+    version="1.1.2",
     author="Rodrigo S. Jauregui",
     author_email="ro.sjda42@gmail.com",
     description="A web novel translator using OpenAI's GPT API",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/CombobulativeDesigns/GPTWebNovelTranslator",
+    url="https://github.com/CombobulativeDesigns/gptwntranslator",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=[

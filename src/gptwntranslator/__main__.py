@@ -99,6 +99,7 @@ def main():
         
     # ========================
         
+    translation_success = True
     if not args.skip_translating:
         # Iterate over chapters
         for target_chapter in translation_targets.keys():
@@ -114,23 +115,33 @@ def main():
                 target_sub_chapters = range(1, len(novel.chapters[target_chapter - 1].sub_chapters) + 1)
             
             chapter = novel.chapters[target_chapter - 1]
-            # iterate over subchapters
-            for target_sub_chapter in target_sub_chapters:
-                target_sub_chapter = int(target_sub_chapter)
-                if target_sub_chapter not in range(1, len(chapter.sub_chapters) + 1):
-                    print(f"Error: SubChapter {target_sub_chapter} not found in novel object")
-                    return
-                
-                try:
-                    print(f"Translating chapter {target_chapter}, subchapter {target_sub_chapter}... ", end="") if args.verbose else None
-                    sys.stdout.flush()
-                    translate_sub_chapter(novel, target_chapter - 1, target_sub_chapter - 1, args.verbose)
-                    print("Done") if args.verbose else None
-                except Exception as e:
-                    traceback.print_exc()
-                    print(f"Error: {e}")
-                    return
-
+            try:
+                # iterate over subchapters
+                for target_sub_chapter in target_sub_chapters:
+                    target_sub_chapter = int(target_sub_chapter)
+                    if target_sub_chapter not in range(1, len(chapter.sub_chapters) + 1):
+                        print(f"Error: SubChapter {target_sub_chapter} not found in novel object")
+                        return
+                    
+                    try:
+                        print(f"Translating chapter {target_chapter}, subchapter {target_sub_chapter}... ", end="") if args.verbose else None
+                        sys.stdout.flush()
+                        translate_sub_chapter(novel, target_chapter - 1, target_sub_chapter - 1, args.verbose)
+                        print("Done") if args.verbose else None
+                    except Exception as e:
+                        print("Failed")
+                        print(f"Error: Failed to translate subchapter: {e}")
+                        translation_success = False
+                        break
+                else:
+                    continue
+                break
+            except KeyboardInterrupt:
+                print("Translation interrupted") if args.verbose else None
+                break
+        else:
+            print("Translation complete") if args.verbose else None
+        
         # Write the novel object to file
         try:
             novel_printable = make_printable(json.dumps(novel, ensure_ascii=False, cls=JsonEncoder), args.verbose)
@@ -144,6 +155,10 @@ def main():
     # ========================
 
     if not args.skip_epub:
+        if not translation_success:
+            print("Error: Skipping epub creation due to failed translation")
+            return
+
         sub_chapters_md = []
         # Iterate over chapters
         for target_chapter in translation_targets.keys():
