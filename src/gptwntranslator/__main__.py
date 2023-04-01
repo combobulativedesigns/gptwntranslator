@@ -13,7 +13,7 @@ from gptwntranslator.scrapers.syosetu_scraper import process_novel
 from gptwntranslator.translators.jp_en_translator import fix_linebreaks, translate_sub_chapter, initialize as initialize_jp_en_translator
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="A web novel translator using OpenAI's GPT API")
     parser.add_argument("directory", help="Working directory path")
     parser.add_argument("novel_code", help="Novel code")
     parser.add_argument("-v", "--verbose", help="Verbose mode", action="store_true")
@@ -21,6 +21,7 @@ def main():
     parser.add_argument("-st", "--skip-translating", help="Skip translating the novel", action="store_true")
     parser.add_argument("-se", "--skip-epub", help="Skip generating the epub", action="store_true")
     parser.add_argument("-c", "--chapters", help="The chapters to translate")
+    parser.add_argument("-x-lb", "--experimental-linebreaks", help="Experimental fixing of linebreaks", action="store_true")
     args = parser.parse_args()
 
     if args.skip_scraping and args.skip_translating and args.skip_epub:
@@ -185,11 +186,13 @@ def main():
                 print(f"Compiling chunks of chapter {target_chapter}, subchapter {target_sub_chapter}... ", end="") if args.verbose else None
                 sys.stdout.flush()
                 sub_chapter_text = sub_chapter.name + "\n\n"
-                sub_chapter_text += fix_linebreaks(sub_chapter.translation, sub_chapter.contents)
+                if args.experimental_linebreaks:
+                    sub_chapter_text += fix_linebreaks(sub_chapter.translation, sub_chapter.contents)
+                else:
+                    sub_chapter_text += sub_chapter.translation
 
                 sub_chapter_md = txt_to_md(sub_chapter_text)
                 sub_chapters_md.append(sub_chapter_md)
-                sub_chapter.translation = sub_chapter_text
                 print("Done") if args.verbose else None
 
         # Write the novel object to file
