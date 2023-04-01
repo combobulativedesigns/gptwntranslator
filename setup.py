@@ -7,16 +7,15 @@ with open("README.md", "r") as readme_file:
 
 setup(
     name="gptwntranslator",
-    version="0.1.0",
+    version="1.1.1",
     author="Rodrigo S. Jauregui",
     author_email="ro.sjda42@gmail.com",
-    description="A web novel translator using gpt-3.5-turbo and gpt-4",
+    description="A web novel translator using OpenAI's GPT API",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/CombobulativeDesigns/GPTWebNovelTranslator",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    py_modules=["main"],
     install_requires=[
         "beautifulsoup4==4.12.0",
         "Janome==0.4.2",
@@ -30,7 +29,6 @@ setup(
     ],
     extras_require={
         "dev": [
-            # Nothing yet
         ],
     },
     classifiers=[
@@ -38,7 +36,7 @@ setup(
         "Programming Language :: Python :: 3.10",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: End Users/Desktop",
         "Topic :: Text Processing :: Linguistic",
     ],
