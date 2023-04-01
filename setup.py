@@ -16,7 +16,6 @@ setup(
     url="https://github.com/CombobulativeDesigns/GPTWebNovelTranslator",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    py_modules=["main"],
     install_requires=[
         "beautifulsoup4==4.12.0",
         "Janome==0.4.2",

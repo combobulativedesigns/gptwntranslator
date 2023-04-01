@@ -1,11 +1,27 @@
+"""This module contains helper functions for file operations"""
+
 import os
 import sys
-
 import pypandoc
 
 
-def write_file(file_path, contents, verbose=False):
-    '''Write contents to file_path'''
+def write_file(file_path: str, contents: str, verbose: bool=False) -> None:
+    """Write contents to file_path
+    
+    Parameters
+    ----------
+    file_path : str
+        The path to the file to write to.
+    contents : str
+        The contents to write to the file.
+    verbose : bool, optional
+        Whether to print verbose messages, by default False
+    
+    Raises
+    ------
+    Exception
+        If an error occurs while writing to the file.
+    """	
 
     try:
         print(f"Writing file {file_path}... ", end="") if verbose else None
@@ -21,8 +37,26 @@ def write_file(file_path, contents, verbose=False):
         print("Failed") if verbose else None
         raise Exception(f"Error: {e}")
 
-def read_file(file_path, verbose=False):
-    '''Read contents from file_path'''
+def read_file(file_path: str, verbose: bool=False) -> str:
+    """Read contents from file_path	
+
+    Parameters
+    ----------
+    file_path : str
+        The path to the file to read from.
+    verbose : bool, optional
+        Whether to print verbose messages, by default False
+
+    Raises
+    ------
+    Exception
+        If an error occurs while reading from the file.
+
+    Returns
+    -------
+    str
+        The contents of the file.
+    """
 
     try:
         print(f"Reading file {file_path}... ", end="") if verbose else None
@@ -38,5 +72,17 @@ def read_file(file_path, verbose=False):
     return contents
 
 
-def write_md_as_epub(input_md, output_path, verbose=False):
+def write_md_as_epub(input_md: str, output_path: str, verbose: bool=False) -> None:
+    """Write the input markdown as an epub file.
+
+    Parameters
+    ----------
+    input_md : str
+        The markdown to write as an epub.
+    output_path : str
+        The path to the epub file to write to.
+    verbose : bool, optional
+        Whether to print verbose messages, by default False
+    """
+    
     pypandoc.convert_text('\n\n'.join(input_md), "epub3", format="md", outputfile=output_path)

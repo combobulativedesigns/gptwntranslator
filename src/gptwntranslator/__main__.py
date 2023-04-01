@@ -70,7 +70,10 @@ def main():
         print(f"Error: Failed to load translator API config: {e}")
         return
     
-    initialize_jp_en_translator(term_models, translation_models, summary_models)
+    print(available_models)
+    input("hold")
+    
+    initialize_jp_en_translator(available_models, term_models, translation_models, summary_models)
 
     novel = None
 

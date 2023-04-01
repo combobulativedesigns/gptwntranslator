@@ -4,10 +4,14 @@ import re
 def parse_chapters(input_string: str) -> dict[str, list[str]]:
     """Parse a string of chapter numbers and ranges into a dictionary.
 
-    Arguments:
-        input_string (str) - The string to parse.
+    Parameters
+    ----------
+    input_string : str
+        The string to parse.
 
-    Returns:
+    Returns
+    -------
+    dict[str, list[str]]
         A dictionary of chapter numbers and subchapter numbers.
     """
 

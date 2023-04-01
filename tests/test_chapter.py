@@ -9,6 +9,7 @@ class TestChapter(unittest.TestCase):
 
     def test_init(self) -> None:
         """Test that the Chapter class is initialized correctly."""
+        
         chapter = Chapter(1, "Introduction", "Introducción", [])
         self.assertEqual(chapter.chapter_index, 1)
         self.assertEqual(chapter.name, "Introduction")
@@ -17,6 +18,7 @@ class TestChapter(unittest.TestCase):
 
     def test_init_invalid_arguments(self) -> None:
         """Test that the Chapter class raises the correct exceptions."""
+
         with self.assertRaises(TypeError):
             Chapter("1", "Introduction", "Introducción", [])
 
@@ -31,48 +33,70 @@ class TestChapter(unittest.TestCase):
 
     def test_str(self) -> None:
         """Test that the Chapter class returns the correct string."""
+
         chapter = Chapter(1, "Introduction", "Introducción", [])
         self.assertEqual(str(chapter), "Chapter 1")
 
     def test_repr(self) -> None:
         """Test that the Chapter class returns the correct representation."""	
+
         chapter = Chapter(1, "Introduction", "Introducción", [])
         self.assertEqual(repr(chapter), "Chapter 1")
 
     def test_eq(self) -> None:
         """Test that the Chapter class returns the correct equality."""
+
         chapter1 = Chapter(1, "Introduction", "Introducción", [])
         chapter2 = Chapter(1, "Different", "Diferente", [])
         self.assertEqual(chapter1, chapter2)
 
     def test_ne(self) -> None:
         """Test that the Chapter class returns the correct inequality."""
+
         chapter1 = Chapter(1, "Introduction", "Introducción", [])
         chapter2 = Chapter(2, "Different", "Diferente", [])
         self.assertNotEqual(chapter1, chapter2)
 
     def test_lt(self) -> None:
         """Test that the Chapter class returns the correct less than."""
+
         chapter1 = Chapter(1, "Introduction", "Introducción", [])
         chapter2 = Chapter(2, "Different", "Diferente", [])
         self.assertLess(chapter1, chapter2)
 
-    def test_le(self) -> None:
+    def test_le_1(self) -> None:
         """Test that the Chapter class returns the correct less than or equal."""
+
         chapter1 = Chapter(1, "Introduction", "Introducción", [])
         chapter2 = Chapter(1, "Different", "Diferente", [])
         self.assertLessEqual(chapter1, chapter2)
 
+    def test_le_2(self) -> None:
+        """Test that the Chapter class returns the correct less than or equal."""
+
+        chapter1 = Chapter(1, "Introduction", "Introducción", [])
+        chapter2 = Chapter(2, "Different", "Diferente", [])
+        self.assertLessEqual(chapter1, chapter2)
+
     def test_gt(self) -> None:
         """Test that the Chapter class returns the correct greater than."""
+
         chapter1 = Chapter(2, "Different", "Diferente", [])
         chapter2 = Chapter(1, "Introduction", "Introducción", [])
         self.assertGreater(chapter1, chapter2)
 
-    def test_ge(self) -> None:
+    def test_ge_1(self) -> None:
         """Test that the Chapter class returns the correct greater than or equal."""
+
         chapter1 = Chapter(1, "Introduction", "Introducción", [])
         chapter2 = Chapter(1, "Different", "Diferente", [])
+        self.assertGreaterEqual(chapter1, chapter2)
+
+    def test_ge_2(self) -> None:
+        """Test that the Chapter class returns the correct greater than or equal."""
+
+        chapter1 = Chapter(2, "Different", "Diferente", [])
+        chapter2 = Chapter(1, "Introduction", "Introducción", [])
         self.assertGreaterEqual(chapter1, chapter2)
 
 

@@ -11,6 +11,38 @@ def initialize(api_key, available_models):
     AVAILABLE_MODELS = available_models
     openai.api_key = api_key
 
+def validate_model(model: dict) -> bool:
+    """Validate a model dictionary and see if it has a correct structure.
+    
+    Parameters
+    ----------
+    model : dict
+        The model dictionary to validate.
+
+    Returns
+    -------
+    bool
+        True if the model dictionary is valid, False otherwise.
+    """
+
+    # Verify that the model dictionary has the correct structure
+    if model is None:
+        return False
+    if "name" not in model:
+        return False
+    if "cost_per_1k_tokens" not in model:
+        return False
+    if "max_tokens" not in model:
+        return False
+    if not isinstance(model["name"], str):
+        return False
+    if not isinstance(model["cost_per_1k_tokens"], float):
+        return False
+    if not isinstance(model["max_tokens"], int):
+        return False
+
+    return True
+
 def get_model(model):
     if AVAILABLE_MODELS is None:
         raise OpenAI_APIException("OpenAI API not initialized")
