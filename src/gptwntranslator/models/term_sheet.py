@@ -1,3 +1,6 @@
+"""Terms sheet model."""
+
+from types import NoneType
 import spacy
 import re
 
@@ -6,41 +9,40 @@ from janome.tokenizer import Tokenizer
 from gptwntranslator.models.term import Term
 
 class TermSheet:
-    def __init__(self, new_terms, old_terms="", prev_summary="", current_chunk="", tokens=[]):
-        self.old_terms = dict()
-        self.new_terms = dict()
-        self.combined_terms = dict()
-        self.prev_summary = prev_summary
-        self.current_chunk = current_chunk
-        self.tokens = tokens
+    """This class represents a terms sheet."""
 
-        self._parse_existing_term_list_str(old_terms)
-        self._parse_term_list_str(new_terms)
-        self._init_tokens()
-        self._calc_dimensions()
+    def __init__(self, novel_code: str) -> None:
+        """Initialize a terms sheet object.
 
-    def _init_tokens(self):
-        tokenizer = Tokenizer()
+        Parameters
+        ----------
+        novel_code : str
+            The code of the novel.
+        """
 
-        try:
-            self.tokens = tokenizer.tokenize(self.current_chunk)
-        except Exception as e:
-            raise Exception(f"Error while tokenizing: {e}")
-    
-    def _calc_dimensions(self):
-        try:
-            # Calculate dimensions
-            self._calc_term_chunk_frequencies()
-            self._calc_term_document_frequencies()
-            self._calc_term_summary_consistency()
-            self._calc_term_prev_chunk_frequencies()
-            self._calc_term_context_relevance()
-            self._calc_term_ner()
-            self._calc_term_novelty()
-        except Exception as e:
-            raise Exception(f"Error calculating dimensions: {e}")
+        # Validate parameters
+        if not isinstance(novel_code, str):
+            raise TypeError("Novel code must be a string")
+        
+        # Initialize properties
+        self.novel_code = novel_code
+        self.terms = dict()
+        self.tokens = list()
 
-    def _parse_term_list_str(self, term_list_str=""):
+    def process_new_terms(self, term_list_str: str):
+        """Parse a string of terms into a dictionary of terms.
+
+        Parameters
+        ----------
+        term_list_str : str
+            The string of terms to parse
+        """
+
+        # Validate parameters
+        if not isinstance(term_list_str, str):
+            raise TypeError("Term list string must be a string")
+        
+        # Initialize variables
         lines = term_list_str.splitlines()
 
         # Parse the cheat sheet
@@ -56,166 +58,196 @@ class TermSheet:
             else:
                 continue
 
-            # Add the term to the cheat sheet
-            if japanese_term not in self.new_terms:
-                self.new_terms[japanese_term] = Term(japanese_term, romaji, english_term, 0, 0, 0, 0, 0, 0, 0)
+            # Add the term to the list of terms
+            if japanese_term not in self.terms:
+                self.terms[japanese_term] = Term(japanese_term, romaji, english_term)
 
-            # Add the term to the cheat sheet
-            if japanese_term not in self.combined_terms:
-                self.combined_terms[japanese_term] = Term(japanese_term, romaji, english_term, 0, 0, 0, 0, 0, 0, 0)
-    
-    def _parse_existing_term_list_str(self, term_list_str=""):
-        lines = term_list_str.splitlines()
+    def update_dimensions(self, novel_str: str) -> None:
+        """Update the dimensions of the terms sheet.
 
-        # Parse the cheat sheet
-        for line in lines:
-            # Skip empty lines
-            if line == "":
-                continue
+        Parameters
+        ----------
+        novel_str : str
+            The novel to update the dimensions for.
+        """
 
-            # Split the line into the japanese term, romanization, and english term
-            pattern_match = re.match(r'- ([^\)]+)\s\(([^\)]+)\s*\)\s-\s([^\(]+)\s\((\d+),\s(\d+),\s(\d+),\s(\d+),\s(\d+),\s(\d+),\s(\d+)\).*(?:$|\n)', line)
-            if pattern_match:
-                japanese_term, romaji, english_term, chunk_frequency, document_frequency, summary_consistency, prev_chunk_frequency, context_relevance, ner, novelty = pattern_match.groups()
-            else:
-                continue
-            
-            # Add the term to the cheat sheet
-            if japanese_term not in self.old_terms:
-                self.old_terms[japanese_term] = Term(japanese_term, romaji, english_term, int(chunk_frequency), int(document_frequency), int(summary_consistency), int(prev_chunk_frequency), int(context_relevance), int(ner), int(novelty))
-            
-            # Add the term to the cheat sheet
-            if japanese_term not in self.combined_terms:
-                self.combined_terms[japanese_term] = Term(japanese_term, romaji, english_term, int(chunk_frequency), int(document_frequency), int(summary_consistency), int(prev_chunk_frequency), int(context_relevance), int(ner), int(novelty))
+        # Validate parameters
+        if not isinstance(novel_str, str):
+            raise TypeError("Novel string must be a string")
 
-    def _calc_term_chunk_frequencies(self):
+        # Calculate the term document frequencies
+        self._calc_term_document_frequencies(novel_str)
+
+        # Calculate the term context relevance
+        self._calc_term_context_relevance(novel_str)
+
+        # Calculate the terms NER value
+        self._calc_term_ner(novel_str)
+
+
+    def _calc_term_document_frequencies(self, novel_str: str) -> None:
+        """Calculate the document frequencies of the terms in the terms sheet.
+
+        Parameters
+        ----------
+        novel_str : str
+            The novel to calculate the document frequencies for.
+        """
+
+        # Validate parameters
+        if not isinstance(novel_str, str):
+            raise TypeError("Novel string must be a string")
+
         try: 
-            # for token in self.tokens:
-            #     if token.surface in self.new_terms.keys():
-            #         self.combined_terms[token.surface].chunk_frequency += 1
-            for term in self.combined_terms.values():
-                self.combined_terms[term.jp_term].chunk_frequency = self.current_chunk.count(term.jp_term)
+            for term in self.terms.values():
+                self.terms[term.jp_term].document_frequency += novel_str.count(term.jp_term)
         except Exception as e:
             raise Exception(f"Error calculating term chunk frequencies: {e}")
+        
+    def _calc_term_context_relevance(self, novel_str: str, window_size: int=5) -> None:
+        """Calculate the context relevance of the terms in the terms sheet.
 
-    def _calc_term_document_frequencies(self):
-        try:    
-            # for token in self.tokens:
-            #     if token.surface in self.new_terms.keys():
-            #         self.combined_terms[token.surface].document_frequency = self.old_terms[token.surface].document_frequency + self.new_terms[token.surface].chunk_frequency
-            for term in self.combined_terms.values():
-                if term.jp_term in self.old_terms.keys():
-                    self.combined_terms[term.jp_term].document_frequency = self.old_terms[term.jp_term].document_frequency + term.chunk_frequency
-                else:
-                    self.combined_terms[term.jp_term].document_frequency = term.chunk_frequency
-        except Exception as e:
-            raise Exception(f"Error calculating term document frequencies: {e}")
+        Parameters
+        ----------
+        novel_str : str
+            The novel to calculate the context relevance for.
+        window_size : int
+            The size of the window to calculate the context relevance for, defaults to 5.
+        """
 
-    def _calc_term_summary_consistency(self):
+        # Validate parameters
+        if not isinstance(novel_str, str):
+            raise TypeError("Novel string must be a string")
+        if not isinstance(window_size, int):
+            raise TypeError("Window size must be an integer")
+
         try:
-            # for token in self.tokens:
-            #     if token.surface in self.combined_terms:
-            #         if token.surface in self.prev_summary:
-            #             self.combined_terms[token.surface].summary_consistency = 1
-            #         else:
-            #             self.combined_terms[token.surface].summary_consistency = 0
-            for term in self.combined_terms.values():
-                if term.en_term in self.prev_summary:
-                    self.combined_terms[term.jp_term].summary_consistency = 1
-                else:
-                    self.combined_terms[term.jp_term].summary_consistency = 0
-        except Exception as e:
-            raise Exception(f"Error calculating term summary consistency: {e}")
-
-    def _calc_term_prev_chunk_frequencies(self):
-        try:
-            # for token in self.tokens:
-            #     if token.surface in self.combined_terms:
-            #         self.combined_terms[token.surface].prev_chunk_frequency = self.old_terms[token.surface].chunk_frequency
-            for term in self.combined_terms.values():
-                if term.jp_term in self.old_terms.keys():
-                    self.combined_terms[term.jp_term].prev_chunk_frequency = self.old_terms[term.jp_term].chunk_frequency
-                else:
-                    self.combined_terms[term.jp_term].prev_chunk_frequency = 0
-        except Exception as e:
-            raise Exception(f"Error calculating term previous chunk frequencies: {e}")
-
-    def _calc_term_context_relevance(self, window_size=5):
-        try:
-            # token_surfaces = [token.surface for token in self.tokens]
-            # num_tokens = len(token_surfaces)
-
-            # for term in self.old_terms:
-            #     jp_term = term
-            #     indices = [i for i, x in enumerate(token_surfaces) if x == jp_term]
-
-            #     for index in indices:
-            #         start, end = max(0, index - window_size), min(num_tokens, index + window_size + 1)
-            #         for i in range(start, end):
-            #             if token_surfaces[i] != jp_term:
-            #                 if token_surfaces[i] in self.combined_terms:
-            #                     self.combined_terms[token_surfaces[i]].context_relevance += 1
-            terms = self.combined_terms.values()
+            # Get the terms and the number of terms
+            terms = self.terms.values()
             num_terms = len(terms)
 
+            # Calculate the context relevance for each term
             for term in terms:
                 jp_term = term.jp_term
-                indices = [i for i, x in enumerate(self.current_chunk) if x == jp_term]
+                indices = [i for i, x in enumerate(novel_str) if x == jp_term]
 
                 for index in indices:
                     start, end = max(0, index - window_size), min(num_terms, index + window_size + 1)
                     for i in range(start, end):
-                        if self.current_chunk[i] != jp_term:
-                            if self.current_chunk[i] in self.combined_terms:
-                                self.combined_terms[self.current_chunk[i]].context_relevance += 1
+                        if novel_str[i] != jp_term:
+                            if novel_str[i] in self.terms:
+                                self.terms[novel_str[i]].context_relevance += 1
         except Exception as e:
             raise Exception(f"Error calculating term context relevance: {e}")
 
-    def _calc_term_ner(self):
+    def _calc_term_ner(self, novel_str: str) -> None:
+        """Find terms which are named entities in the novel.
+
+        Parameters
+        ----------
+        novel_str : str
+            The novel to find named entities in.
+        """
+
         try:
+            # Load the spacy model
             nlp = spacy.load("ja_core_news_sm")
-            doc = nlp(self.current_chunk)
+            doc = nlp(novel_str)
+
+            # Find named entities
             for ent in doc.ents:
-                if ent.text in self.combined_terms.keys():
-                    self.combined_terms[ent.text].ner = 1
+                if ent.text in self.terms.keys():
+                    self.terms[ent.text].ner = 1
         except Exception as e:
             raise Exception(f"Error calculating term NER: {e}")
 
-    def _calc_term_novelty(self):
-        try:
-            # for term in self.combined_terms:
-            #     old_document_frequency = self.old_terms[term].document_frequency if term in self.old_terms else 0
-            #     new_document_frequency = self.new_terms[term].document_frequency if term in self.new_terms else 0
-            #     self.combined_terms[term].novelty = new_document_frequency - old_document_frequency
-            for term in self.combined_terms.values():
-                old_document_frequency = self.old_terms[term.jp_term].document_frequency if term.jp_term in self.old_terms else 0
-                new_document_frequency = term.document_frequency
-                self.combined_terms[term.jp_term].novelty = new_document_frequency - old_document_frequency
-        except Exception as e:
-            raise Exception(f"Error calculating term novelty: {e}")
+    def _get_top_terms(self, chunk: str|NoneType=None, num_terms: int=15) -> list[Term]:
+        """Get the top terms from the terms sheet.
 
-    def _get_top_terms(self, num_terms=15):
-        if self.combined_terms:
-            if len(self.combined_terms) > num_terms:
-                return sorted(self.combined_terms.values(), reverse=True)[:num_terms]
+        Parameters
+        ----------
+        chunk : str|NoneType, optional
+            The chunk to get the top terms for. If None, get the top terms for the entire novel. By default None
+        num_terms : int, optional
+            The number of terms to get, by default 15
+        
+        Returns
+        -------
+        list[Term]
+            The top terms.
+        """
+
+        # Validate parameters
+        if chunk is not None and not isinstance(chunk, str):
+            raise TypeError("Chunk must be a string")
+        if not isinstance(num_terms, int):
+            raise TypeError("Number of terms must be an integer")
+        
+        # Get the top terms
+        if self.terms:
+            # If there are terms
+            if len(self.terms) > num_terms:
+                # If there are more terms than the number of terms to get
+                if chunk is None:
+                    # If the chunk is None, get the top terms from the entire novel, capped at the number of terms
+                    terms = sorted(self.terms.values(), reverse=True)[:num_terms]
+                else:
+                    # If the chunk is not None, get the top terms from the chunk, capped at the number of terms
+                    terms = sorted([term for term in self.terms.values() if term.jp_term in chunk], reverse=True)[:num_terms]
             else:
-                return sorted(self.combined_terms.values(), reverse=True)
+                # If there are less terms than the number of terms to get
+                if chunk is None:
+                    # If the chunk is None, get the top terms from the entire novel
+                    terms = sorted(self.terms.values(), reverse=True)
+                else:
+                    # If the chunk is not None, get the top terms from the chunk
+                    terms = sorted([term for term in self.terms.values() if term.jp_term in chunk], reverse=True)
         else:
-            return []
+            # If there are no terms, return an empty list
+            terms = []
+
+        return terms
     
     def __str__(self):
+        """Get the string representation of the terms sheet."""
+
+        # Get the top terms
         terms_str = ""
         top_terms = self._get_top_terms()
         
+        # Get the string representation of the top terms
         for term in top_terms:
             terms_str += f"{term.__str__()}\n"
 
         return terms_str
     
-    def for_api(self):
+    def for_api(self, chunk: str, num_terms: int=15) -> str:
+        """Get the string representation of the terms sheet for the API.
+
+        Parameters
+        ----------
+        chunk : str
+            The chunk to get the top terms for.
+        num_terms : int, optional
+            The number of terms to get, by default 15
+
+        Returns
+        -------
+        str
+            The string representation of the terms sheet for the API.
+        """
+
+        # Validate parameters
+        if not isinstance(chunk, str):
+            raise TypeError("Chunk must be a string")
+        if not isinstance(num_terms, int):
+            raise TypeError("Number of terms must be an integer")
+        
+        # Get the top terms
         terms = ""
         top_terms = self._get_top_terms()
         
+        # Get the string representation of the top terms
         for term in top_terms:
             terms += f"{term.for_api()}\n"
 
