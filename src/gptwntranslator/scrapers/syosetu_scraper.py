@@ -48,7 +48,7 @@ def _get_index(soup):
     index = soup.find('div', id='novel_contents').find('div', id='novel_color').find('div', class_='index_box')
     return index
 
-def _process_index(index):
+def _process_index(index, novel_code):
     # Process the index to get the chapter links
     # The div elements that contain the chapter names are found at div.chapter_title elements
     # The sub chapters are found at dl.novel_sublist2 > dd.subtitle > a, with their release date found at dl.novel_sublist2 > dt.long_update
@@ -87,28 +87,24 @@ def _process_index(index):
             sub_chapter_release_date = sub_chapter.find('dt', class_='long_update').text
 
             # Append sub chapter
-            sub_chapters.append(
-                SubChapter(
-                sub_chapter_number, 
+            sub_chapters.append(SubChapter(
+                novel_code,
                 chapter_number,
-                sub_chapter_name,
-                "",
+                sub_chapter_number,
                 sub_chapter_link,
-                sub_chapter_release_date,
-                "",
-                "",
-                ""))
+                sub_chapter_name,
+                sub_chapter_release_date
+            ))
 
             # Increment sub chapter number
             sub_chapter_number += 1
 
         # Append chapter
-        chapters.append(
-            Chapter(
+        chapters.append(Chapter(
+            novel_code,
             chapter_number,
-            chapter_name,
-            "",
-            sub_chapters))
+            chapter_name_str,
+            sub_chapters=sub_chapters))
 
     else:
         # Find sub chapters relevant to each chapter
@@ -147,17 +143,14 @@ def _process_index(index):
                     sub_chapter_release_date = next_element.find('dt', class_='long_update').text
 
                     # Append sub chapter
-                    sub_chapters.append(
-                        SubChapter(
-                        sub_chapter_number, 
+                    sub_chapters.append(SubChapter(
+                        novel_code,
                         chapter_number,
-                        sub_chapter_name,
-                        "",
+                        sub_chapter_number,
                         sub_chapter_link,
-                        sub_chapter_release_date,
-                        "",
-                        "",
-                        ""))
+                        sub_chapter_name,
+                        sub_chapter_release_date
+                    ))
 
                     # Increment sub chapter number
                     sub_chapter_number += 1
@@ -166,12 +159,11 @@ def _process_index(index):
                 chapter_name = next_element
 
             # Append chapter
-            chapters.append(
-                Chapter(
-                chapter_number, 
-                chapter_name_str, 
-                "", 
-                sub_chapters))
+            chapters.append(Chapter(
+                novel_code,
+                chapter_number,
+                chapter_name_str,
+                sub_chapters=sub_chapters))
 
             # Increment chapter number
             chapter_number += 1
@@ -228,7 +220,7 @@ def process_novel(novel_code, targets, verbose=False):
         index = _get_index(soup)
 
         # Process index
-        chapters = _process_index(index)
+        chapters = _process_index(index, novel_code)
 
         print("Done") if verbose else None
     except Exception as e:
@@ -269,13 +261,10 @@ def process_novel(novel_code, targets, verbose=False):
     return Novel(
         novel_code,
         title,
-        "",
         author,
-        "",
-        link,
         description,
-        "",
-        chapters)
+        author_link=link,
+        chapters=chapters)
 
 
 
