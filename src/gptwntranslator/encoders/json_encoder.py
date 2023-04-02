@@ -1,3 +1,5 @@
+"""Module containing classes for encoding objects to JSON format."""
+
 import json
 from gptwntranslator.models.chapter import Chapter
 from gptwntranslator.models.chunk import Chunk
@@ -6,8 +8,24 @@ from gptwntranslator.models.sub_chapter import SubChapter
 from gptwntranslator.models.term import Term
 from gptwntranslator.models.term_sheet import TermSheet
 
+
 class JsonEncoder(json.JSONEncoder):
-    def default(self, o):
+    """This class is used to encode objects to JSON format."""
+
+    def default(self, o: object) -> dict:
+        """This function is used to encode objects to JSON format.
+
+        Parameters
+        ----------
+        o : object
+            The object to encode.
+
+        Returns
+        -------
+        dict
+            The encoded object.
+        """
+
         if isinstance(o, Term):
             return {
                 "jp_term": o.jp_term,

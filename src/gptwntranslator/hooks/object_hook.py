@@ -1,3 +1,5 @@
+"""This module contains the object hook for the JSON decoder."""
+
 from gptwntranslator.models.chapter import Chapter
 from gptwntranslator.models.chunk import Chunk
 from gptwntranslator.models.novel import Novel
@@ -6,7 +8,15 @@ from gptwntranslator.models.term import Term
 from gptwntranslator.models.term_sheet import TermSheet
 
 
-def generic_object_hook(dct):
+def generic_object_hook(dct: dict):
+    """This function is used to decode JSON objects into Python objects.
+    
+    Parameters
+    ----------
+    dct : dict
+        The dictionary to decode.
+    """
+    
     if '_type' in dct:
         if dct['_type'] == 'Novel':
             return Novel(
