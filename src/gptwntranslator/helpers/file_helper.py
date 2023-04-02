@@ -23,6 +23,14 @@ def write_file(file_path: str, contents: str, verbose: bool=False) -> None:
         If an error occurs while writing to the file.
     """	
 
+    # Validate the parameters
+    if not isinstance(file_path, str):
+        raise TypeError("The file path must be a string")
+    if not isinstance(contents, str):
+        raise TypeError("The contents must be a string")
+    if not isinstance(verbose, bool):
+        raise TypeError("The verbose flag must be a boolean")
+
     try:
         print(f"Writing file {file_path}... ", end="") if verbose else None
         sys.stdout.flush()
@@ -58,6 +66,12 @@ def read_file(file_path: str, verbose: bool=False) -> str:
         The contents of the file.
     """
 
+    # Validate the parameters
+    if not isinstance(file_path, str):
+        raise TypeError("The file path must be a string")
+    if not isinstance(verbose, bool):
+        raise TypeError("The verbose flag must be a boolean")
+
     try:
         print(f"Reading file {file_path}... ", end="") if verbose else None
 
@@ -85,4 +99,12 @@ def write_md_as_epub(input_md: str, output_path: str, verbose: bool=False) -> No
         Whether to print verbose messages, by default False
     """
     
+    # Validate the parameters
+    if not isinstance(input_md, str):
+        raise TypeError("The input markdown must be a string")
+    if not isinstance(output_path, str):
+        raise TypeError("The output path must be a string")
+    if not isinstance(verbose, bool):
+        raise TypeError("The verbose flag must be a boolean")
+
     pypandoc.convert_text('\n\n'.join(input_md), "epub3", format="md", outputfile=output_path)

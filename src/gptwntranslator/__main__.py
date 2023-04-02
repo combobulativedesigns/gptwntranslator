@@ -83,7 +83,7 @@ def main():
     if not args.skip_scraping:
         try:
             novel = process_novel(args.novel_code, translation_targets, args.verbose)
-            novel_printable = make_printable(json.dumps(novel, ensure_ascii=False, cls=JsonEncoder), args.verbose)
+            novel_printable = make_printable(json.dumps(novel, ensure_ascii=False, cls=JsonEncoder))
             write_file(novel_object_output_path, novel_printable, args.verbose)
         except Exception as e:
             print(f"Error: Failed to scrape novel: {e}")
@@ -145,7 +145,7 @@ def main():
         
         # Write the novel object to file
         try:
-            novel_printable = make_printable(json.dumps(novel, ensure_ascii=False, cls=JsonEncoder), args.verbose)
+            novel_printable = make_printable(json.dumps(novel, ensure_ascii=False, cls=JsonEncoder))
             write_file(novel_object_output_path, novel_printable, args.verbose)
         except Exception as e:
             print(f"Error: {e}")
@@ -197,7 +197,7 @@ def main():
 
         # Write the novel object to file
         try:
-            novel_printable = make_printable(json.dumps(novel, ensure_ascii=False, cls=JsonEncoder), args.verbose)
+            novel_printable = make_printable(json.dumps(novel, ensure_ascii=False, cls=JsonEncoder))
             write_file(novel_object_output_path, novel_printable, args.verbose)
         except Exception as e:
             print(f"Error: {e}")

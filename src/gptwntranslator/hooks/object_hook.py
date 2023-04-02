@@ -16,6 +16,10 @@ def generic_object_hook(dct: dict):
     dct : dict
         The dictionary to decode.
     """
+
+    # Validate parameters
+    if not isinstance(dct, dict):
+        raise TypeError("Dictionary must be a dictionary")
     
     if '_type' in dct:
         if dct['_type'] == 'Novel':

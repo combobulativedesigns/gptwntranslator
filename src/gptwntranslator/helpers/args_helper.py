@@ -1,3 +1,5 @@
+"""Contains helper functions for parsing command line arguments."""
+
 import re
 
 
@@ -14,6 +16,10 @@ def parse_chapters(input_string: str) -> dict[str, list[str]]:
     dict[str, list[str]]
         A dictionary of chapter numbers and subchapter numbers.
     """
+
+    # Validate parameters
+    if not isinstance(input_string, str):
+        raise TypeError("Input string must be a string")
 
     # Check if the input string is empty
     if input_string == "":
