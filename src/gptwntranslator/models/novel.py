@@ -69,7 +69,7 @@ class Novel:
         self.author_link = author_link
         self.description_translation = description_translation
         self.chapters = chapters
-        self.terms_sheet = terms_sheet
+        self.terms_sheet = terms_sheet if terms_sheet is not None else TermSheet(novel_code)
 
     def __str__(self):
         """Return the string representation of a Novel object."""

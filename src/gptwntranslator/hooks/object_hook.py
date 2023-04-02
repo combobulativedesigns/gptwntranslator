@@ -12,64 +12,59 @@ def generic_object_hook(dct):
             return Novel(
                 dct['novel_code'], 
                 dct['title'], 
-                dct['title_translation'], 
                 dct['author'], 
-                dct['author_translation'], 
-                dct['author_link'], 
                 dct['description'], 
-                dct['description_translation'], 
-                dct['chapters'])
+                title_translation=dct['title_translation'], 
+                author_translation=dct['author_translation'], 
+                author_link=dct['author_link'], 
+                description_translation=dct['description_translation'], 
+                chapters=dct['chapters'], 
+                terms_sheet=dct['terms_sheet'])
         
         elif dct['_type'] == 'Chapter':
             return Chapter(
+                dct['novel_code'], 
                 dct['chapter_index'], 
                 dct['name'], 
-                dct['translated_name'], 
-                dct['sub_chapters'])
+                translated_name=dct['translated_name'], 
+                sub_chapters=dct['sub_chapters'])
         
         elif dct['_type'] == 'SubChapter':
             return SubChapter(
-                dct['sub_chapter_index'], 
+                dct['novel_code'], 
                 dct['chapter_index'], 
-                dct['name'], 
-                dct['translated_name'], 
+                dct['sub_chapter_index'], 
                 dct['link'], 
-                dct['release_date'], 
+                dct['name'], 
                 dct['contents'], 
-                dct['translation'], 
-                dct['summary'])
+                dct['release_date'], 
+                translated_name=dct['translated_name'], 
+                translation=dct['translation'], 
+                summary=dct['summary'])
         
         elif dct['_type'] == 'Chunk':
             return Chunk(
-                dct['chunk_index'], 
+                dct['novel_code'],
                 dct['chapter_index'], 
                 dct['sub_chapter_index'], 
+                dct['chunk_index'], 
                 dct['contents'], 
-                dct['term_sheet'], 
-                dct['summary'], 
-                dct['translation'], 
-                dct['translation_fixed'])
+                dct['prev_line'], 
+                dct['next_line'], 
+                translation=dct['translation']) 
         
         elif dct['_type'] == 'TermSheet':
             return TermSheet(
-                dct['old_terms'], 
-                dct['new_terms'], 
-                dct['combined_terms'], 
-                dct['prev_summary'], 
-                dct['current_chunk'], 
-                dct['tokens'])
+                dct['novel_code'], 
+                terms=dct['terms']) 
         
         elif dct['_type'] == 'Term':
             return Term(
                 dct['jp_term'], 
                 dct['ro_term'], 
                 dct['en_term'], 
-                dct['chunk_frequency'],
-                dct['document_frequency'],
-                dct['summary_consistency'],
-                dct['prev_chunk_frequency'],
-                dct['context_relevance'],
-                dct['ner'],
-                dct['term_novelty'])
+                document_frequency=dct['document_frequency'],
+                context_relevance=dct['context_relevance'],
+                ner=dct['ner'])
         
     return dct

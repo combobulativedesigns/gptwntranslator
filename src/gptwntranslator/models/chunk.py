@@ -46,13 +46,14 @@ class Chunk:
             raise TypeError("Translation must be a string")
         
         # Set attributes
-        self.chunk_index = chunk_index
+        self.novel_code = novel_code
         self.chapter_index = chapter_index
         self.sub_chapter_index = sub_chapter_index
+        self.chunk_index = chunk_index
         self.contents = contents
-        self.translation = translation
         self.prev_line = prev_line
         self.next_line = next_line
+        self.translation = translation
     
     def __str__(self):
         """Return the string representation of a Chunk object."""

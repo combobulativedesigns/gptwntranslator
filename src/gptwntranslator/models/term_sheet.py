@@ -11,23 +11,26 @@ from gptwntranslator.models.term import Term
 class TermSheet:
     """This class represents a terms sheet."""
 
-    def __init__(self, novel_code: str) -> None:
+    def __init__(self, novel_code: str, terms: dict[str, Term]|NoneType=None) -> None:
         """Initialize a terms sheet object.
 
         Parameters
         ----------
         novel_code : str
             The code of the novel.
+        terms : dict[str, Term]|NoneType, optional
+            The terms in the terms sheet, by default None
         """
 
         # Validate parameters
         if not isinstance(novel_code, str):
             raise TypeError("Novel code must be a string")
+        if not isinstance(terms, (NoneType, dict)):
+            raise TypeError("Terms must be a dictionary of terms")
         
         # Initialize properties
         self.novel_code = novel_code
-        self.terms = dict()
-        self.tokens = list()
+        self.terms = dict() if terms is None else terms
 
     def process_new_terms(self, term_list_str: str):
         """Parse a string of terms into a dictionary of terms.
