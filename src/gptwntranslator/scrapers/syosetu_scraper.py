@@ -250,6 +250,7 @@ def _process_index(index: BeautifulSoup, novel_code: str) -> list[Chapter]:
                         sub_chapter_number,
                         sub_chapter_link,
                         sub_chapter_name,
+                        "",
                         sub_chapter_release_date
                     ))
 
@@ -307,15 +308,55 @@ def _get_sub_chapter_contents(soup: BeautifulSoup) -> str:
 
     return sub_chapter_text_contents
 
-def process_novel(novel_code: str, targets: dict[str, list[str]], verbose: bool=False) -> Novel:
+def process_targets(novel: Novel, targets: dict[str, list[str]], verbose: bool=False) -> None:
+    # Initialize
+    base_url = 'https://ncode.syosetu.com'
+
+    # Get url
+    url = base_url + '/' + novel.novel_code + '/'
+
+    for chapter in novel.chapters:
+        chapter.sub_chapters.sort()
+
+        if targets is not None:
+            if str(chapter.chapter_index) not in targets:
+                continue
+
+            sub_chapter_targets = targets[str(chapter.chapter_index)]
+            for sub_chapter in chapter.sub_chapters:
+                if len(sub_chapter_targets) > 0 and str(sub_chapter.sub_chapter_index) not in sub_chapter_targets:
+                    continue
+
+                try:
+                    print("Scraping " + base_url + sub_chapter.link + "... ", end="") if verbose else None
+                    sys.stdout.flush()
+                    
+                    # Get soup
+                    soup = _get_soup(base_url + sub_chapter.link)
+
+                    # Get sub chapter contents
+                    sub_chapter_contents = _get_sub_chapter_contents(soup)
+
+                    # Set sub chapter contents
+                    sub_chapter.contents = sub_chapter_contents
+
+                    print("Done") if verbose else None
+                except Exception as e:
+                    print("Failed") if verbose else None
+                    raise Exception("Failed to scrape " + base_url + sub_chapter.link + ": " + str(e))
+
+
+
+#def process_novel(novel_code: str, targets: dict[str, list[str]], verbose: bool=False) -> Novel:
+def process_novel(novel_code: str, verbose: bool=False) -> Novel:
     """Process a novel.
 
     Parameters
     ----------
     novel_code : str
         The code of the novel.
-    targets : dict[str, list[str]]
-        The targets to process.
+    # targets : dict[str, list[str]]
+    #     The targets to process.
     verbose : bool, optional
         Whether to print verbose output, by default False
 
@@ -328,15 +369,15 @@ def process_novel(novel_code: str, targets: dict[str, list[str]], verbose: bool=
     # Validate parameters
     if not isinstance(novel_code, str):
         raise TypeError("novel_code must be a str")
-    if not isinstance(targets, dict):
-        raise TypeError("targets must be a dict")
-    for key, value in targets.items():
-        if not isinstance(key, str):
-            raise TypeError("targets keys must be str")
-        if not isinstance(value, list):
-            raise TypeError("targets values must be list")
-        if not all(isinstance(element, str) for element in value):
-            raise TypeError("targets values must be list of str")
+    # if not isinstance(targets, dict):
+    #     raise TypeError("targets must be a dict")
+    # for key, value in targets.items():
+    #     if not isinstance(key, str):
+    #         raise TypeError("targets keys must be str")
+    #     if not isinstance(value, list):
+    #         raise TypeError("targets values must be list")
+    #     if not all(isinstance(element, str) for element in value):
+    #         raise TypeError("targets values must be list of str")
     if not isinstance(verbose, bool):
         raise TypeError("verbose must be a bool")
 
@@ -374,35 +415,35 @@ def process_novel(novel_code: str, targets: dict[str, list[str]], verbose: bool=
         raise Exception("Failed to scrape " + url + ": " + str(e))
     
     chapters.sort()
-    for chapter in chapters:
-        chapter.sub_chapters.sort()
+    # for chapter in chapters:
+    #     chapter.sub_chapters.sort()
 
-        if targets is not None:
-            if str(chapter.chapter_index) not in targets:
-                continue
+    #     if targets is not None:
+    #         if str(chapter.chapter_index) not in targets:
+    #             continue
 
-            sub_chapter_targets = targets[str(chapter.chapter_index)]
-            for sub_chapter in chapter.sub_chapters:
-                if len(sub_chapter_targets) > 0 and str(sub_chapter.sub_chapter_index) not in sub_chapter_targets:
-                    continue
+    #         sub_chapter_targets = targets[str(chapter.chapter_index)]
+    #         for sub_chapter in chapter.sub_chapters:
+    #             if len(sub_chapter_targets) > 0 and str(sub_chapter.sub_chapter_index) not in sub_chapter_targets:
+    #                 continue
 
-                try:
-                    print("Scraping " + base_url + sub_chapter.link + "... ", end="") if verbose else None
-                    sys.stdout.flush()
+    #             try:
+    #                 print("Scraping " + base_url + sub_chapter.link + "... ", end="") if verbose else None
+    #                 sys.stdout.flush()
                     
-                    # Get soup
-                    soup = _get_soup(base_url + sub_chapter.link)
+    #                 # Get soup
+    #                 soup = _get_soup(base_url + sub_chapter.link)
 
-                    # Get sub chapter contents
-                    sub_chapter_contents = _get_sub_chapter_contents(soup)
+    #                 # Get sub chapter contents
+    #                 sub_chapter_contents = _get_sub_chapter_contents(soup)
 
-                    # Set sub chapter contents
-                    sub_chapter.contents = sub_chapter_contents
+    #                 # Set sub chapter contents
+    #                 sub_chapter.contents = sub_chapter_contents
 
-                    print("Done") if verbose else None
-                except Exception as e:
-                    print("Failed") if verbose else None
-                    raise Exception("Failed to scrape " + base_url + sub_chapter.link + ": " + str(e))
+    #                 print("Done") if verbose else None
+    #             except Exception as e:
+    #                 print("Failed") if verbose else None
+    #                 raise Exception("Failed to scrape " + base_url + sub_chapter.link + ": " + str(e))
                 
     return Novel(
         novel_code,
@@ -411,19 +452,3 @@ def process_novel(novel_code: str, targets: dict[str, list[str]], verbose: bool=
         description,
         author_link=link,
         chapters=chapters)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

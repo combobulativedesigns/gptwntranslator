@@ -12,6 +12,7 @@ build/
 *.egg
 *.so
 *.dylib
+.pytest_cache
 
 # Virtual environment
 .venv/
@@ -41,6 +42,8 @@ Desktop.ini
 
 # Proyect output
 output/
+persistent_data.json
 
 # Pipreqs files
 requirements.in
+
