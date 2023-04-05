@@ -1,14 +1,12 @@
 import openai
 import tiktoken
 
-AVAILABLE_MODELS = None
+from gptwntranslator.helpers.config_helper import Config
 
 class OpenAI_APIException(Exception):
     pass
 
-def initialize(api_key, available_models):
-    global AVAILABLE_MODELS
-    AVAILABLE_MODELS = available_models
+def initialize(api_key):
     openai.api_key = api_key
 
 def validate_model(model: dict) -> bool:
@@ -44,11 +42,13 @@ def validate_model(model: dict) -> bool:
     return True
 
 def get_model(model):
-    if AVAILABLE_MODELS is None:
+    cf = Config()
+    available_models = cf.data.config.openai.models
+    if available_models is None:
         raise OpenAI_APIException("OpenAI API not initialized")
-    if model not in AVAILABLE_MODELS:
+    if model not in available_models:
         raise OpenAI_APIException(f"Model {model} not available")
-    return AVAILABLE_MODELS[model]
+    return available_models[model]
 
 def get_line_token_count(line, model="gpt-3.5-turbo", encoding=None):
     if encoding is None:
@@ -94,18 +94,9 @@ def get_messages_token_count(messages, model="gpt-3.5-turbo", encoding=None):
     num_tokens += 2
     return num_tokens
 
-def call_api(messages, model="gpt-3.5-turbo"):    
-    response = None
-    try_count = 0
-    while response is None:
-        try:
-            response = openai.ChatCompletion.create(
-                model=model,
-                messages=messages,
-            )
-        except openai.error.APIConnectionError:
-            try_count += 1
-            if try_count > 5:
-                raise OpenAI_APIException("API Connection attempts exceeded 5.")
-            
+def call_api(messages, model="gpt-3.5-turbo"):
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=messages,
+    )  
     return response
