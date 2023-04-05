@@ -24,9 +24,8 @@ def _ui(screen):
             config = Config()
             config.load(config_file_path)
             config.vars["output_path"] = output_file_path
-            target_language = config.data.config.translator.target_language
-            languages = [lang[1] for lang in [list(dct.items())[0] for dct in config.data.config.languages] if lang[0] == target_language]
-            config.vars["target_language"] = languages[0]
+            language = config.get_language_name_for_code(config.data.config.translator.target_language)
+            config.vars["target_language"] = language
             openai_api.initialize(config.data.config.openai.api_key)
         except Exception as e:
             messages = [

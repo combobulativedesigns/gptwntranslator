@@ -1,4 +1,5 @@
-beautifulsoup4==4.12.0
+asciimatics==1.14.0
+beautifulsoup4==4.12.1
 Janome==0.4.2
 openai==0.27.2
 pypandoc==1.11
@@ -6,4 +7,5 @@ pypandoc_binary==1.11
 PyYAML==6.0
 spacy==3.5.1
 tiktoken==0.3.2
+yattag==1.15.1
 ja_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/ja_core_news_sm-3.5.0/ja_core_news_sm-3.5.0-py3-none-any.whl

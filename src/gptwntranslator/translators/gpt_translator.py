@@ -77,25 +77,24 @@ class GPTTranslator:
         self._metadata_models = metadata_models
         self._original_language = original_language
         self._target_language = target_language
+        
+        cf = Config()
+        self._original_language_str = cf.get_language_name_for_code(original_language) if original_language in cf.get_languages() else ""
+        self._target_language_str = cf.get_language_name_for_code(target_language) if target_language in cf.get_languages() else ""
 
     def set_original_language(self, original_language: str) -> None:
         # Validate the parameters
         if not isinstance(original_language, str):
-            raise TypeError("Original language must be a string")
+            raise TypeError(f"Original language ({original_language}) must be a string")
         
         cf = Config()
-        if len(original_language) == 2:
-            languages = [lang[1] for lang in [list(dct.items())[0] for dct in cf.data.config.languages] if lang[0] == original_language]
-            if len(languages) == 1:
-                original_language = languages[0]
-            else:
-                raise ValueError("Original language must be a valid language")
-        else:
-            languages = [lang[1] for lang in [list(dct.items())[0] for dct in cf.data.config.languages] if lang[1] == original_language]
-            if not len(languages) == 1:
-                raise ValueError("Original language must be a valid language")
+
+        # Verify language exists in config
+        if original_language not in cf.get_languages():
+            raise ValueError(f"Original language ({original_language}) must be a valid language in ({cf.get_languages()})")
 
         self._original_language = original_language
+        self._original_language_str = cf.get_language_name_for_code(original_language) if original_language in cf.get_languages() else ""
 
     def _get_api_model(self, model: str) -> dict:
         # Validate the parameters
@@ -288,15 +287,15 @@ class GPTTranslator:
         if model not in available_models:
             raise ValueError(f"Model must be a valid model. Available models: {', '.join(available_models)}")
 
-        string_term_original_language = self._original_language.lower() + "_term"
-        string_term_target_language = self._target_language.lower() + "_term"
-        phonetic_term = "phonetic_for_" + string_term_original_language if self._original_language != "Japanese" else "rōmaji_for_" + string_term_original_language
+        string_term_original_language = self._original_language_str.lower() + "_term"
+        string_term_target_language = self._target_language_str.lower() + "_term"
+        phonetic_term = "phonetic_for_" + string_term_original_language if self._original_language_str != "Japanese" else "rōmaji_for_" + string_term_original_language
 
         # Build the messages list for the API call
         messages = [
-            {"role": "system", "content": f"You are a {self._original_language} to {self._target_language} translator."},
+            {"role": "system", "content": f"You are a {self._original_language_str} to {self._target_language_str} translator."},
             {"role": "system", "name": "example_user", "content": 
-                f"Generate a term list for the text I'm about to provide. Mantain {self._original_language} novel translation format convetions. Follow the format \"- {string_term_original_language} ({phonetic_term}) - {string_term_target_language}\""},
+                f"Generate a term list for the text I'm about to provide. Mantain {self._original_language_str} novel translation format convetions. Follow the format \"- {string_term_original_language} ({phonetic_term}) - {string_term_target_language}\""},
             {"role": "system", "name": "example_assistant", "content": "Understood. Please provide the text."},
             {"role": "user", "content": chunk.contents}
         ]
@@ -332,9 +331,9 @@ class GPTTranslator:
         
         # Build the messages to send to the API
         messages = [
-            {"role": "system", "content": f"You are a {self._original_language} to {self._target_language} translator."},
+            {"role": "system", "content": f"You are a {self._original_language_str} to {self._target_language_str} translator."},
             {"role": "system", "name": "example_user", "content": 
-                f"Translate the chunk of text I'm about to provide. Mantain {self._original_language} novel translation format convetions. As context, I'll provide the immediate previous line of the text, the immediate next line of the text, the summary of the enclosing section, and a list of relevant terms and their translations to use. Do not repeat the {self._original_language} text before the translation, nor clarify your actions."},
+                f"Translate the chunk of text I'm about to provide. Mantain {self._original_language_str} novel translation format convetions. As context, I'll provide the immediate previous line of the text, the immediate next line of the text, the summary of the enclosing section, and a list of relevant terms and their translations to use. Do not repeat the {self._original_language_str} text before the translation, nor clarify your actions."},
             {"role": "system", "name": "example_assistant", "content": "Understood. Please provide the previous line."}
         ]
         if chunk.prev_line:
@@ -356,7 +355,7 @@ class GPTTranslator:
         else:
             messages.append({"role": "system", "name": "example_user", "content": ""})
             messages.append({"role": "system", "name": "example_assistant", "content": "No summary provided. The text is the first line of the text. Please provide the relevant terms."})
-        messages.append({"role": "system", "name": "example_user", "content": term_lists.for_api(chunk.contents)})
+        messages.append({"role": "system", "name": "example_user", "content": term_lists.for_api(chunk.contents, self._original_language)})
         messages.append({"role": "system", "name": "example_assistant", "content": "Understood. Please provide the text."})
         messages.append({"role": "user", "content": chunk.contents})
 
@@ -388,8 +387,8 @@ class GPTTranslator:
 
         # Build the messages to send to the API
         messages = [
-            {"role": "system", "content": f"You are an assistant that summarizes {self._original_language} text in {self._target_language}."},
-            {"role": "system", "name": "example_user", "content": f"You are summarizing a text. Part of this text has already been summarized. I'll provide this previous summary and the proceeding chunk text. Please provide an updated summary of the text. Do not repeat the {self._original_language} text before the summary, nor clarify your actions."},
+            {"role": "system", "content": f"You are an assistant that summarizes {self._original_language_str} text in {self._original_language_str}."},
+            {"role": "system", "name": "example_user", "content": f"You are summarizing a text. Part of this text has already been summarized. I'll provide this previous summary and the proceeding chunk text. Please provide an updated summary of the text. Do not repeat the {self._original_language_str} text before the summary, nor clarify your actions."},
             {"role": "system", "name": "example_assistant", "content": "Understood. Please provide the previous summary."}
         ]
         if previous_summary:
@@ -437,10 +436,10 @@ class GPTTranslator:
 
         # Build the messages to send to the API
         messages = [
-            {"role": "system", "content": f"You are an assistant that translates {self._original_language} text in {self._target_language}."},
+            {"role": "system", "content": f"You are an assistant that translates {self._original_language_str} text in {self._target_language_str}."},
             {"role": "system", "name": "example_user", "content": 
-                f"You are translating a novel's metadata. I'll provide the novel's metadata in {self._original_language}. Please provide the metadata in {self._target_language}. Do not repeat the {self._original_language} text before the translation, nor clarify your actions. Mantain the xml format."},
-            {"role": "system", "name": "example_assistant", "content": f"Understood. Please provide the metadata in {self._original_language}."},
+                f"You are translating a novel's metadata. I'll provide the novel's metadata in {self._original_language_str}. Please provide the metadata in {self._target_language_str}. Do not repeat the {self._original_language_str} text before the translation, nor clarify your actions. Mantain the xml format."},
+            {"role": "system", "name": "example_assistant", "content": f"Understood. Please provide the metadata in {self._original_language_str}."},
             {"role": "user", "content": f"{metadata}"}
         ]
 
@@ -508,10 +507,10 @@ class GPTTranslator:
 
         # Build the messages to send to the API
         messages = [
-            {"role": "system", "content": f"You are an assistant that summarizes {self._original_language} text in {self._target_language}."},
+            {"role": "system", "content": f"You are an assistant that summarizes {self._original_language_str} text in {self._target_language_str}."},
             {"role": "system", "name": "example_user", "content": 
-                f"You are translating a novel's metadata. I'll provide the novel's metadata in {self._original_language}. Please provide the metadata in {self._target_language}. Do not repeat the {self._original_language} text before the translation, nor clarify your actions. Mantain the xml format."},
-            {"role": "system", "name": "example_assistant", "content": f"Understood. Please provide the metadata in {self._original_language}."},
+                f"You are translating a novel's metadata. I'll provide the novel's metadata in {self._original_language_str}. Please provide the metadata in {self._target_language_str}. Do not repeat the {self._original_language_str} text before the translation, nor clarify your actions. Mantain the xml format."},
+            {"role": "system", "name": "example_assistant", "content": f"Understood. Please provide the metadata in {self._original_language_str}."},
             {"role": "user", "content": f"{metadata}"}
         ]
 
@@ -1038,5 +1037,5 @@ class GPTTranslatorSingleton(GPTTranslator):
         summary_models = cf.data.config.translator.api.summary.models
         metadata_models = cf.data.config.translator.api.metadata.models
         original_language = ""
-        target_language = cf.vars["target_language"]
+        target_language = cf.data.config.translator.target_language
         self._initialize(available_models, terms_models, translation_models, summary_models, metadata_models, original_language, target_language)

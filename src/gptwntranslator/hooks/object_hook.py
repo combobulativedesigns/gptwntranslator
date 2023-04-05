@@ -75,11 +75,11 @@ def generic_object_hook(dct: dict):
         
         elif dct['_type'] == 'Term':
             return Term(
-                dct['jp_term'], 
-                dct['ro_term'], 
-                dct['en_term'], 
+                dct['original_term'], 
+                dct['pho_rom_term'], 
                 document_frequency=dct['document_frequency'],
                 context_relevance=dct['context_relevance'],
-                ner=dct['ner'])
+                ner=dct['ner'],
+                translations=dct['translations'])
         
     return dct

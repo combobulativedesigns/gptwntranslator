@@ -453,6 +453,6 @@ def process_novel(novel_code: str, verbose: bool=False) -> Novel:
         title,
         author,
         description,
-        "Japanese",
+        "ja",
         author_link=link,
         chapters=chapters)

@@ -162,7 +162,7 @@ class PageNovelTranslating(PageBase):
                 message = "(8/12) Updating terms sheet weights... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
-                novel.terms_sheet.update_dimensions(novel.original_body())
+                novel.terms_sheet.update_dimensions(novel.original_body(), novel.original_language)
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
                 last_y += 1

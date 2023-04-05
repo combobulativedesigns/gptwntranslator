@@ -3,17 +3,15 @@
 class Term:
     """This class represents a term."""
 
-    def __init__(self, jp_term: str, ro_term: str, en_term: str, document_frequency: int=0, context_relevance: int=0, ner: int=0):
+    def __init__(self, original_term, pho_rom_term, document_frequency: int=0, context_relevance: int=0, ner: int=0, translations: dict[str, str]=None) -> None:
         """Initialize the term.
 
         Parameters
         ----------
-        jp_term : str
-            The Japanese term.
-        ro_term : str
-            The Romaji term.
-        en_term : str
-            The English term.
+        original_term : str
+            The original term.
+        pho_rom_term : str
+            The phonetic romanization of the original term.
         document_frequency : int
             The document frequency of the term.
         context_relevance : int
@@ -23,12 +21,10 @@ class Term:
         """
 
         # Validate parameters
-        if not isinstance(jp_term, str):
-            raise TypeError("Japanese term must be a string")
-        if not isinstance(ro_term, str):
-            raise TypeError("Romaji term must be a string")
-        if not isinstance(en_term, str):
-            raise TypeError("English term must be a string")
+        if not isinstance(original_term, str):
+            raise TypeError("Original term must be a string")
+        if not isinstance(pho_rom_term, str):
+            raise TypeError("Phonetic romanization term must be a string")
         if not isinstance(document_frequency, int):
             raise TypeError("Document frequency must be an integer")
         if not isinstance(context_relevance, int):
@@ -37,12 +33,32 @@ class Term:
             raise TypeError("NER value must be an integer")
         
         # Set the properties
-        self.jp_term = jp_term
-        self.ro_term = ro_term
-        self.en_term = en_term
+        self.original_term = original_term
+        self.pho_rom_term = pho_rom_term
         self.document_frequency = document_frequency
         self.context_relevance = context_relevance
         self.ner = ner
+        self.translations = dict()
+
+    def add_translation(self, language: str, translation: str):
+        """Add a translation to the term.
+
+        Parameters
+        ----------
+        language : str
+            The language of the translation.
+        translation : str
+            The translation.
+        """
+
+        # Validate parameters
+        if not isinstance(language, str):
+            raise TypeError("Language must be a string")
+        if not isinstance(translation, str):
+            raise TypeError("Translation must be a string")
+        
+        # Add the translation
+        self.translations[language] = translation
 
     def _get_weight(self) -> int:
         """Get the weight of the term.
@@ -65,8 +81,34 @@ class Term:
 
         return weight
     
-    def for_api(self) -> str:
+    def has_translation(self, target_language: str) -> bool:
+        """Check if the term has a translation for the target language.
+
+        Parameters
+        ----------
+        target_language : str
+            The target language of the translation.
+
+        Returns
+        -------
+        bool
+            True if the term has a translation for the target language, False otherwise.
+        """
+
+        # Validate the parameter
+        if not isinstance(target_language, str):
+            raise TypeError("Target language must be a string")
+        
+        # Check if the translation exists
+        return target_language in self.translations
+    
+    def for_api(self, target_language: str) -> str:
         """Get the term for the API.
+
+        Parameters
+        ----------
+        target_language : str
+            The target language of the translation.
 
         Returns
         -------
@@ -74,11 +116,20 @@ class Term:
             The term for the API.
         """
 
-        return f"- {self.jp_term} ({self.ro_term}) - {self.en_term}"
+        # Validate the parameter
+        if not isinstance(target_language, str):
+            raise TypeError("Target language must be a string")
+        if target_language not in self.translations:
+            raise ValueError("The target language is not available")
+        
+        # Get the translation
+        translation = self.translations[target_language]
+
+        return f"- {self.original_term} ({self.pho_rom_term}) - {translation}"
     
     def __str__(self):
         """Return the string representation of a Term object."""
-        return f"- {self.jp_term} ({self.ro_term}) - {self.en_term} ({self.document_frequency}, {self.context_relevance}, {self.ner})"
+        return f"- {self.original_term} ({self.pho_rom_term}) - ({self.document_frequency}, {self.context_relevance}, {self.ner})"
     
     def __eq__(self, other):
         """Return True if the two Term objects are equal.
@@ -98,7 +149,7 @@ class Term:
         if not isinstance(other, Term):
             raise TypeError("The other object must be a Term object")
         
-        return self.jp_term == other.jp_term
+        return self.original_term == other.original_term
     
     def __lt__(self, other):
         """Return True if the weight of the current Term object is less than the weight of the other Term object.
@@ -198,4 +249,4 @@ class Term:
         if not isinstance(other, Term):
             raise TypeError("The other object must be a Term object")
         
-        return self.jp_term != other.jp_term
+        return self.original_term != other.original_term

@@ -28,12 +28,12 @@ class JsonEncoder(json.JSONEncoder):
 
         if isinstance(o, Term):
             return {
-                "jp_term": o.jp_term,
-                "ro_term": o.ro_term,
-                "en_term": o.en_term,
+                "original_term": o.original_term,
+                "pho_rom_term": o.pho_rom_term,
                 "document_frequency": o.document_frequency,
                 "context_relevance": o.context_relevance,
                 "ner": o.ner,
+                "translations": o.translations,
                 "_type": "Term"
             }
         

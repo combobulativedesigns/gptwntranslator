@@ -18,7 +18,23 @@ class Config:
                 raise Exception("Failed to load config file: " + str(e))
         else:
             raise Exception("Config already loaded")
+        
+    def get_language_name_for_code(self, language_code: str) -> str:
+        return [lang[1] for lang in [list(dct.items())[0] for dct in self.data.config.languages] if lang[0] == language_code][0]
+    
+    def get_language_code_for_name(self, language_name: str) -> str:
+        return [lang[0] for lang in [list(dct.items())[0] for dct in self.data.config.languages] if lang[1] == language_name][0]
 
+    def get_spacy_pipeline_for_language_code(self, language_code: str) -> str:
+        return [lang[1] for lang in [list(dct.items())[0] for dct in self.data.config.spacy.pipelines] if lang[0] == language_code][0]
+    
+    def get_spacy_pipeline_for_language_name(self, language_name: str) -> str:
+        language_code = self.get_language_code_for_name(language_name)
+        return self.get_spacy_pipeline_for_language_code(language_code)
+    
+    def get_languages(self):
+        return [lang[0] for lang in [list(dct.items())[0] for dct in self.data.config.languages]]
+    
 class DotDict(dict):
     """A dictionary that supports dot notation."""
 

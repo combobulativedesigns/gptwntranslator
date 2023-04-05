@@ -5,6 +5,7 @@ import spacy
 import re
 
 from janome.tokenizer import Tokenizer
+from gptwntranslator.helpers.config_helper import Config
 
 from gptwntranslator.models.term import Term
 
@@ -47,6 +48,7 @@ class TermSheet:
         
         # Initialize variables
         lines = term_list_str.splitlines()
+        cf = Config()
 
         # Parse the cheat sheet
         for line in lines:
@@ -54,18 +56,23 @@ class TermSheet:
             if line == "":
                 continue
 
-            # Split the line into the japanese term, romanization, and english term
+            # Split the line into the original term, romanization/phonetic, and translated term
             pattern_match = re.match(r'- ([^\)]+)\s\(([^\)]+)\s*\)\s-\s([^\(]+)(?:\s\(.*)*(?:$|\n)', line)
             if pattern_match:
-                japanese_term, romaji, english_term = pattern_match.groups()
+                original_term, ro_pho_term, translated_term = pattern_match.groups()
             else:
                 continue
 
             # Add the term to the list of terms
-            if japanese_term not in self.terms:
-                self.terms[japanese_term] = Term(japanese_term, romaji, english_term)
+            if original_term not in self.terms:
+                self.terms[original_term] = Term(original_term, ro_pho_term)
 
-    def update_dimensions(self, novel_str: str) -> None:
+            # Add the translation to the term
+            language = cf.data.config.translator.target_language
+            if language not in self.terms[original_term].translations:
+                self.terms[original_term].add_translation(language, translated_term)
+
+    def update_dimensions(self, novel_str: str, original_language: str) -> None:
         """Update the dimensions of the terms sheet.
 
         Parameters
@@ -85,7 +92,7 @@ class TermSheet:
         self._calc_term_context_relevance(novel_str)
 
         # Calculate the terms NER value
-        self._calc_term_ner()
+        self._calc_term_ner(original_language)
 
 
     def _calc_term_document_frequencies(self, novel_str: str) -> None:
@@ -103,7 +110,7 @@ class TermSheet:
 
         try: 
             for term in self.terms.values():
-                self.terms[term.jp_term].document_frequency += novel_str.count(term.jp_term)
+                self.terms[term.original_term].document_frequency += novel_str.count(term.original_term)
         except Exception as e:
             raise Exception(f"Error calculating term chunk frequencies: {e}")
         
@@ -131,19 +138,19 @@ class TermSheet:
 
             # Calculate the context relevance for each term
             for term in terms:
-                jp_term = term.jp_term
-                indices = [i for i, x in enumerate(novel_str) if x == jp_term]
+                original_term = term.original_term
+                indices = [i for i, x in enumerate(novel_str) if x == original_term]
 
                 for index in indices:
                     start, end = max(0, index - window_size), min(num_terms, index + window_size + 1)
                     for i in range(start, end):
-                        if novel_str[i] != jp_term:
+                        if novel_str[i] != original_term:
                             if novel_str[i] in self.terms:
                                 self.terms[novel_str[i]].context_relevance += 1
         except Exception as e:
             raise Exception(f"Error calculating term context relevance: {e}")
 
-    def _calc_term_ner(self) -> None:
+    def _calc_term_ner(self, original_language: str) -> None:
         """Find terms which are named entities in the novel.
 
         Parameters
@@ -152,21 +159,18 @@ class TermSheet:
             The novel to find named entities in.
         """
 
+        cf = Config()
+        pipeline = cf.get_spacy_pipeline_for_language_code(original_language)
+
         try:
             # Load the spacy model
-            nlp = spacy.load("ja_core_news_sm")
+            nlp = spacy.load(pipeline)
             
             for term in self.terms.values():
-                doc1 = nlp(term.jp_term)
-                doc2 = nlp(term.en_term)
+                doc = nlp(term.original_term)
 
-                for ent in doc1.ents:
-                    if ent.text == term.jp_term:
-                        term.ner = 1
-                        break
-
-                for ent in doc2.ents:
-                    if ent.text == term.en_term:
+                for ent in doc.ents:
+                    if ent.text == term.original_term:
                         term.ner = 1
                         break
         except Exception as e:
@@ -204,7 +208,7 @@ class TermSheet:
                     terms = sorted(self.terms.values(), reverse=True)[:num_terms]
                 else:
                     # If the chunk is not None, get the top terms from the chunk, capped at the number of terms
-                    terms = sorted([term for term in self.terms.values() if term.jp_term in chunk], reverse=True)[:num_terms]
+                    terms = sorted([term for term in self.terms.values() if term.original_term in chunk], reverse=True)[:num_terms]
             else:
                 # If there are less terms than the number of terms to get
                 if chunk is None:
@@ -212,7 +216,7 @@ class TermSheet:
                     terms = sorted(self.terms.values(), reverse=True)
                 else:
                     # If the chunk is not None, get the top terms from the chunk
-                    terms = sorted([term for term in self.terms.values() if term.jp_term in chunk], reverse=True)
+                    terms = sorted([term for term in self.terms.values() if term.original_term in chunk], reverse=True)
         else:
             # If there are no terms, return an empty list
             terms = []
@@ -232,13 +236,15 @@ class TermSheet:
 
         return terms_str
     
-    def for_api(self, chunk: str, num_terms: int=15) -> str:
+    def for_api(self, chunk: str, target_language: str, num_terms: int=15) -> str:
         """Get the string representation of the terms sheet for the API.
 
         Parameters
         ----------
         chunk : str
             The chunk to get the top terms for.
+        target_language : str
+            The target language of the translation.
         num_terms : int, optional
             The number of terms to get, by default 15
 
@@ -251,6 +257,8 @@ class TermSheet:
         # Validate parameters
         if not isinstance(chunk, str):
             raise TypeError("Chunk must be a string")
+        if not isinstance(target_language, str):
+            raise TypeError("Target language must be a string")
         if not isinstance(num_terms, int):
             raise TypeError("Number of terms must be an integer")
         
@@ -259,8 +267,8 @@ class TermSheet:
         top_terms = self._get_top_terms()
         
         # Get the string representation of the top terms
-        for term in top_terms:
-            terms += f"{term.for_api()}\n"
+        for term in [term for term in top_terms if term.has_translation(target_language)]:
+            terms += f"{term.for_api(target_language)}\n"
 
         return terms
 
