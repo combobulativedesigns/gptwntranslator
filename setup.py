@@ -7,7 +7,7 @@ with open("README.md", "r") as readme_file:
 
 setup(
     name="gptwntranslator",
-    version="1.1.2",
+    version="2.0.0",
     author="Rodrigo S. Jauregui",
     author_email="ro.sjda42@gmail.com",
     description="A web novel translator using OpenAI's GPT API",
@@ -17,7 +17,8 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=[
-        "beautifulsoup4==4.12.0",
+        "asciimatics==1.14.0",
+        "beautifulsoup4==4.12.1",
         "Janome==0.4.2",
         "openai==0.27.2",
         "pypandoc==1.11",
@@ -25,7 +26,8 @@ setup(
         "PyYAML==6.0",
         "spacy==3.5.1",
         "tiktoken==0.3.2",
-        "ja_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/ja_core_news_sm-3.5.0/ja_core_news_sm-3.5.0-py3-none-any.whl",
+        "yattag==1.15.1",
+        "ja_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/ja_core_news_sm-3.5.0/ja_core_news_sm-3.5.0-py3-none-any.whl"
     ],
     extras_require={
         "dev": [
