@@ -41,6 +41,7 @@ class PageNovelMenu(PageTypeA):
             self.pre_messages.append(u"Author: {}".format(novel.author_translation))
         else:
             self.pre_messages.append(u"Author: {}".format(novel.author))
+        self.pre_messages.append(u"Language: {}".format(novel.original_language))
         self.pre_messages.append(f"Code: {novel.novel_code}")
 
     def process_actions(self, item, content):

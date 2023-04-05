@@ -48,7 +48,7 @@ class PageNovelExporting(PageBase):
             md_text += f"<h1 id=\"chapter-{sub_chapter.chapter_index}-{sub_chapter.sub_chapter_index}\"><strong>{name}</strong></h1>"
             lines = sub_chapter.translation.splitlines()
             for line in lines:
-                md_text += "{}\n\n".format(line.strip())
+                md_text += "{}\n\n".format(line.strip('\n\t '))
 
         config = Config()
         output = os.path.join(config.vars["output_path"], "{}.epub".format(novel.novel_code))

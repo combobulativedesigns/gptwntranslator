@@ -8,7 +8,7 @@ from gptwntranslator.models.term_sheet import TermSheet
 class Novel:
     """Model for a japanese web novel."""
 
-    def __init__(self, novel_code: str, title: str, author: str, description: str, title_translation: str="", author_translation: str="", author_link: str="", description_translation: str="", chapters: list[Chapter]=[], terms_sheet: TermSheet|NoneType=None) -> None:
+    def __init__(self, novel_code: str, title: str, author: str, description: str, original_language: str, title_translation: str="", author_translation: str="", author_link: str="", description_translation: str="", chapters: list[Chapter]=[], terms_sheet: TermSheet|NoneType=None) -> None:
         """Initialize a novel object.
 
         Parameters
@@ -21,6 +21,8 @@ class Novel:
             The author of the novel.
         description : str
             The description of the novel.
+        original_language : str
+            The original language of the novel.
         title_translation : str, optional
             The translation of the title, by default ""
         author_translation : str, optional
@@ -44,6 +46,8 @@ class Novel:
             raise TypeError("Author must be a string")
         if not isinstance(description, str):
             raise TypeError("Description must be a string")
+        if not isinstance(original_language, str):
+            raise TypeError("Original language must be a string")
         if not isinstance(title_translation, str):
             raise TypeError("Title translation must be a string")
         if not isinstance(author_translation, str):
@@ -64,6 +68,7 @@ class Novel:
         self.title = title
         self.author = author
         self.description = description
+        self.original_language = original_language
         self.title_translation = title_translation
         self.author_translation = author_translation
         self.author_link = author_link

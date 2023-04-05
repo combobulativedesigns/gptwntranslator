@@ -78,6 +78,25 @@ class GPTTranslator:
         self._original_language = original_language
         self._target_language = target_language
 
+    def set_original_language(self, original_language: str) -> None:
+        # Validate the parameters
+        if not isinstance(original_language, str):
+            raise TypeError("Original language must be a string")
+        
+        cf = Config()
+        if len(original_language) == 2:
+            languages = [lang[1] for lang in [list(dct.items())[0] for dct in cf.data.config.languages] if lang[0] == original_language]
+            if len(languages) == 1:
+                original_language = languages[0]
+            else:
+                raise ValueError("Original language must be a valid language")
+        else:
+            languages = [lang[1] for lang in [list(dct.items())[0] for dct in cf.data.config.languages] if lang[1] == original_language]
+            if not len(languages) == 1:
+                raise ValueError("Original language must be a valid language")
+
+        self._original_language = original_language
+
     def _get_api_model(self, model: str) -> dict:
         # Validate the parameters
         if not isinstance(model, str):
@@ -370,7 +389,7 @@ class GPTTranslator:
         # Build the messages to send to the API
         messages = [
             {"role": "system", "content": f"You are an assistant that summarizes {self._original_language} text in {self._target_language}."},
-            {"role": "system", "name": "example_user", "content": "You are summarizing a text. Part of this text has already been summarized. I'll provide this previous summary and the proceeding chunk text. Please provide an updated summary of the text. Do not repeat the {self._original_language} text before the summary, nor clarify your actions."},
+            {"role": "system", "name": "example_user", "content": f"You are summarizing a text. Part of this text has already been summarized. I'll provide this previous summary and the proceeding chunk text. Please provide an updated summary of the text. Do not repeat the {self._original_language} text before the summary, nor clarify your actions."},
             {"role": "system", "name": "example_assistant", "content": "Understood. Please provide the previous summary."}
         ]
         if previous_summary:
@@ -418,7 +437,7 @@ class GPTTranslator:
 
         # Build the messages to send to the API
         messages = [
-            {"role": "system", "content": f"You are an assistant that summarizes {self._original_language} text in {self._target_language}."},
+            {"role": "system", "content": f"You are an assistant that translates {self._original_language} text in {self._target_language}."},
             {"role": "system", "name": "example_user", "content": 
                 f"You are translating a novel's metadata. I'll provide the novel's metadata in {self._original_language}. Please provide the metadata in {self._target_language}. Do not repeat the {self._original_language} text before the translation, nor clarify your actions. Mantain the xml format."},
             {"role": "system", "name": "example_assistant", "content": f"Understood. Please provide the metadata in {self._original_language}."},
@@ -1010,7 +1029,7 @@ class GPTTranslator:
         return exceptions
 
 @singleton
-class GPTTranslatorJP2EN(GPTTranslator):
+class GPTTranslatorSingleton(GPTTranslator):
     def __init__(self) -> None:
         cf = Config()
         available_models = cf.data.config.openai.models
@@ -1018,6 +1037,6 @@ class GPTTranslatorJP2EN(GPTTranslator):
         translation_models = cf.data.config.translator.api.translation.models
         summary_models = cf.data.config.translator.api.summary.models
         metadata_models = cf.data.config.translator.api.metadata.models
-        original_language = "Japanese"
-        target_language = "English"
+        original_language = ""
+        target_language = cf.vars["target_language"]
         self._initialize(available_models, terms_models, translation_models, summary_models, metadata_models, original_language, target_language)

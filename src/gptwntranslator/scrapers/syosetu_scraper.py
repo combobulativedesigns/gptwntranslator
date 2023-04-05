@@ -3,6 +3,7 @@
 import sys
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
+from gptwntranslator.helpers.text_helper import make_printable
 
 from gptwntranslator.models.chapter import Chapter
 from gptwntranslator.models.novel import Novel
@@ -52,7 +53,7 @@ def _get_title(soup: BeautifulSoup) -> str:
     # Find element that contains the title
     # It's found at div#novel_contents > div#novel_color > p.novel_title
     title = soup.find('div', id='novel_contents').find('div', id='novel_color').find('p', class_='novel_title').text
-    return title
+    return title.strip('\n\t ')
 
 def _get_author(soup: BeautifulSoup) -> tuple[str, str]:
     """Get the author of the novel.
@@ -79,12 +80,14 @@ def _get_author(soup: BeautifulSoup) -> tuple[str, str]:
     # Check if the author is a link
     if author_soup.find('a') is None:
         # The author is not a link
-        author = author_soup.text
+        author = author_soup.text.strip('\n\t ')
+        if author.startswith('作者：'):
+            author = author[3:]
         link = ""
     else:
         # The author is a link
-        author = author_soup.find('a').text
-        link = author_soup.find('a').get('href')
+        author = author_soup.find('a').text.strip('\n\t ')
+        link = author_soup.find('a').get('href').strip('\n\t ')
 
     return author, link
 
@@ -109,7 +112,7 @@ def _get_description(soup: BeautifulSoup) -> str:
     # Find element that contains the description
     # It's found at div#novel_contents > div#novel_color > div#novel_ex
     description = soup.find('div', id='novel_contents').find('div', id='novel_color').find('div', id='novel_ex').text
-    return description
+    return description.strip('\n\t ')
 
 def _get_index(soup: BeautifulSoup) -> BeautifulSoup:
     """Get the index of the novel.
@@ -304,7 +307,7 @@ def _get_sub_chapter_contents(soup: BeautifulSoup) -> str:
             sub_chapter_text_contents += "\n"
         # If it contains text, it's a paragraph, so add a paragraph
         elif sub_chapter_content.text != '':
-            sub_chapter_text_contents += sub_chapter_content.text.strip() + "\n\n"
+            sub_chapter_text_contents += sub_chapter_content.text.strip('\n\t ') + "\n\n"
 
     return sub_chapter_text_contents
 
@@ -450,5 +453,6 @@ def process_novel(novel_code: str, verbose: bool=False) -> Novel:
         title,
         author,
         description,
+        "Japanese",
         author_link=link,
         chapters=chapters)

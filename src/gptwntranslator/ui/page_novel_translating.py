@@ -1,7 +1,7 @@
 from gptwntranslator.helpers.text_helper import parse_chapters
 from gptwntranslator.helpers.ui_helper import print_title, wait_for_user_input
 from gptwntranslator.storage.json_storage import JsonStorage
-from gptwntranslator.translators.gpt_translator import GPTTranslatorJP2EN
+from gptwntranslator.translators.gpt_translator import GPTTranslatorSingleton
 from gptwntranslator.ui.page_base import PageBase
 from gptwntranslator.ui.page_exit import PageExit
 from gptwntranslator.ui.page_message import PageMessage
@@ -64,7 +64,8 @@ class PageNovelTranslating(PageBase):
                 message = "(3/12) Initializing translator... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
-                translator = GPTTranslatorJP2EN()
+                translator = GPTTranslatorSingleton()
+                translator.set_original_language(novel.original_language)
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
                 last_y += 1

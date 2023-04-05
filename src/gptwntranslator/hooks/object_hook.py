@@ -28,6 +28,7 @@ def generic_object_hook(dct: dict):
                 dct['title'], 
                 dct['author'], 
                 dct['description'], 
+                dct['original_language'],
                 title_translation=dct['title_translation'], 
                 author_translation=dct['author_translation'], 
                 author_link=dct['author_link'], 

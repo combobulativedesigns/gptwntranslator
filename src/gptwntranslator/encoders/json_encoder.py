@@ -88,6 +88,7 @@ class JsonEncoder(json.JSONEncoder):
                 "title": o.title,
                 "author": o.author,
                 "description": o.description,
+                "original_language": o.original_language,
                 "title_translation": o.title_translation,
                 "author_translation": o.author_translation,
                 "author_link": o.author_link,

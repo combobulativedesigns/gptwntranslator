@@ -149,11 +149,11 @@ def txt_to_md(input_txt: str) -> str:
     
     lines = input_txt.splitlines()
 
-    chapter_title = lines[0].strip()
+    chapter_title = lines[0].strip('\n\t ')
     output_txt = f"## **{chapter_title}**\n\n"
 
     for line in lines[1:]:
-        line = line.strip()
+        line = line.strip('\n\t ')
         if line:
             output_txt += f"{line}\n\n"
 
