@@ -13,7 +13,6 @@ from gptwntranslator.models.novel import Novel
 from gptwntranslator.models.chunk import Chunk
 from gptwntranslator.models.sub_chapter import SubChapter
 from gptwntranslator.models.term_sheet import TermSheet
-from gptwntranslator.translators.jp_en_translator import _calculate_line_token_counts, _split_text_into_chunks
 
 
 class GPTTranslatorException(Exception):
@@ -31,13 +30,11 @@ class GPTTranslatorAPINoRetriesException(GPTTranslatorAPIException):
 class GPTTranslatorGPTFormatException(GPTTranslatorException):
     pass
 
-class GPTTranslator:
-    def __new__(cls, *args, **kwargs):
-        if cls is GPTTranslator:
-            raise TypeError(f"'{cls.__name__}' cannot be instantiated. Create a subclass instead.")
-        return object.__new__(cls, *args, **kwargs)
+class GPTTranslator:    
+    def __init__(self) -> None:
+        TypeError(f"'{self.__class__.__name__}' cannot be instantiated. Create a subclass instead.")
     
-    def __init__(self, available_models: dict, terms_models: list[str], translation_models: list[str], summary_models: list[str], metadata_models: list[str], original_language: str="Japanese", target_language: str="English") -> None:
+    def _initialize(self, available_models: dict, terms_models: list[str], translation_models: list[str], summary_models: list[str], metadata_models: list[str], original_language: str="Japanese", target_language: str="English") -> None:
         
         # Validate the parameters
         if not isinstance(available_models, dict):
@@ -340,7 +337,7 @@ class GPTTranslator:
         else:
             messages.append({"role": "system", "name": "example_user", "content": ""})
             messages.append({"role": "system", "name": "example_assistant", "content": "No summary provided. The text is the first line of the text. Please provide the relevant terms."})
-        messages.append({"role": "system", "name": "example_user", "content": term_lists.for_api()})
+        messages.append({"role": "system", "name": "example_user", "content": term_lists.for_api(chunk.contents)})
         messages.append({"role": "system", "name": "example_assistant", "content": "Understood. Please provide the text."})
         messages.append({"role": "user", "content": chunk.contents})
 
@@ -480,13 +477,13 @@ class GPTTranslator:
 
         with tag('metadata'):
             for chapter in novel.chapters:
-                with tag('chapter', id=str(chapter.index)):
+                with tag('chapter', id=str(chapter.chapter_index)):
                     with tag('title'):
-                        text(chapter.title)
+                        text(chapter.name)
                     for sub_chapter in chapter.sub_chapters:
                         if sub_chapter in sub_chapters:
-                            with tag('sub_chapter', id=str(sub_chapter.index)):
-                                text(sub_chapter.title)
+                            with tag('sub_chapter', id=str(sub_chapter.sub_chapter_index)):
+                                text(sub_chapter.name)
 
         metadata = doc.getvalue()
 
@@ -511,11 +508,11 @@ class GPTTranslator:
             chapters = root.findall('chapter')
             for chapter_data in chapters:
                 chapter = novel.get_chapter(int(chapter_data.attrib['id']))
-                chapter.title = chapter_data.find('title').text
+                chapter.translated_name = chapter_data.find('title').text
                 sub_chapters = chapter_data.findall('sub_chapter')
                 for sub_chapter_data in sub_chapters:
                     sub_chapter = chapter.get_sub_chapter(int(sub_chapter_data.attrib['id']))
-                    sub_chapter.title = sub_chapter_data.text
+                    sub_chapter.translated_name = sub_chapter_data.text
         except Exception as e:
             raise GPTTranslatorGPTFormatException("Invalid metadata format")
 
@@ -542,11 +539,12 @@ class GPTTranslator:
         for chunk in chunks:
             tries = 0
             while True:
-                task_id = api_call_queue.add_call(self._perform_summary_action, retries=1, chunk=chunk, summarization_model=model, previous_summary=previous_summary)
+                task_id = api_call_queue.add_call(self._perform_summary_action, retries=1, chunk=chunk.contents, summarization_model=model, previous_summary=previous_summary)
                 api_call_queue.wait()
                 result = api_call_queue.get_result(task_id)
-
-                if result is not Exception:
+                
+                if not isinstance(result, Exception):
+                    previous_summary = result
                     break
                 else:
                     if isinstance(result, GPTTranslatorAPIRetryableException):
@@ -593,7 +591,8 @@ class GPTTranslator:
                 api_call_queue.wait()
                 result = api_call_queue.get_result(task_id)
 
-                if result is not Exception:
+                if not isinstance(result, Exception):
+                    previous_terms += result + "\n\n"
                     break
                 else:
                     if isinstance(result, GPTTranslatorAPIRetryableException):
@@ -607,8 +606,6 @@ class GPTTranslator:
                         api_call_queue.stop()
                         raise result
                     
-            previous_terms += result + "\n\n"
-
         api_call_queue.stop()
 
         return previous_terms
@@ -644,7 +641,8 @@ class GPTTranslator:
                 api_call_queue.wait()
                 result = api_call_queue.get_result(task_id)
 
-                if result is not Exception:
+                if not isinstance(result, Exception):
+                    translation[chunk.chunk_index] = result
                     break
                 else:
                     if isinstance(result, GPTTranslatorAPIRetryableException):
@@ -657,12 +655,10 @@ class GPTTranslator:
                     else:
                         api_call_queue.stop()
                         raise result
-                    
-            translation[chunk.chunk_index] = result
 
         api_call_queue.stop()
 
-        return translation
+        return "\n\n".join([translation[key] for key in sorted(translation)])
     
     def _get_sub_chapter_context(self, novel: Novel, chapter_index: int, sub_chapter_index: int) -> tuple[SubChapter, SubChapter]:
         # Validate the provided arguments
@@ -770,7 +766,7 @@ class GPTTranslator:
 
         tries = 0
         while True:
-            task_id = api_call_queue.add_call(self._perform_chapters_metadata_action, retries=1, novel=novel, targets=sub_chapters, metadata_model=model)
+            task_id = api_call_queue.add_call(self._perform_chapters_metadata_action, retries=1, novel=novel, sub_chapters=sub_chapters, metadata_model=model)
             api_call_queue.wait()
             result = api_call_queue.get_result(task_id)
 
@@ -828,35 +824,35 @@ class GPTTranslator:
             next_line = next_sub_chapter.contents.splitlines()[0] if next_sub_chapter and next_sub_chapter.contents else ""
 
             # Calculate the optimal configuration for the sub chapter
-            line_token_counts = _calculate_line_token_counts(sub_chapter.contents)
+            line_token_counts = self._calculate_line_token_counts(sub_chapter.contents)
             _, _, summary_division, _, _, summary_model = self._greedy_find_max_optimal_configuration(line_token_counts)
 
             # Split the text into chunks for the terms sheet API
-            terms_chunks = _split_text_into_chunks(sub_chapter.contents, summary_division, line_token_counts)
+            terms_chunks = self._split_text_into_chunks(sub_chapter.contents, summary_division, line_token_counts)
             terms_chunks_objects = list()
             for i, chunk in enumerate(terms_chunks):
                 chunk_prev_line = prev_line if i == 0 else terms_chunks[i - 1].splitlines()[-1]
                 chunk_next_line = next_line if i == len(terms_chunks) - 1 else terms_chunks[i + 1].splitlines()[0]
 
                 terms_chunks_objects.append(Chunk(
-                    i,
+                    novel.novel_code,
                     sub_chapter.chapter_index,
                     sub_chapter.sub_chapter_index,
+                    i,
                     chunk,
-                    "",
                     chunk_prev_line,
                     chunk_next_line))
-                
-            tasks[(sub_chapter.chapter_index, sub_chapter.sub_chapter_index)].append(api_call_queue.add_call(self._summarize_sub_chapter, retries=1, chunks=terms_chunks_objects, model=summary_model))
+            
+            tasks[(sub_chapter.chapter_index, sub_chapter.sub_chapter_index)] = api_call_queue.add_call(self._summarize_sub_chapter, retries=1, chunks=terms_chunks_objects, model=summary_model)
 
         api_call_queue.wait()
-
+        
         exceptions = []
-        for task in tasks.items():
-            result = api_call_queue.get_result(task.value)
+        for key, value in tasks.items():
+            result = api_call_queue.get_result(value)
             if not isinstance(result, Exception):
-                active_chapter = novel.get_chapter(task.key[0])
-                active_sub_chapter = active_chapter.get_sub_chapter(task.key[1])
+                active_chapter = novel.get_chapter(key[0])
+                active_sub_chapter = active_chapter.get_sub_chapter(key[1])
                 active_sub_chapter.summary = result
             else:
                 exceptions.append(result)
@@ -898,33 +894,33 @@ class GPTTranslator:
             next_line = next_sub_chapter.contents.splitlines()[0] if next_sub_chapter and next_sub_chapter.contents else ""
 
             # Calculate the optimal configuration for the sub chapter
-            line_token_counts = _calculate_line_token_counts(sub_chapter.contents)
+            line_token_counts = self._calculate_line_token_counts(sub_chapter.contents)
             terms_division, _, _, terms_model, _, _ = self._greedy_find_max_optimal_configuration(line_token_counts)
 
             # Split the text into chunks for the terms sheet API
-            terms_chunks = _split_text_into_chunks(sub_chapter.contents, terms_division, line_token_counts)
+            terms_chunks = self._split_text_into_chunks(sub_chapter.contents, terms_division, line_token_counts)
             terms_chunks_objects = list()
             for i, chunk in enumerate(terms_chunks):
                 chunk_prev_line = prev_line if i == 0 else terms_chunks[i - 1].splitlines()[-1]
                 chunk_next_line = next_line if i == len(terms_chunks) - 1 else terms_chunks[i + 1].splitlines()[0]
 
                 terms_chunks_objects.append(Chunk(
-                    i,
+                    novel.novel_code,
                     sub_chapter.chapter_index,
                     sub_chapter.sub_chapter_index,
+                    i,
                     chunk,
-                    "",
                     chunk_prev_line,
                     chunk_next_line))
                 
-            tasks[(sub_chapter.chapter_index, sub_chapter.sub_chapter_index)].append(api_call_queue.add_call(self._gather_terms_for_sub_chapter, retries=1, chunks=terms_chunks_objects, model=terms_model))
+            tasks[(sub_chapter.chapter_index, sub_chapter.sub_chapter_index)] = api_call_queue.add_call(self._gather_terms_for_sub_chapter, retries=1, chunks=terms_chunks_objects, model=terms_model)
 
         api_call_queue.wait()
 
         terms = ""
         exceptions = []
-        for task in tasks.items():
-            result = api_call_queue.get_result(task.value)
+        for _, value in tasks.items():
+            result = api_call_queue.get_result(value)
             if not isinstance(result, Exception):
                 terms += result + "\n\n"
             else:
@@ -974,42 +970,42 @@ class GPTTranslator:
             next_line = next_sub_chapter.contents.splitlines()[0] if next_sub_chapter and next_sub_chapter.contents else ""
 
             # Calculate the optimal configuration for the sub chapter
-            line_token_counts = _calculate_line_token_counts(sub_chapter.contents)
+            line_token_counts = self._calculate_line_token_counts(sub_chapter.contents)
             _, translate_division, _, _, translate_model, _ = self._greedy_find_max_optimal_configuration(line_token_counts)
 
             # Split the text into chunks for the terms sheet API
-            terms_chunks = _split_text_into_chunks(sub_chapter.contents, translate_division, line_token_counts)
+            terms_chunks = self._split_text_into_chunks(sub_chapter.contents, translate_division, line_token_counts)
             terms_chunks_objects = list()
             for i, chunk in enumerate(terms_chunks):
                 chunk_prev_line = prev_line if i == 0 else terms_chunks[i - 1].splitlines()[-1]
                 chunk_next_line = next_line if i == len(terms_chunks) - 1 else terms_chunks[i + 1].splitlines()[0]
 
                 terms_chunks_objects.append(Chunk(
-                    i,
+                    novel.novel_code,
                     sub_chapter.chapter_index,
                     sub_chapter.sub_chapter_index,
+                    i,
                     chunk,
-                    "",
                     chunk_prev_line,
                     chunk_next_line))
                 
-            tasks[(sub_chapter.chapter_index, sub_chapter.sub_chapter_index)].append(api_call_queue.add_call(self._translate_sub_chapter, retries=1, chunks=terms_chunks_objects, model=translate_model, summary=sub_chapter.summary, term_lists=novel.terms_sheet))
+            tasks[(sub_chapter.chapter_index, sub_chapter.sub_chapter_index)] = api_call_queue.add_call(self._translate_sub_chapter, retries=1, chunks=terms_chunks_objects, model=translate_model, summary=sub_chapter.summary, term_lists=novel.terms_sheet)
 
         api_call_queue.wait()
 
         translation = ""
         exceptions = []
-        for task in tasks.items():
-            result = api_call_queue.get_result(task.value)
+        for key, value in tasks.items():
+            result = api_call_queue.get_result(value)
             if not isinstance(result, Exception):
-                translation += result + "\n"
+                active_chapter = novel.get_chapter(key[0])
+                active_sub_chapter = active_chapter.get_sub_chapter(key[1])
+                active_sub_chapter.translation = result
+
             else:
                 exceptions.append(result)
 
         api_call_queue.stop()
-
-        if not exceptions:
-            novel.translation = translation
 
         return exceptions
 
@@ -1024,4 +1020,4 @@ class GPTTranslatorJP2EN(GPTTranslator):
         metadata_models = cf.data.config.translator.api.metadata.models
         original_language = "Japanese"
         target_language = "English"
-        super().__init__(available_models, terms_models, translation_models, summary_models, metadata_models, original_language, target_language)
+        self._initialize(available_models, terms_models, translation_models, summary_models, metadata_models, original_language, target_language)

@@ -85,7 +85,7 @@ class TermSheet:
         self._calc_term_context_relevance(novel_str)
 
         # Calculate the terms NER value
-        self._calc_term_ner(novel_str)
+        self._calc_term_ner()
 
 
     def _calc_term_document_frequencies(self, novel_str: str) -> None:
@@ -143,7 +143,7 @@ class TermSheet:
         except Exception as e:
             raise Exception(f"Error calculating term context relevance: {e}")
 
-    def _calc_term_ner(self, novel_str: str) -> None:
+    def _calc_term_ner(self) -> None:
         """Find terms which are named entities in the novel.
 
         Parameters
@@ -155,12 +155,20 @@ class TermSheet:
         try:
             # Load the spacy model
             nlp = spacy.load("ja_core_news_sm")
-            doc = nlp(novel_str)
+            
+            for term in self.terms.values():
+                doc1 = nlp(term.jp_term)
+                doc2 = nlp(term.en_term)
 
-            # Find named entities
-            for ent in doc.ents:
-                if ent.text in self.terms.keys():
-                    self.terms[ent.text].ner = 1
+                for ent in doc1.ents:
+                    if ent.text == term.jp_term:
+                        term.ner = 1
+                        break
+
+                for ent in doc2.ents:
+                    if ent.text == term.en_term:
+                        term.ner = 1
+                        break
         except Exception as e:
             raise Exception(f"Error calculating term NER: {e}")
 

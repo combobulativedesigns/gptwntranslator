@@ -90,7 +90,24 @@ class Novel:
             raise TypeError("Chapter number must be an integer")
 
         # Return the chapter object
-        return [chapter for chapter in self.chapters if chapter.chapter_number == chapter_number][0]
+        return [chapter for chapter in self.chapters if chapter.chapter_index == chapter_number][0]
+    
+    def original_body(self) -> str:
+        """Return the whole body of text available for this novel.
+
+        Returns
+        -------
+        str
+            The whole body of text available for this novel.
+        """
+
+        # Return the whole body of text available
+        body = self.title
+        for chapter in self.chapters:
+            body += "\n\n"
+            body += chapter.original_body()
+
+        return body
 
     def __str__(self):
         """Return the string representation of a Novel object."""

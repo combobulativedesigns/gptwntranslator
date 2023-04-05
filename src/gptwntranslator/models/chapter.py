@@ -64,6 +64,23 @@ class Chapter:
         
         # Return the sub chapter with the given index
         return [sub_chapter for sub_chapter in self.sub_chapters if sub_chapter.sub_chapter_index == sub_chapter_index][0]
+    
+    def original_body(self) -> str:
+        """Return the original body of the chapter.
+
+        Returns
+        -------
+        str
+            The original body of the chapter.
+        """
+
+        body = self.name
+        for sub_chapter in self.sub_chapters:
+            body += "\n\n"
+            body += sub_chapter.contents
+
+        return body
+
 
     def __str__(self) -> str:
         """Return the string representation of a Chapter object."""

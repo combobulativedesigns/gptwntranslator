@@ -7,9 +7,11 @@ import uuid
 
 from gptwntranslator.helpers.design_patterns_helper import singleton
 
+
 class APICallQueue:
     def __init__(self):
         self._initialize()
+        self._id = None
 
     def _initialize(self):
         self._executor = concurrent.futures.ThreadPoolExecutor()
@@ -20,11 +22,15 @@ class APICallQueue:
         self._task_condition = threading.Condition(self._task_lock)
 
     def start(self):
+        monitor = APICallQueueMonitor()
+        self._id = monitor.add_queue(self)
         self._executor.submit(self._worker)
 
     def stop(self):
         self._task_queue.put((None, None, None, None))
         self._executor.shutdown(wait=True)
+        monitor = APICallQueueMonitor()
+        monitor.remove_queue(self._id)
 
     def add_call(self, func, retries=3, **params):
         task_id = uuid.uuid4()
@@ -73,3 +79,20 @@ class APICallQueue:
 @singleton
 class APICallQueueSingleton(APICallQueue):
     pass
+
+@singleton
+class APICallQueueMonitor:
+    def __init__(self):
+        self._active_queues = dict()
+
+    def add_queue(self, queue: APICallQueue) -> str:
+        queue_id = uuid.uuid4()
+        self._active_queues[queue_id] = queue
+        return queue_id
+    
+    def remove_queue(self, queue_id: str):
+        self._active_queues.pop(queue_id)
+
+    def stop_all(self):
+        for _, queue in self._active_queues.items():
+            queue.stop()
