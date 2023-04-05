@@ -51,7 +51,7 @@ class PageNovelExporting(PageBase):
                 md_text += "{}\n\n".format(line.strip())
 
         config = Config()
-        output = os.path.join(config.vars["output_path"], "novel.epub")
+        output = os.path.join(config.vars["output_path"], "{}.epub".format(novel.novel_code))
         write_md_as_epub(md_text, output)
 
 
@@ -67,7 +67,7 @@ class PageNovelExporting(PageBase):
         while True:
             last_y += 2
             try:
-                message = "(1/12) Parsing chapter targets... "
+                message = "(1/3) Parsing chapter targets... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 targets = parse_chapters(targets)
@@ -85,7 +85,7 @@ class PageNovelExporting(PageBase):
                 break
             
             try:
-                message = "(2/12) Loading local storage... "
+                message = "(2/3) Loading local storage... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 novels = storage.get_data()
@@ -104,7 +104,7 @@ class PageNovelExporting(PageBase):
                 break
 
             try:
-                message = "(2/`1) Exporting novel to epub... "
+                message = "(3/3) Exporting novel to epub... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 self.export_epub(novel, targets)

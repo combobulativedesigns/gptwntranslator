@@ -20,9 +20,9 @@ class PageNovelMenu(PageTypeA):
                 (1, 0, 2, "2) Download chapters", PageNovelScrapingTargets, "", False), 
                 (2, 0, 3, "3) Translate metadata", PageNovelTranslateMetadata, "", False), 
                 (3, 0, 4, "4) Translate chapters", PageNovelTranslationTargets, "", False), 
-                (4, 0, 5, "5) Edit novel", PageNovelEditingTarget, "", False), 
-                (5, 0, 6, "6) Export novel", PageNovelExportTargets, "", False), 
-                (7, 0, 0, "0) Go back", PageReturn, "", False)]
+                # (4, 0, 5, "5) Edit novel", PageNovelEditingTarget, "", False), 
+                (4, 0, 5, "5) Export novel", PageNovelExportTargets, "", False), 
+                (6, 0, 0, "0) Go back", PageReturn, "", False)]
         }
 
         super().__init__(menu)
