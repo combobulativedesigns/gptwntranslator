@@ -31,3 +31,6 @@ config:
         models:
           - gpt-3.5
           - gpt-4
+      metadata:
+        models:
+          - gpt-4

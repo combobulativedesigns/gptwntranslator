@@ -71,6 +71,27 @@ class Novel:
         self.chapters = chapters
         self.terms_sheet = terms_sheet if terms_sheet is not None else TermSheet(novel_code)
 
+    def get_chapter(self, chapter_number: int) -> Chapter:
+        """Return the chapter object of the given chapter number.
+
+        Parameters
+        ----------
+        chapter_number : int
+            The chapter number of the chapter to return.
+
+        Returns
+        -------
+        Chapter
+            The chapter object of the given chapter number.
+        """
+
+        # Validate parameters
+        if not isinstance(chapter_number, int):
+            raise TypeError("Chapter number must be an integer")
+
+        # Return the chapter object
+        return [chapter for chapter in self.chapters if chapter.chapter_number == chapter_number][0]
+
     def __str__(self):
         """Return the string representation of a Novel object."""
         return f"{self.novel_code}"

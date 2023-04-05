@@ -44,6 +44,27 @@ class Chapter:
         self.translated_name = translated_name
         self.sub_chapters = sub_chapters
 
+    def get_sub_chapter(self, sub_chapter_index: int) -> SubChapter:
+        """Return the sub chapter with the given index.
+
+        Parameters
+        ----------
+        sub_chapter_index : int
+            The index of the sub chapter.
+
+        Returns
+        -------
+        SubChapter
+            The sub chapter with the given index.
+        """
+
+        # Validate parameters
+        if not isinstance(sub_chapter_index, int):
+            raise TypeError("Sub chapter index must be an integer")
+        
+        # Return the sub chapter with the given index
+        return [sub_chapter for sub_chapter in self.sub_chapters if sub_chapter.sub_chapter_index == sub_chapter_index][0]
+
     def __str__(self) -> str:
         """Return the string representation of a Chapter object."""
 

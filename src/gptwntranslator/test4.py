@@ -3,11 +3,13 @@ import locale
 from types import NoneType
 from asciimatics.screen import Screen
 from asciimatics.event import KeyboardEvent
-from gptwntranslator.helpers.args_helper import parse_chapters
 
+import gptwntranslator.api.openai_api as openai_api
+from gptwntranslator.helpers.config_helper import Config
+from gptwntranslator.helpers.text_helper import parse_chapters
 from gptwntranslator.scrapers.syosetu_scraper import process_novel, process_targets
-
 from gptwntranslator.storage.json_storage import JsonStorage, JsonStorageException, JsonStorageFileException, JsonStorageFormatException
+from gptwntranslator.translators.gpt_translator import GPTTranslatorJP2EN
 
 
 def get_resources():
@@ -497,15 +499,88 @@ class PageNovelTranslateMetadata(PageBase):
         last_y = print_title(screen, resources["title"], 0)
 
         while True:
+            last_y += 2
+            try:
+                screen.print_at("Loading novel from local storage...", 2, last_y)
+                screen.refresh()
+                novels = storage.get_data()
+                novel = [novel for novel in novels if novel.novel_code == novel_code][0]
+                screen.print_at("Novel loaded successfully.", 2, last_y + 1)
+                screen.refresh()
+                last_y += 2
+            except Exception as e:
+                screen.print_at("Error loading novel from local storage.", 2, last_y)
+                messages = [
+                    f"Error: Error loading local storage.",
+                    f"Error: {e}"]
+                target = PageMessage
+                params = {"messages": messages, "return_page": PageNovelMenu, "return_kwargs": {"novel_url_code": novel_code}}
+                break
+
+            try:
+                screen.print_at("Initializing translator...", 2, last_y)
+                screen.refresh()
+                translator = GPTTranslatorJP2EN()
+                screen.print_at("Translator initialized successfully.", 2, last_y + 1)
+                screen.refresh()
+                last_y += 2
+            except Exception as e:
+                screen.print_at("Error initializing translator.", 2, last_y)
+                messages = [
+                    f"Error: Error initializing translator.",
+                    f"Error: {e}"]
+                target = PageMessage
+                params = {"messages": messages, "return_page": PageNovelMenu, "return_kwargs": {"novel_url_code": novel_code}}
+                break
+            
+            try:
+                # Translate novel metadata
+                screen.print_at("Translating novel metadata...", 2, last_y)
+                screen.refresh()
+                exceptions = translator.translate_novel_metadata(novel)
+                if exceptions:
+                    screen.print_at(f"There were {len(exceptions)} errors while translating novel metadata.", 2, last_y + 1)
+                    screen.refresh()
+                    last_y += 2
+                    for exception in exceptions:
+                        screen.print_at(f"Error: {exception}", 2, last_y)
+                        last_y += 1
+                    screen.refresh()
+                    last_y += 2
+                    raise Exception("There were errors while translating novel metadata.")
+                else:
+                    screen.print_at("Novel metadata translated successfully.", 2, last_y + 1)
+                    screen.refresh()
+                    last_y += 2
+            except Exception as e:
+                screen.print_at("Error translating novel metadata.", 2, last_y)
+                messages = [
+                    f"Error: Error translating novel metadata.",
+                    f"Error: {e}"]
+                target = PageMessage
+                params = {"messages": messages, "return_page": PageNovelMenu, "return_kwargs": {"novel_url_code": novel_code}}
+                break
+
+            try:
+                screen.print_at("Saving novel to local storage...", 2, last_y)
+                screen.refresh()
+                storage.set_data(novels)
+                screen.print_at("Novel saved to local storage.", 2, last_y + 1)
+                target, params = PageNovelMenu, {"novel_url_code": novel_code}
+                last_y += 2
+            except Exception as e:
+                screen.print_at("Novel saving failed.", 2, last_y)
+                messages = [
+                    f"Error: Novel saving failed.",
+                    f"Error: {e}"]
+                target = PageMessage
+                params = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
             break
 
         last_y += 2
         screen.refresh()
         wait_for_user_input(screen, 2, last_y)
         return target, params
-
-
-
     
 class PageNovelScrapingTargets(PageTypeB):
     def __init__(self) -> None:
@@ -663,18 +738,51 @@ def navigate_items(screen, pre_y, pre_x, items, active_index=0):
 def main(screen):
     verbose = False
 
-    config_file_path = os.path.join(os.getcwd(), "config", "config.json")
+    config_file_path = os.path.join(os.getcwd(), "config", "config.yaml")
 
     persistent_data_file_path = os.path.join(os.getcwd(), "persistent_data.json")
 
     storage = JsonStorage()
     storage.initialize(persistent_data_file_path)
 
-    try:
-        storage.get_data()
-        page = PageNovelSelection
-        parameters = {"novel_objects": []}
-    except JsonStorageFileException as e:
+    while True:
+        try:
+            config = Config()
+            config.load(config_file_path)
+            openai_api.initialize(config.data.config.openai.api_key)
+        except Exception as e:
+            messages = [
+                f"Error: Failed to load config file.",
+                f"Path: {config_file_path}",
+                f"Error: {e}"]
+            page = PageMessage
+            parameters = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
+            break
+
+        try:
+            storage.get_data()
+            page = PageNovelSelection
+            parameters = {"novel_objects": []}
+            break
+        except JsonStorageFormatException as e:
+            messages = [
+                f"Error: Failed to parse persistent data file.",
+                f"Path: {persistent_data_file_path}",
+                f"Error: {e}"]
+            page = PageMessage
+            parameters = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
+            break
+        except JsonStorageFileException as e:
+            pass
+        except Exception as e:
+            messages = [
+                f"Error: Failed to load persistent data file.",
+                f"Path: {persistent_data_file_path}",
+                f"Error: {e}"]
+            page = PageMessage
+            parameters = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
+            break
+
         try:
             storage.set_data([])
             messages = [
@@ -690,14 +798,9 @@ def main(screen):
                 f"Error: {e}"]
             page = PageMessage
             parameters = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
-    except JsonStorageFormatException as e:
-        messages = [
-            f"Error: Failed to parse persistent data file.",
-            f"Path: {persistent_data_file_path}",
-            f"Error: {e}"]
-        page = PageMessage
-        parameters = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
-    
+
+        break
+
     while True:
         try:
             page, parameters = page().show(screen, **parameters)
