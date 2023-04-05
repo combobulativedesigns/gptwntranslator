@@ -16,6 +16,8 @@ def _ui(screen):
 
     persistent_data_file_path = os.path.join(os.getcwd(), "persistent_data.json")
 
+    output_file_path = os.path.join(os.getcwd(), "output")
+
     storage = JsonStorage()
     storage.initialize(persistent_data_file_path)
 
@@ -23,6 +25,7 @@ def _ui(screen):
         try:
             config = Config()
             config.load(config_file_path)
+            config.vars["output_path"] = output_file_path
             openai_api.initialize(config.data.config.openai.api_key)
         except Exception as e:
             messages = [

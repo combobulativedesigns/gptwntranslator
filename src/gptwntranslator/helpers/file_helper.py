@@ -107,4 +107,4 @@ def write_md_as_epub(input_md: str, output_path: str, verbose: bool=False) -> No
     if not isinstance(verbose, bool):
         raise TypeError("The verbose flag must be a boolean")
 
-    pypandoc.convert_text('\n\n'.join(input_md), "epub3", format="md", outputfile=output_path)
+    pypandoc.convert_text(input_md, "epub3", format="md", outputfile=output_path)

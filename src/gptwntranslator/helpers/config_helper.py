@@ -7,6 +7,7 @@ from gptwntranslator.helpers.file_helper import read_file
 class Config:
     def __init__(self):
         self.data = None
+        self.vars = dict()
 
     def load(self, path):
         if self.data is None:

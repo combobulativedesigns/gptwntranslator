@@ -1,4 +1,5 @@
 from gptwntranslator.ui.page_message import PageMessage
+from gptwntranslator.ui.page_novel_exporting import PageNovelExporting
 from gptwntranslator.ui.page_return import PageReturn
 from gptwntranslator.ui.page_type_b import PageTypeB
 from gptwntranslator.ui.ui_resources import get_resources
@@ -15,7 +16,7 @@ class PageNovelExportTargets(PageTypeB):
             ],
             "menu_items": [
                 (0, 0, None, "Chapter selection pattern:", 1, "", True),
-                (2, 0, 1, "1) Start exporting", PageReturn, "", False),
+                (2, 0, 1, "1) Start exporting", PageNovelExporting, "", False),
                 (3, 0, 2, "2) Pattern explanation", PageMessage, resources["chapter_regex_explanation"], False),
                 (5, 0, 0, "0) Go back", PageReturn, "", False)]
         }
