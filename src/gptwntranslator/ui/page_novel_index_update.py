@@ -18,32 +18,52 @@ class PageNovelIndexUpdate(PageBase):
 
         # Print title
         last_y = print_title(screen, resources["title"], 0)
-
+        
         last_y += 2
-        screen.print_at("Updating metadata...", 2, last_y)
-        screen.refresh()
+        screen.print_at(f"Updating novel metadata: {novel_code}", 2, last_y)
 
-        last_y += 1
-        try:
-            novels = storage.get_data()
-        except Exception as e:
-            screen.print_at("Error loading local storage.", 2, last_y)
-            messages = [
-                f"Error: Error loading local storage.",
-                f"Error: {e}"]
-            target = PageMessage
-            params = {"messages": messages, "return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
-            return target, params
-
-        try:
-            # Scrape novel
-            novel = process_novel(novel_code)
-            screen.print_at("Metadata updated successfully.", 2, last_y)
-            last_y += 1
-            screen.print_at("Saving novel to local storage...", 2, last_y)
-            screen.refresh()
+        while True:
+            last_y += 2
             try:
-                # Save novel to local storage
+                message = "(1/3) Loading local storage... "
+                screen.print_at(message, 2, last_y)
+                screen.refresh()
+                novels = storage.get_data()
+                screen.print_at("success.", 2 + len(message), last_y)
+                screen.refresh()
+                last_y += 1
+            except Exception as e:
+                screen.print_at("failed.", 2 + len(message), last_y)
+                last_y += 1
+                messages = [
+                    f"Error: Error loading local storage.",
+                    f"Error: {e}"]
+                target = PageMessage
+                params = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
+                break
+
+            try:
+                message = "(2/3) Downloading novel metadata... "
+                screen.print_at(message, 2, last_y)
+                screen.refresh()
+                novel = process_novel(novel_code)
+                screen.print_at("success.", 2 + len(message), last_y)
+                screen.refresh()
+                last_y += 1
+            except Exception as e:
+                screen.print_at("failed.", 2 + len(message), last_y)
+                last_y += 1
+                messages = [
+                    f"Error: Error downloading novel metadata.",
+                    f"Error: {e}"]
+                target = PageMessage
+                params = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
+                break
+
+            try:
+                message = "(3/3) Updating local data... "
+                screen.print_at(message, 2, last_y)
+                screen.refresh()
                 novel_old = [novel for novel in novels if novel.novel_code == novel_code][0]
                 novel_old.title = novel.title
                 novel_old.author = novel.author
@@ -53,25 +73,21 @@ class PageNovelIndexUpdate(PageBase):
                     if chapter not in novel_old.chapters:
                         novel_old.chapters.append(chapter)
                 storage.set_data(novels)
+                screen.print_at("success.", 2 + len(message), last_y)
+                screen.refresh()
                 last_y += 1
-                screen.print_at("Novel saved to local storage.", 2, last_y)
                 target, params = self.args["return_page"], self.args["return_kwargs"]
             except Exception as e:
-                screen.print_at("Novel saving failed.", 2, last_y)
+                screen.print_at("failed.", 2 + len(message), last_y)
+                last_y += 1
                 messages = [
-                    f"Error: Novel saving failed.",
+                    f"Error: Error updating local data.",
                     f"Error: {e}"]
                 target = PageMessage
                 params = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
-        except Exception as e:
-            screen.print_at("Metadata update failed.", 2, last_y)
-            messages = [
-                f"Error: Metadata update failed.",
-                f"Error: {e}"]
-            target = PageMessage
-            params = {"messages": messages, "return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
+            break
 
-        last_y += 2
+        last_y += 1
         screen.refresh()
         wait_for_user_input(screen, 2, last_y)
         return target, params

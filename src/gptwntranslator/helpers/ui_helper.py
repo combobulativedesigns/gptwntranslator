@@ -23,9 +23,14 @@ def read_user_input(screen, x, y):
             if key == 10 or key == 13:
                 break
             elif key == screen.KEY_BACK:
-                input_str = input_str[:-1]
-            else:
-                input_str += chr(key)
+                if len(input_str) > 0:
+                    input_str = input_str[:-1]
+                    screen.print_at(" ", x + len(input_str), y) # erase the deleted char from the screen
+            elif key < 256:
+                try:
+                    input_str += chr(key)
+                except ValueError:
+                    pass
 
     # screen.show_cursor(False)
     return input_str

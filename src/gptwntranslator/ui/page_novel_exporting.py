@@ -64,6 +64,9 @@ class PageNovelExporting(PageBase):
 
         # Print title
         last_y = print_title(screen, resources["title"], 0)
+        
+        last_y += 2
+        screen.print_at(f"Exporting targets: {targets}", 2, last_y)
 
         while True:
             last_y += 2
