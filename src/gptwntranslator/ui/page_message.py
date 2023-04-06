@@ -1,9 +1,12 @@
 
 
+from gptwntranslator.helpers.logger_helper import CustomLogger
 from gptwntranslator.helpers.ui_helper import print_title, wait_for_user_input
 from gptwntranslator.ui.page_base import PageBase
 from gptwntranslator.ui.ui_resources import get_resources
 
+
+logger = CustomLogger(__name__)
 
 class PageMessage(PageBase):
     def __init__(self) -> None:
@@ -20,6 +23,8 @@ class PageMessage(PageBase):
             screen.print_at(message, 2, last_y)
 
         last_y += 2
+
+        logger.debug(f"kwargs: {kwargs}")
 
         screen.refresh()
         wait_for_user_input(screen, 2, last_y)

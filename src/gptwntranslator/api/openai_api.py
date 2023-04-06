@@ -2,6 +2,9 @@ import openai
 import tiktoken
 
 from gptwntranslator.helpers.config_helper import Config
+from gptwntranslator.helpers.logger_helper import CustomLogger
+
+logger = CustomLogger(__name__)
 
 class OpenAI_APIException(Exception):
     pass
@@ -95,8 +98,12 @@ def get_messages_token_count(messages, model="gpt-3.5-turbo", encoding=None):
     return num_tokens
 
 def call_api(messages, model="gpt-3.5-turbo"):
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=messages,
-    )  
-    return response
+    try:
+        response = openai.ChatCompletion.create(
+            model=model,
+            messages=messages,
+        )  
+        return response
+    except Exception as e:
+        logger.warning(f"OpenAI API call failed: {e}")
+        raise e

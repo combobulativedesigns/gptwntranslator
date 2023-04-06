@@ -1,5 +1,6 @@
+import asyncio
 import sys
-from gptwntranslator.helpers.api_helper import APICallQueueMonitor
+from gptwntranslator.helpers.api_helper import MultiAPICallQueue
 from gptwntranslator.helpers.ui_helper import print_title, wait_for_user_input
 from gptwntranslator.ui.page_base import PageBase
 from gptwntranslator.ui.ui_resources import get_resources
@@ -17,9 +18,8 @@ class PageExit(PageBase):
 
             last_y += 2
             screen.print_at("Goodbye!", 2, last_y)
-
-            monitor = APICallQueueMonitor()
-            monitor.stop_all()
+        
+            MultiAPICallQueue().stop_all()
 
             last_y += 2
             screen.refresh()
