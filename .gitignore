@@ -47,3 +47,6 @@ persistent_data.json
 # Pipreqs files
 requirements.in
 
+# Logs
+gptwntranslator.log
+

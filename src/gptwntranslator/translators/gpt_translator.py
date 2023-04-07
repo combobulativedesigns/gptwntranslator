@@ -1,19 +1,25 @@
 """This module contains the Japanese to English translator functions"""
 
+import asyncio
+from functools import partial
 import openai
 from yattag import Doc
 import xml.etree.ElementTree as ET
 
 from gptwntranslator.api.openai_api import call_api, get_line_token_count, validate_model
-from gptwntranslator.helpers.api_helper import APICallQueue
+from gptwntranslator.helpers.api_helper import MultiAPICallQueue
 from gptwntranslator.helpers.config_helper import Config
 from gptwntranslator.helpers.data_helper import get_targeted_sub_chapters
 from gptwntranslator.helpers.design_patterns_helper import singleton
+from gptwntranslator.helpers.logger_helper import CustomLogger
+from gptwntranslator.helpers.task_helper import Task
 from gptwntranslator.models.novel import Novel
 from gptwntranslator.models.chunk import Chunk
 from gptwntranslator.models.sub_chapter import SubChapter
 from gptwntranslator.models.term_sheet import TermSheet
 
+
+logger = CustomLogger(__name__)
 
 class GPTTranslatorException(Exception):
     pass
@@ -83,42 +89,56 @@ class GPTTranslator:
         self._target_language_str = cf.get_language_name_for_code(target_language) if target_language in cf.get_languages() else ""
 
     def set_original_language(self, original_language: str) -> None:
+        logger.debug(f"Setting original language to '{original_language}'")
         # Validate the parameters
         if not isinstance(original_language, str):
+            logger.error(f"Original language ({original_language}) must be a string")
             raise TypeError(f"Original language ({original_language}) must be a string")
         
         cf = Config()
 
         # Verify language exists in config
         if original_language not in cf.get_languages():
+            logger.error(f"Original language ({original_language}) must be a valid language in ({cf.get_languages()})")
             raise ValueError(f"Original language ({original_language}) must be a valid language in ({cf.get_languages()})")
 
         self._original_language = original_language
         self._original_language_str = cf.get_language_name_for_code(original_language) if original_language in cf.get_languages() else ""
 
     def _get_api_model(self, model: str) -> dict:
+        logger.debug(f"Getting API model for '{model}'")
         # Validate the parameters
         if not isinstance(model, str):
+            logger.error(f"Model ({model}) must be a string")
             raise TypeError("Model must be a string")
         if model not in self._available_models:
+            logger.error(f"Model ({model}) must be a valid model")
             raise ValueError("Model must be a valid model")
         
         # Get the translation model
         return self._available_models[model]
     
     def _split_text_into_chunks(self, text: str, division_size: int, line_token_counts: list[int]) -> list[str]:
+        logger.debug(f"Splitting text into chunks of size '{division_size}'")
+
         # Validate the parameters
         if not isinstance(text, str):
+            logger.error(f"Text must be a string")
             raise TypeError("Text must be a string")
         if not isinstance(division_size, int):
+            logger.error(f"Division size ({division_size}) must be an integer")
             raise TypeError("Division size must be an integer")
         if division_size <= 0:
+            logger.error(f"Division size ({division_size}) must be greater than 0")
             raise ValueError("Division size must be greater than 0")
         if not isinstance(line_token_counts, list):
+            logger.error(f"Line token counts ({line_token_counts}) must be a list")
             raise TypeError("Line token counts must be a list")
         if not all(isinstance(line_token_count, int) for line_token_count in line_token_counts):
+            logger.error(f"Line token counts ({line_token_counts}) must be a list of integers")
             raise TypeError("Line token counts must be a list of integers")
         if not all(line_token_count >= 0 for line_token_count in line_token_counts):
+            logger.error(f"Line token counts ({line_token_counts}) must be a list of positive integers")
             raise ValueError("Line token counts must be a list of positive integers")
         
         # Initialize some variables
@@ -143,22 +163,32 @@ class GPTTranslator:
         return chunks
     
     def _estimate_chunks(self, total_lines: int, division_size: int, line_token_counts: list[int]) -> int:
+        logger.debug(f"Estimating chunks for '{total_lines}' lines, '{division_size}' division size, and '{line_token_counts}' line token counts")
+
         # Validate the input
         if not isinstance(total_lines, int):
+            logger.error(f"Total lines ({total_lines}) must be an integer")
             raise TypeError("total_lines must be an integer.")
         if total_lines <= 0:
+            logger.error(f"Total lines ({total_lines}) must be a positive integer")
             raise ValueError("total_lines must be a positive integer.")
         if not isinstance(division_size, int):
+            logger.error(f"Division size ({division_size}) must be an integer")
             raise TypeError("division_size must be an integer.")
         if division_size <= 0:
+            logger.error(f"Division size ({division_size}) must be a positive integer")
             raise ValueError("division_size must be a positive integer.")
         if not isinstance(line_token_counts, list):
+            logger.error(f"Line token counts ({line_token_counts}) must be a list")
             raise TypeError("line_token_counts must be a list.")
         if not all(isinstance(token_count, int) for token_count in line_token_counts):
+            logger.error(f"Line token counts ({line_token_counts}) must be a list of integers")
             raise TypeError("line_token_counts must be a list of integers.")
         if not all(token_count >= 0 for token_count in line_token_counts):
+            logger.error(f"Line token counts ({line_token_counts}) must be a list of positive integers")
             raise ValueError("line_token_counts must be a list of positive integers.")
         if len(line_token_counts) != total_lines:
+            logger.error(f"Line token counts ({line_token_counts}) must have the same length as total lines ({total_lines})")
             raise ValueError("line_token_counts must have the same length as total_lines.")
         
         # Estimate the number of chunks
@@ -167,18 +197,26 @@ class GPTTranslator:
         return len(chunks)
     
     def _original_language_token_limit_worst_case(self, N: int, worst_case_ratio: float|int=1.125, safety_factor: float|int=0.8) -> int:
+        logger.debug(f"Calculating original language token limit for '{N}' tokens, '{worst_case_ratio}' worst case ratio, and '{safety_factor}' safety factor")
+        
         # Validate the input
         if not isinstance(N, int):
+            logger.error(f"N ({N}) must be an integer")
             raise TypeError("N must be an integer.")
         if N <= 0:
+            logger.error(f"N ({N}) must be a positive integer")
             raise ValueError("N must be a positive integer.")
         if not isinstance(worst_case_ratio, float) and not isinstance(worst_case_ratio, int):
+            logger.error(f"Worst case ratio ({worst_case_ratio}) must be a float or an integer")
             raise TypeError("worst_case_ratio must be a float or an integer.")
         if worst_case_ratio <= 0:
+            logger.error(f"Worst case ratio ({worst_case_ratio}) must be a positive float or integer")
             raise ValueError("worst_case_ratio must be a positive float or integer.")
         if not isinstance(safety_factor, float) and not isinstance(safety_factor, int):
+            logger.error(f"Safety factor ({safety_factor}) must be a float or an integer")
             raise TypeError("safety_factor must be a float or an integer.")
         if safety_factor <= 0:
+            logger.error(f"Safety factor ({safety_factor}) must be a positive float or integer")
             raise ValueError("safety_factor must be a positive float or integer.")
         
         # Calculate the token limit
@@ -188,18 +226,24 @@ class GPTTranslator:
         return token_limit
     
     def _greedy_find_max_optimal_configuration(self, line_token_counts: list[int]) -> tuple[int, int, int, str, str, str]:
+        logger.debug(f"Finding max optimal configuration for '{line_token_counts}' line token counts")
+
         # Validate the input
         if not isinstance(line_token_counts, list):
+            logger.error(f"Line token counts ({line_token_counts}) must be a list")
             raise TypeError("line_token_counts must be a list.")
         if not all(isinstance(token_count, int) for token_count in line_token_counts):
+            logger.error(f"Line token counts ({line_token_counts}) must be a list of integers")
             raise TypeError("line_token_counts must be a list of integers.")
         if not all(token_count >= 0 for token_count in line_token_counts):
+            logger.error(f"Line token counts ({line_token_counts}) must be a list of positive integers")
             raise ValueError("line_token_counts must be a list of positive integers.")
 
         # Initialize some values
         total_lines = len(line_token_counts)
         min_cost = float('inf')
         best_combination = None
+        wrapper_percentage = 0.3
 
         # Get the models to use
         terms_models = [self._get_api_model(model) for model in self._terms_models]
@@ -219,34 +263,38 @@ class GPTTranslator:
                     summary_model_limit = self._original_language_token_limit_worst_case(summary_model["max_tokens"])
                     summary_model_limit = summary_model_limit - (summary_model_limit % 4)
 
-                    for term_division in range(term_model_limit // 1, term_model_limit // 2, -4):
-                        for translation_division in range(translation_model_limit // 1, translation_model_limit // 2, -4):
-                            for summary_division in range(summary_model_limit // 1, summary_model_limit // 2, -4):
+                    for term_division in range(term_model_limit // 2, term_model_limit + 1, 100):
+                        for translation_division in range(translation_model_limit // 2, translation_model_limit + 1, 100):
+                            for summary_division in range(summary_model_limit // 2, summary_model_limit + 1, 100):
+                                # Calculate the cost of the current configuration
+                                term_chunks = self._estimate_chunks(total_lines, term_division, line_token_counts)
+                                translation_chunks = self._estimate_chunks(total_lines, translation_division, line_token_counts)
+                                summary_chunks = self._estimate_chunks(total_lines, summary_division, line_token_counts)
 
-                                # Check if the current configuration is valid
-                                if term_division % translation_division == 0:
+                                # term_cost = term_chunks * term_division * term_model["cost_per_1k_tokens"]
+                                # translation_cost = translation_chunks * translation_division * translation_model["cost_per_1k_tokens"]
+                                # summary_cost = summary_chunks * summary_division * summary_model["cost_per_1k_tokens"]
 
-                                    # Calculate the cost of the current configuration
-                                    term_chunks = self._estimate_chunks(total_lines, term_division, line_token_counts)
-                                    translation_chunks = self._estimate_chunks(total_lines, translation_division, line_token_counts)
-                                    summary_chunks = self._estimate_chunks(total_lines, summary_division, line_token_counts)
+                                term_cost = term_chunks * (term_division * (1 + wrapper_percentage)) * term_model["cost_per_1k_tokens"]
+                                translation_cost = translation_chunks * (translation_division * (1 + wrapper_percentage)) * translation_model["cost_per_1k_tokens"]
+                                summary_cost = summary_chunks * (summary_division * (1 + wrapper_percentage)) * summary_model["cost_per_1k_tokens"]
 
-                                    term_cost = term_chunks * term_division * term_model["cost_per_1k_tokens"]
-                                    translation_cost = translation_chunks * translation_division * translation_model["cost_per_1k_tokens"]
-                                    summary_cost = summary_chunks * summary_division * summary_model["cost_per_1k_tokens"]
+                                total_cost = term_cost + translation_cost + summary_cost
 
-                                    total_cost = term_cost + translation_cost + summary_cost
+                                # Check if the current configuration is better than the best configuration so far, and update the best configuration if it is
+                                if total_cost < min_cost:
+                                    min_cost = total_cost
+                                    best_combination = (term_division, translation_division, summary_division, term_model['name'], translation_model['name'], summary_model['name'])
 
-                                    # Check if the current configuration is better than the best configuration so far, and update the best configuration if it is
-                                    if total_cost < min_cost:
-                                        min_cost = total_cost
-                                        best_combination = (term_division, translation_division, summary_division, term_model['name'], translation_model['name'], summary_model['name'])
-
+        logger.info(f"Found max optimal configuration: {best_combination}")
         return best_combination
     
     def _calculate_line_token_counts(self, text: str) -> list[int]:
+        logger.debug(f"Calculating line token counts for text")
+
         # Validate input
         if not isinstance(text, str):
+            logger.error(f"Text ({text}) must be a string")
             raise TypeError("Text must be a string")
         
         # Split the text into lines and calculate the token count for each line
@@ -274,6 +322,8 @@ class GPTTranslator:
             raise e
     
     def _perform_relevant_terms_action(self, **kwargs) -> str:
+        logger.debug(f"Performing relevant terms action.")
+
         available_models = [self._get_api_model(model)['name'] for model in self._terms_models]
 
         chunk = kwargs["chunk"]
@@ -281,10 +331,13 @@ class GPTTranslator:
 
         # Validate input
         if not isinstance(chunk, Chunk):
+            logger.error(f"Chunk ({chunk}) must be a Chunk object")
             raise TypeError("Chunk must be a Chunk object")
         if not isinstance(model, str):
+            logger.error(f"Model ({model}) must be a string")
             raise TypeError("Model must be a string")
         if model not in available_models:
+            logger.error(f"Model ({model}) must be a valid model. Available models: {', '.join(available_models)}")
             raise ValueError(f"Model must be a valid model. Available models: {', '.join(available_models)}")
 
         string_term_original_language = self._original_language_str.lower() + "_term"
@@ -294,22 +347,26 @@ class GPTTranslator:
         # Build the messages list for the API call
         messages = [
             {"role": "system", "content": f"You are a {self._original_language_str} to {self._target_language_str} translator."},
-            {"role": "system", "name": "example_user", "content": 
-                f"Generate a term list for the text I'm about to provide. Mantain {self._original_language_str} novel translation format convetions. Follow the format \"- {string_term_original_language} ({phonetic_term}) - {string_term_target_language}\""},
-            {"role": "system", "name": "example_assistant", "content": "Understood. Please provide the text."},
+            {"role": "user", "content": 
+                f"Generate a term list for the text I'm about to provide. Mantain {self._original_language_str} novel translation format convetions. Follow the format \"- {string_term_original_language} ({phonetic_term}) - {string_term_target_language}\". Focus on proper nouns and technical terms."},
+            {"role": "assistant", "content": f"Understood. Please provide the text. I'll generate the term list with their translations to {self._target_language_str}."},
             {"role": "user", "content": chunk.contents}
         ]
 
         # Call the API
         try:
+            logger.debug(f"Calling API.")
             response = call_api(messages, model)
             response = response['choices'][0]['message']['content']
         except Exception as e:
+            logger.error(f"Error performing relevant terms action: {e}")
             self._handle_api_exceptions(e)
         
         return response
     
     def _perform_translation_action(self, **kwargs) -> str:
+        logger.debug(f"Performing translation action.")
+
         available_models = [self._get_api_model(model)['name'] for model in self._translation_models]
 
         chunk = kwargs["chunk"]
@@ -319,56 +376,65 @@ class GPTTranslator:
         
         # Validate inputs
         if not isinstance(chunk, Chunk):
+            logger.error(f"Chunk ({chunk}) must be a Chunk object")
             raise TypeError("Chunk must be a Chunk object")
         if not isinstance(term_lists, TermSheet):
+            logger.error(f"Term lists must be a TermSheet object")
             raise TypeError("Term lists must be a TermSheet object")
         if not isinstance(summary, str):
+            logger.error(f"Summary must be a string")
             raise TypeError("Summary must be a string")
         if not isinstance(translation_model, str):
+            logger.error(f"Translation model ({translation_model}) must be a string")
             raise TypeError("Translation model must be a string")
         if translation_model not in available_models:
+            logger.error(f"Translation model ({translation_model}) must be a valid model. Available models: {', '.join(available_models)}")
             raise ValueError(f"Translation model must be a valid model. Available models: {', '.join(available_models)}")
         
         # Build the messages to send to the API
         messages = [
             {"role": "system", "content": f"You are a {self._original_language_str} to {self._target_language_str} translator."},
-            {"role": "system", "name": "example_user", "content": 
-                f"Translate the chunk of text I'm about to provide. Mantain {self._original_language_str} novel translation format convetions. As context, I'll provide the immediate previous line of the text, the immediate next line of the text, the summary of the enclosing section, and a list of relevant terms and their translations to use. Do not repeat the {self._original_language_str} text before the translation, nor clarify your actions."},
-            {"role": "system", "name": "example_assistant", "content": "Understood. Please provide the previous line."}
+            {"role": "user", "content": 
+                f"Translate the chunk of text I'm about to provide. Mantain {self._original_language_str} novel translation format convetions. As context, I'll provide the immediate previous line of the text, the immediate next line of the text, the summary of the enclosing section, and a list of relevant terms and their translations to use. Do not repeat the {self._original_language_str} text, nor clarify your actions."},
+            {"role": "assistant", "content": "Understood. Please provide the previous line."}
         ]
         if chunk.prev_line:
-            messages.append({"role": "system", "name": "example_user", "content": chunk.prev_line})
-            messages.append({"role": "system", "name": "example_assistant", "content": "Understood. Please provide the next line."})
+            messages.append({"role": "user", "content": chunk.prev_line})
+            messages.append({"role": "assistant", "content": "Understood. Please provide the next line."})
         else:
-            messages.append({"role": "system", "name": "example_user", "content": ""})
-            messages.append({"role": "system", "name": "example_assistant", "content": "No previous line provided. The text is the first line of the text. Please provide the next line."})
+            messages.append({"role": "user", "content": ""})
+            messages.append({"role": "assistant", "content": "No previous line provided. The text is the first line of the text. Please provide the next line."})
 
         if chunk.next_line:
-            messages.append({"role": "system", "name": "example_user", "content": chunk.next_line})
-            messages.append({"role": "system", "name": "example_assistant", "content": "Understood. Please provide the summary."})
+            messages.append({"role": "user", "content": chunk.next_line})
+            messages.append({"role": "assistant", "content": "Understood. Please provide the summary."})
         else:
-            messages.append({"role": "system", "name": "example_user", "content": ""})
-            messages.append({"role": "system", "name": "example_assistant", "content": "No next line provided. The text is the last line of the text. Please provide the summary."})
+            messages.append({"role": "user", "content": ""})
+            messages.append({"role": "assistant", "content": "No next line provided. The text is the last line of the text. Please provide the summary."})
         if summary:
-            messages.append({"role": "system", "name": "example_user", "content": summary})
-            messages.append({"role": "system", "name": "example_assistant", "content": "Understood. Please provide the relevant terms."})
+            messages.append({"role": "user", "content": summary})
+            messages.append({"role": "assistant", "content": "Understood. Please provide the relevant terms."})
         else:
-            messages.append({"role": "system", "name": "example_user", "content": ""})
-            messages.append({"role": "system", "name": "example_assistant", "content": "No summary provided. The text is the first line of the text. Please provide the relevant terms."})
-        messages.append({"role": "system", "name": "example_user", "content": term_lists.for_api(chunk.contents, self._original_language)})
-        messages.append({"role": "system", "name": "example_assistant", "content": "Understood. Please provide the text."})
+            messages.append({"role": "user", "content": ""})
+            messages.append({"role": "assistant", "content": "No summary provided. The text is the first line of the text. Please provide the relevant terms."})
+        messages.append({"role": "user", "content": term_lists.for_api(chunk.contents, self._original_language)})
+        messages.append({"role": "assistant", "content": f"Understood. Please provide the text. I'll translate it to {self._target_language_str}."})
         messages.append({"role": "user", "content": chunk.contents})
 
         # Call the API
         try:
+            logger.debug(f"Calling API.")
             response = call_api(messages, model=translation_model)
             response = response['choices'][0]['message']['content']
         except Exception as e:
+            logger.error(f"Error performing translation action: {e}")
             self._handle_api_exceptions(e)
             
         return response
     
     def _perform_summary_action(self, **kwargs) -> str:
+        logger.debug(f"Performing summary action.")
+
         available_models = [self._get_api_model(model)['name'] for model in self._summary_models]
 
         chunk = kwargs['chunk']
@@ -377,38 +443,46 @@ class GPTTranslator:
 
         # Validate parameters
         if not isinstance(chunk, str):
+            logger.error(f"Chunk must be a string")
             raise TypeError("Chunk must be a string")
         if not isinstance(previous_summary, str):
+            logger.error(f"Previous summary must be a string")
             raise TypeError("Previous summary must be a string")
         if not isinstance(summarization_model, str):
+            logger.error(f"Summarization model must be a string")
             raise TypeError("Summarization model must be a string")
         if summarization_model not in available_models:
+            logger.error(f"Summarization model ({summarization_model}) must be a valid model. Available models: {', '.join(available_models)}")
             raise ValueError(f"Summarization model must be a valid model. Available models: {', '.join(available_models)}")
 
         # Build the messages to send to the API
         messages = [
-            {"role": "system", "content": f"You are an assistant that summarizes {self._original_language_str} text in {self._original_language_str}."},
-            {"role": "system", "name": "example_user", "content": f"You are summarizing a text. Part of this text has already been summarized. I'll provide this previous summary and the proceeding chunk text. Please provide an updated summary of the text. Do not repeat the {self._original_language_str} text before the summary, nor clarify your actions."},
-            {"role": "system", "name": "example_assistant", "content": "Understood. Please provide the previous summary."}
+            {"role": "system", "content": f"You are an assistant that summarizes {self._original_language_str} text in {self._target_language_str}."},
+            {"role": "user", "content": f"You are summarizing a text. Part of this text has already been summarized. I'll provide this previous summary and the proceeding chunk text. Please provide an updated summary of the text. Do not repeat the {self._original_language_str} text, nor clarify your actions."},
+            {"role": "assistant", "content": "Understood. Please provide the previous summary."}
         ]
         if previous_summary:
-            messages.append({"role": "system", "name": "example_user", "content": previous_summary})
-            messages.append({"role": "system", "name": "example_assistant", "content": "Understood. Please provide the text."})
+            messages.append({"role": "user", "content": previous_summary})
+            messages.append({"role": "assistant", "content": f"Understood. Please provide the text. I'll summarize it in {self._target_language_str}."})
         else:
-            messages.append({"role": "system", "name": "example_user", "content": ""})
-            messages.append({"role": "system", "name": "example_assistant", "content": "No summary provided. The text is the first line of the text. Please provide the text."})
+            messages.append({"role": "user", "content": ""})
+            messages.append({"role": "assistant", "content": f"No summary provided. The text is the first line of the text. Please provide the text. I'll summarize it in {self._target_language_str}."})
         messages.append({"role": "user", "content": chunk})
 
         # Call the API
         try:
+            logger.debug(f"Calling API.")
             response = call_api(messages, model=summarization_model)
             response = response['choices'][0]['message']['content']
         except Exception as e:
+            logger.error(f"Error performing summary action: {e}")
             self._handle_api_exceptions(e)
         
         return response
     
     def _perform_novel_metadata_action(self, **kwargs) -> None:
+        logger.debug(f"Performing novel metadata action.")
+
         available_models = [self._get_api_model(model)['name'] for model in self._summary_models]
 
         novel = kwargs['novel']
@@ -416,10 +490,13 @@ class GPTTranslator:
 
         # Validate parameters
         if not isinstance(novel, Novel):
+            logger.error(f"Novel must be a Novel object")
             raise TypeError("Novel must be a Novel object")
         if not isinstance(metadata_model, str):
+            logger.error(f"Metadata model must be a string")
             raise TypeError("Metadata model must be a string")
         if metadata_model not in available_models:
+            logger.error(f"Metadata model ({metadata_model}) must be a valid model. Available models: {', '.join(available_models)}")
             raise ValueError(f"Metadata model must be a valid model. Available models: {', '.join(available_models)}")
 
         doc, tag, text = Doc().tagtext()
@@ -436,29 +513,35 @@ class GPTTranslator:
 
         # Build the messages to send to the API
         messages = [
-            {"role": "system", "content": f"You are an assistant that translates {self._original_language_str} text in {self._target_language_str}."},
-            {"role": "system", "name": "example_user", "content": 
-                f"You are translating a novel's metadata. I'll provide the novel's metadata in {self._original_language_str}. Please provide the metadata in {self._target_language_str}. Do not repeat the {self._original_language_str} text before the translation, nor clarify your actions. Mantain the xml format."},
-            {"role": "system", "name": "example_assistant", "content": f"Understood. Please provide the metadata in {self._original_language_str}."},
+            {"role": "system", "content": f"You are a {self._original_language_str} to {self._target_language_str} translator."},
+            {"role": "user", "content": 
+                f"You are translating a novel's metadata. I'll provide the novel's metadata in {self._original_language_str}. Please translate the metadata to {self._target_language_str}. Do not repeat the {self._original_language_str} text, nor clarify your actions. Mantain the xml format."},
+            {"role": "assistant", "content": f"Understood. Please provide the metadata in {self._original_language_str}. I'll translate it to {self._target_language_str}."},
             {"role": "user", "content": f"{metadata}"}
         ]
 
         # Call the API
         try:
+            logger.debug(f"Calling API.")
             response = call_api(messages, model=metadata_model)
             response = response['choices'][0]['message']['content']
         except Exception as e:
+            logger.error(f"Error performing novel metadata action: {e}")
             self._handle_api_exceptions(e)
 
         try:
+            logger.debug(f"Parsing response.")
             root = ET.fromstring(response)
             novel.title_translation = root.find('title').text
             novel.author_translation = root.find('author').text
             novel.description_translation = root.find('description').text
         except Exception as e:
+            logger.error(f"Error parsing response: {e}")
             raise GPTTranslatorGPTFormatException("Invalid metadata format {}".format(e))
     
     def _perform_chapters_metadata_action(self, **kwargs) -> str:
+        logger.debug(f"Performing chapters metadata action.")
+
         available_models = [self._get_api_model(model)['name'] for model in self._summary_models]
 
         novel = kwargs['novel']
@@ -467,14 +550,19 @@ class GPTTranslator:
 
         # Validate parameters
         if not isinstance(novel, Novel):
+            logger.error(f"Novel must be a Novel object")
             raise TypeError("Novel must be a Novel object")
         if not isinstance(metadata_model, str):
+            logger.error(f"Metadata model must be a string")
             raise TypeError("Metadata model must be a string")
         if metadata_model not in available_models:
+            logger.error(f"Metadata model ({metadata_model}) must be a valid model. Available models: {', '.join(available_models)}")
             raise ValueError(f"Metadata model must be a valid model. Available models: {', '.join(available_models)}")
         if not isinstance(sub_chapters, list):
+            logger.error(f"Sub chapters must be a list")
             raise TypeError("Sub chapters must be a list")
         if not all(isinstance(sub_chapter, SubChapter) for sub_chapter in sub_chapters):
+            logger.error(f"Sub chapters must be SubChapter objects")
             raise TypeError("Sub chapters must be SubChapter objects")
         # if not isinstance(targets, dict):
         #     raise TypeError("Targets must be a dictionary")
@@ -507,21 +595,24 @@ class GPTTranslator:
 
         # Build the messages to send to the API
         messages = [
-            {"role": "system", "content": f"You are an assistant that summarizes {self._original_language_str} text in {self._target_language_str}."},
-            {"role": "system", "name": "example_user", "content": 
-                f"You are translating a novel's metadata. I'll provide the novel's metadata in {self._original_language_str}. Please provide the metadata in {self._target_language_str}. Do not repeat the {self._original_language_str} text before the translation, nor clarify your actions. Mantain the xml format."},
-            {"role": "system", "name": "example_assistant", "content": f"Understood. Please provide the metadata in {self._original_language_str}."},
+            {"role": "system", "content": f"You are a {self._original_language_str} to {self._target_language_str} translator."},
+            {"role": "user", "content": 
+                f"You are translating a novel's metadata. I'll provide the novel's metadata in {self._original_language_str}. Please translate the metadata to {self._target_language_str}. Do not repeat the {self._original_language_str} text, nor clarify your actions. Mantain the xml format."},
+            {"role": "assistant", "content": f"Understood. Please provide the metadata in {self._original_language_str}. I'll translate it to {self._target_language_str}."},
             {"role": "user", "content": f"{metadata}"}
         ]
 
         # Call the API
         try:
+            logger.debug(f"Calling API.")
             response = call_api(messages, model=metadata_model)
             response = response['choices'][0]['message']['content']
         except Exception as e:
+            logger.error(f"Error performing novel metadata action: {e}")
             self._handle_api_exceptions(e)
 
         try:
+            logger.debug(f"Parsing response.")
             root = ET.fromstring(response)
             chapters = root.findall('chapter')
             for chapter_data in chapters:
@@ -532,9 +623,12 @@ class GPTTranslator:
                     sub_chapter = chapter.get_sub_chapter(int(sub_chapter_data.attrib['id']))
                     sub_chapter.translated_name = sub_chapter_data.text
         except Exception as e:
+            logger.error(f"Error parsing response: {e}")
             raise GPTTranslatorGPTFormatException("Invalid metadata format")
 
     def _summarize_sub_chapter(self,  **kwargs) -> str:
+        logger.debug(f"Summarizing sub chapter.")
+
         available_models = [self._get_api_model(model)['name'] for model in self._summary_models]
 
         chunks = kwargs['chunks']
@@ -542,47 +636,32 @@ class GPTTranslator:
 
         # Validate the provided arguments
         if not isinstance(chunks, list):
+            logger.error(f"Chunks must be a list")
             raise TypeError("Chunks must be a list")
         if not all(isinstance(chunk, Chunk) for chunk in chunks):
+            logger.error(f"Chunks must be a list of Chunk objects")
             raise TypeError("Chunks must be a list of Chunk objects")
         if not isinstance(model, str):
+            logger.error(f"Metadata model must be a string")
             raise TypeError("Metadata model must be a string")
         if model not in available_models:
+            logger.error(f"Metadata model ({model}) must be a valid model. Available models: {', '.join(available_models)}")
             raise ValueError(f"Metadata model must be a valid model. Available models: {', '.join(available_models)}")
 
-        api_call_queue = APICallQueue()
-        api_call_queue.start()
-        
+        task = Task(max_workers=4, retry_on_exceptions=(GPTTranslatorAPIRetryableException))
+
         previous_summary = ""
         for chunk in chunks:
-            tries = 0
-            while True:
-                task_id = api_call_queue.add_call(self._perform_summary_action, retries=1, chunk=chunk.contents, summarization_model=model, previous_summary=previous_summary)
-                api_call_queue.wait()
-                result = api_call_queue.get_result(task_id)
-                
-                if not isinstance(result, Exception):
-                    previous_summary = result
-                    break
-                else:
-                    if isinstance(result, GPTTranslatorAPIRetryableException):
-                        if tries < 3:
-                            tries += 1
-                            continue
-                        else:
-                            api_call_queue.stop()
-                            raise result
-                    else:
-                        api_call_queue.stop()
-                        raise result
-            
+            result = self._perform_summary_action(chunk=chunk.contents, summarization_model=model, previous_summary=previous_summary)
+            if isinstance(result, Exception):
+                raise result
             previous_summary = result
-
-        api_call_queue.stop()
 
         return previous_summary
     
     def _gather_terms_for_sub_chapter(self,  **kwargs) -> str:
+        logger.debug(f"Gathering terms for sub chapter.")
+
         available_models = [self._get_api_model(model)['name'] for model in self._terms_models]
 
         chunks = kwargs['chunks']
@@ -590,45 +669,43 @@ class GPTTranslator:
 
         # Validate the provided arguments
         if not isinstance(chunks, list):
+            logger.error(f"Chunks must be a list")
             raise TypeError("Chunks must be a list")
         if not all(isinstance(chunk, Chunk) for chunk in chunks):
+            logger.error(f"Chunks must be a list of Chunk objects")
             raise TypeError("Chunks must be a list of Chunk objects")
         if not isinstance(model, str):
+            logger.error(f"Metadata model must be a string")
             raise TypeError("Metadata model must be a string")
         if model not in available_models:
+            logger.error(f"Metadata model ({model}) must be a valid model. Available models: {', '.join(available_models)}")
             raise ValueError(f"Metadata model must be a valid model. Available models: {', '.join(available_models)}")
 
-        api_call_queue = APICallQueue()
-        api_call_queue.start()
+        task = Task(max_workers=4, retry_on_exceptions=(GPTTranslatorAPIRetryableException))
 
-        previous_terms = ""
+        previous_terms = {}
         for chunk in chunks:
-            tries = 0
-            while True:
-                task_id = api_call_queue.add_call(self._perform_relevant_terms_action, retries=1, chunk=chunk, model=model)
-                api_call_queue.wait()
-                result = api_call_queue.get_result(task_id)
+            sub_task = task.add_subtask(self._perform_relevant_terms_action, chunk=chunk, model=model)
+            previous_terms[(sub_task, chunk.chunk_index)] = ""
 
-                if not isinstance(result, Exception):
-                    previous_terms += result + "\n\n"
-                    break
-                else:
-                    if isinstance(result, GPTTranslatorAPIRetryableException):
-                        if tries < 3:
-                            tries += 1
-                            continue
-                        else:
-                            api_call_queue.stop()
-                            raise result
-                    else:
-                        api_call_queue.stop()
-                        raise result
-                    
-        api_call_queue.stop()
+        sorted_keys = sorted(previous_terms.keys(), key=lambda x: x[1])
+        previous_terms = {key[0]: previous_terms[key] for key in sorted_keys}
 
-        return previous_terms
+        results = task.run_subtasks()
+
+        logger.info(f"Results: {results}")
+
+        for task_id in previous_terms:
+            result = results[task_id]
+            if isinstance(result, Exception):
+                raise result
+            previous_terms[task_id] = result
+            
+        return "\n\n".join(previous_terms.values())
     
     def _translate_sub_chapter(self,  **kwargs) -> str:
+        logger.debug(f"Translating sub chapter.")
+
         available_models = [self._get_api_model(model)['name'] for model in self._translation_models]
 
         chunks = kwargs['chunks']
@@ -638,53 +715,53 @@ class GPTTranslator:
 
         # Validate the provided arguments
         if not isinstance(chunks, list):
+            logger.error(f"Chunks must be a list")
             raise TypeError("Chunks must be a list")
         if not all(isinstance(chunk, Chunk) for chunk in chunks):
+            logger.error(f"Chunks must be a list of Chunk objects")
             raise TypeError("Chunks must be a list of Chunk objects")
         if not isinstance(model, str):
+            logger.error(f"Metadata model must be a string")
             raise TypeError("Metadata model must be a string")
         if model not in available_models:
+            logger.error(f"Metadata model ({model}) must be a valid model. Available models: {', '.join(available_models)}")
             raise ValueError(f"Metadata model must be a valid model. Available models: {', '.join(available_models)}")
         if not isinstance(summary, str):
+            logger.error(f"Summary must be a string")
             raise TypeError("Summary must be a string")
-        
-        api_call_queue = APICallQueue()
-        api_call_queue.start()
+
+        task = Task(max_workers=4, retry_on_exceptions=(GPTTranslatorAPIRetryableException))
 
         translation = {}
         for chunk in chunks:
-            tries = 0
-            while True:
-                task_id = api_call_queue.add_call(self._perform_translation_action, retries=1, chunk=chunk, translation_model=model, summary=summary, term_lists=term_lists)
-                api_call_queue.wait()
-                result = api_call_queue.get_result(task_id)
+            sub_task = task.add_subtask(self._perform_translation_action, chunk=chunk, translation_model=model, summary=summary, term_lists=term_lists)
+            translation[(sub_task, chunk.chunk_index)] = ""
 
-                if not isinstance(result, Exception):
-                    translation[chunk.chunk_index] = result
-                    break
-                else:
-                    if isinstance(result, GPTTranslatorAPIRetryableException):
-                        if tries < 3:
-                            tries += 1
-                            continue
-                        else:
-                            api_call_queue.stop()
-                            raise result
-                    else:
-                        api_call_queue.stop()
-                        raise result
+        sorted_keys = sorted(translation.keys(), key=lambda x: x[1])
+        translation = {key[0]: translation[key] for key in sorted_keys}
 
-        api_call_queue.stop()
+        results = task.run_subtasks()
 
-        return "\n\n".join([translation[key] for key in sorted(translation)])
+        for task_id in translation:
+            result = results[task_id]
+            if isinstance(result, Exception):
+                raise result
+            translation[task_id] = result
+
+        return "\n\n".join(translation.values())
     
     def _get_sub_chapter_context(self, novel: Novel, chapter_index: int, sub_chapter_index: int) -> tuple[SubChapter, SubChapter]:
+        logger.debug(f"Getting sub chapter context.")
+        
         # Validate the provided arguments
         if not isinstance(novel, Novel):
+            logger.error(f"Novel must be a Novel object")
             raise TypeError("Novel must be a Novel object")
         if not isinstance(chapter_index, int):
+            logger.error(f"Chapter index must be an integer")
             raise TypeError("Chapter index must be an integer")
         if not isinstance(sub_chapter_index, int):
+            logger.error(f"Sub chapter index must be an integer")
             raise TypeError("Sub chapter index must be an integer")
 
         # Check if the chapter and sub chapter indices are valid
@@ -692,6 +769,7 @@ class GPTTranslator:
             chapter = novel.chapters[chapter_index]
             sub_chapter = chapter.sub_chapters[sub_chapter_index]
         except IndexError:
+            logger.error(f"Invalid chapter or sub chapter index")
             raise GPTTranslatorException("Invalid chapter or sub chapter index")
 
         # Get the previous sub chapters
@@ -718,117 +796,103 @@ class GPTTranslator:
             # If the sub chapter is not the last sub chapter of a chapter, the next sub chapter is the next sub chapter of the same chapter
             next_sub_chapter = chapter.sub_chapters[sub_chapter_index + 1]
 
+        logger.debug(f"Previous sub chapter: {prev_sub_chapter}, Next sub chapter: {next_sub_chapter}")
         return prev_sub_chapter, next_sub_chapter
     
     def translate_novel_metadata(self, novel: Novel) -> list[Exception]:
+        logger.debug(f"Translating novel metadata.")
+
         # Validate the provided arguments
         if not isinstance(novel, Novel):
+            logger.error(f"Novel must be a Novel object")
             raise TypeError("Novel must be a Novel object")
         
         # Get the metadata model
         model = self._get_api_model(self._metadata_models[0])['name']
 
-        api_call_queue = APICallQueue()
-        api_call_queue.start()
+        result = self._perform_novel_metadata_action(novel=novel, metadata_model=model)
         
-        tries = 0
-        while True:
-            task_id = api_call_queue.add_call(self._perform_novel_metadata_action, retries=1, novel=novel, metadata_model=model)
-            api_call_queue.wait()
-            result = api_call_queue.get_result(task_id)
-
-            if not isinstance(result, Exception):
-                break
-            else:
-                if isinstance(result, GPTTranslatorAPIRetryableException):
-                    if tries < 3:
-                        tries += 1
-                        continue
-                    else:
-                        api_call_queue.stop()
-                        return [result]
-                else:
-                    api_call_queue.stop()
-                    return [result]
-
-        api_call_queue.stop()
+        if isinstance(result, Exception):
+            return [result]
 
         return []
     
     def translate_sub_chapters_metadata(self, novel: Novel, targets: dict[str, list[str]]) -> list[Exception]:
+        logger.debug(f"Translating sub chapters metadata.")
+
         # Validate parameters
         if not isinstance(novel, Novel):
+            logger.error(f"Novel must be a Novel object")
             raise TypeError("Novel must be a Novel object")
         if not isinstance(targets, dict):
+            logger.error(f"Targets must be a dictionary")
             raise TypeError("Targets must be a dictionary")
         if not all(isinstance(key, str) for key in targets.keys()):
+            logger.error(f"Chapter numbers must be strings")
             raise TypeError("Chapter numbers must be strings")
         if not all(key.isdigit() for key in targets.keys()):
+            logger.error(f"Chapter numbers must be digits as strings")
             raise TypeError("Chapter numbers must be digits as strings")
         if not all(isinstance(value, list) for value in targets.values()):
+            logger.error(f"Sub chapter numbers must be lists")
             raise TypeError("Sub chapter numbers must be lists")
         if not all(isinstance(item, str) for value in targets.values() for item in value):
+            logger.error(f"Sub chapter numbers must be strings")
             raise TypeError("Sub chapter numbers must be strings")
         if not all(item.isdigit() for value in targets.values() for item in value):
+            logger.error(f"Sub chapter numbers must be digits as strings")
             raise TypeError("Sub chapter numbers must be digits as strings")
         
         # Get the metadata model
         model = self._get_api_model(self._metadata_models[0])['name']
+
+        result = None
         
         sub_chapters = get_targeted_sub_chapters(novel, targets)
 
-        api_call_queue = APICallQueue()
-        api_call_queue.start()
-
         # Translate the metadata
-
-        tries = 0
-        while True:
-            task_id = api_call_queue.add_call(self._perform_chapters_metadata_action, retries=1, novel=novel, sub_chapters=sub_chapters, metadata_model=model)
-            api_call_queue.wait()
-            result = api_call_queue.get_result(task_id)
-
-            if not isinstance(result, Exception):
-                break
-            else:
-                if isinstance(result, GPTTranslatorAPIRetryableException):
-                    if tries < 3:
-                        tries += 1
-                        continue
-                    else:
-                        api_call_queue.stop()
-                        return [result]
-                else:
-                    api_call_queue.stop()
-                    return [result]
-                
-        api_call_queue.stop()
+        result = self._perform_chapters_metadata_action(novel=novel, sub_chapters=sub_chapters, metadata_model=model)
+        
+        if isinstance(result, Exception):
+            return [result]
 
         return []
 
     def summarize_sub_chapters(self, novel: Novel, targets: dict[str, list[str]]) -> list[Exception]:
+        logger.debug(f"Summarizing sub chapters.")
+
         # Validate parameters
         if not isinstance(novel, Novel):
+            logger.error(f"Novel must be a Novel object")
             raise TypeError("Novel must be a Novel object")
         if not isinstance(targets, dict):
+            logger.error(f"Targets must be a dictionary")
             raise TypeError("Targets must be a dictionary")
         if not all(isinstance(key, str) for key in targets.keys()):
+            logger.error(f"Chapter numbers must be strings")
             raise TypeError("Chapter numbers must be strings")
         if not all(key.isdigit() for key in targets.keys()):
+            logger.error(f"Chapter numbers must be digits as strings")
             raise TypeError("Chapter numbers must be digits as strings")
         if not all(isinstance(value, list) for value in targets.values()):
+            logger.error(f"Sub chapter numbers must be lists")
             raise TypeError("Sub chapter numbers must be lists")
         if not all(isinstance(item, str) for value in targets.values() for item in value):
+            logger.error(f"Sub chapter numbers must be strings")
             raise TypeError("Sub chapter numbers must be strings")
         if not all(item.isdigit() for value in targets.values() for item in value):
+            logger.error(f"Sub chapter numbers must be digits as strings")
             raise TypeError("Sub chapter numbers must be digits as strings")
         
         sub_chapters = get_targeted_sub_chapters(novel, targets)
 
         tasks = {}
 
-        api_call_queue = APICallQueue()
-        api_call_queue.start()
+        if all(sub_chapter.summary for sub_chapter in sub_chapters):
+            logger.debug(f"All sub chapters are already summarized.")
+            return []
+
+        task = Task(max_workers=4, retry_on_exceptions=(GPTTranslatorAPIRetryableException))
 
         # Summarize the sub chapters
         for sub_chapter in sub_chapters:
@@ -861,47 +925,54 @@ class GPTTranslator:
                     chunk_prev_line,
                     chunk_next_line))
             
-            tasks[(sub_chapter.chapter_index, sub_chapter.sub_chapter_index)] = api_call_queue.add_call(self._summarize_sub_chapter, retries=1, chunks=terms_chunks_objects, model=summary_model)
+            sub_task = task.add_subtask(self._summarize_sub_chapter, chunks=terms_chunks_objects, model=summary_model)
+            tasks[(sub_chapter.chapter_index, sub_chapter.sub_chapter_index)] = sub_task
 
-        api_call_queue.wait()
+        results = task.run_subtasks()
         
         exceptions = []
         for key, value in tasks.items():
-            result = api_call_queue.get_result(value)
-            if not isinstance(result, Exception):
+            result = results[value]
+            if isinstance(result, Exception):
+                exceptions.append(result)
+            else: 
                 active_chapter = novel.get_chapter(key[0])
                 active_sub_chapter = active_chapter.get_sub_chapter(key[1])
                 active_sub_chapter.summary = result
-            else:
-                exceptions.append(result)
-
-        api_call_queue.stop()
 
         return exceptions
     
     def gather_terms_for_sub_chapters(self, novel: Novel, targets: dict[str, list[str]]) -> list[Exception]:
+        logger.debug(f"Gathering terms for sub chapters.")
+
         # Validate parameters
         if not isinstance(novel, Novel):
+            logger.error(f"Novel must be a Novel object")
             raise TypeError("Novel must be a Novel object")
         if not isinstance(targets, dict):
+            logger.error(f"Targets must be a dictionary")
             raise TypeError("Targets must be a dictionary")
         if not all(isinstance(key, str) for key in targets.keys()):
+            logger.error(f"Chapter numbers must be strings")
             raise TypeError("Chapter numbers must be strings")
         if not all(key.isdigit() for key in targets.keys()):
+            logger.error(f"Chapter numbers must be digits as strings")
             raise TypeError("Chapter numbers must be digits as strings")
         if not all(isinstance(value, list) for value in targets.values()):
+            logger.error(f"Sub chapter numbers must be lists")
             raise TypeError("Sub chapter numbers must be lists")
         if not all(isinstance(item, str) for value in targets.values() for item in value):
+            logger.error(f"Sub chapter numbers must be strings")
             raise TypeError("Sub chapter numbers must be strings")
         if not all(item.isdigit() for value in targets.values() for item in value):
+            logger.error(f"Sub chapter numbers must be digits as strings")
             raise TypeError("Sub chapter numbers must be digits as strings")
         
         sub_chapters = get_targeted_sub_chapters(novel, targets)
 
         tasks = {}
 
-        api_call_queue = APICallQueue()
-        api_call_queue.start()
+        task = Task(max_workers=4, retry_on_exceptions=(GPTTranslatorAPIRetryableException))
 
         # Summarize the sub chapters
         for sub_chapter in sub_chapters:
@@ -930,21 +1001,22 @@ class GPTTranslator:
                     chunk,
                     chunk_prev_line,
                     chunk_next_line))
-                
-            tasks[(sub_chapter.chapter_index, sub_chapter.sub_chapter_index)] = api_call_queue.add_call(self._gather_terms_for_sub_chapter, retries=1, chunks=terms_chunks_objects, model=terms_model)
+            
+            sub_task = task.add_subtask(self._gather_terms_for_sub_chapter, chunks=terms_chunks_objects, model=terms_model)
+            tasks[(sub_chapter.chapter_index, sub_chapter.sub_chapter_index)] = sub_task
 
-        api_call_queue.wait()
+        results = task.run_subtasks()
+
+        logger.info(f"{results}")
 
         terms = ""
         exceptions = []
         for _, value in tasks.items():
-            result = api_call_queue.get_result(value)
-            if not isinstance(result, Exception):
-                terms += result + "\n\n"
-            else:
+            result = results[value]
+            if isinstance(result, Exception):
                 exceptions.append(result)
-
-        api_call_queue.stop()
+            else:
+                terms += result + "\n\n"
 
         if not novel.terms_sheet:
             novel.terms_sheet = TermSheet(novel.novel_code)
@@ -953,28 +1025,36 @@ class GPTTranslator:
         return exceptions
     
     def translate_sub_chapters(self, novel: Novel, targets: dict[str, list[str]]) -> list[Exception]:
+        logger.debug(f"Translating sub chapters.")
+
         # Validate parameters
         if not isinstance(novel, Novel):
+            logger.error(f"Novel must be a Novel object")
             raise TypeError("Novel must be a Novel object")
         if not isinstance(targets, dict):
+            logger.error(f"Targets must be a dictionary")
             raise TypeError("Targets must be a dictionary")
         if not all(isinstance(key, str) for key in targets.keys()):
+            logger.error(f"Chapter numbers must be strings")
             raise TypeError("Chapter numbers must be strings")
         if not all(key.isdigit() for key in targets.keys()):
+            logger.error(f"Chapter numbers must be digits as strings")
             raise TypeError("Chapter numbers must be digits as strings")
         if not all(isinstance(value, list) for value in targets.values()):
+            logger.error(f"Sub chapter numbers must be lists")
             raise TypeError("Sub chapter numbers must be lists")
         if not all(isinstance(item, str) for value in targets.values() for item in value):
+            logger.error(f"Sub chapter numbers must be strings")
             raise TypeError("Sub chapter numbers must be strings")
         if not all(item.isdigit() for value in targets.values() for item in value):
+            logger.error(f"Sub chapter numbers must be digits as strings")
             raise TypeError("Sub chapter numbers must be digits as strings")
         
         sub_chapters = get_targeted_sub_chapters(novel, targets)
 
         tasks = {}
 
-        api_call_queue = APICallQueue()
-        api_call_queue.start()
+        task = Task(max_workers=4, retry_on_exceptions=(GPTTranslatorAPIRetryableException))
 
         # Summarize the sub chapters
         for sub_chapter in sub_chapters:
@@ -1007,29 +1087,28 @@ class GPTTranslator:
                     chunk_prev_line,
                     chunk_next_line))
                 
-            tasks[(sub_chapter.chapter_index, sub_chapter.sub_chapter_index)] = api_call_queue.add_call(self._translate_sub_chapter, retries=1, chunks=terms_chunks_objects, model=translate_model, summary=sub_chapter.summary, term_lists=novel.terms_sheet)
+            sub_task = task.add_subtask(self._translate_sub_chapter, chunks=terms_chunks_objects, model=translate_model, summary=sub_chapter.summary, term_lists=novel.terms_sheet)
+            tasks[(sub_chapter.chapter_index, sub_chapter.sub_chapter_index)] = sub_task
 
-        api_call_queue.wait()
+        results = task.run_subtasks()
 
         translation = ""
         exceptions = []
         for key, value in tasks.items():
-            result = api_call_queue.get_result(value)
-            if not isinstance(result, Exception):
+            result = results[value]
+            if isinstance(result, Exception):
+                exceptions.append(result)
+            else:
                 active_chapter = novel.get_chapter(key[0])
                 active_sub_chapter = active_chapter.get_sub_chapter(key[1])
                 active_sub_chapter.translation = result
-
-            else:
-                exceptions.append(result)
-
-        api_call_queue.stop()
 
         return exceptions
 
 @singleton
 class GPTTranslatorSingleton(GPTTranslator):
     def __init__(self) -> None:
+        logger.info("Initializing GPTTranslator")
         cf = Config()
         available_models = cf.data.config.openai.models
         terms_models = cf.data.config.translator.api.terms_list.models

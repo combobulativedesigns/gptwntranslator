@@ -12,6 +12,12 @@ class PageNovelTranslating(PageBase):
     def __init__(self) -> None:
         pass
 
+    def pre_render(self, screen, **kwargs) -> None:
+        return super().pre_render(screen, **kwargs)
+        self.pre_pessages = [
+            f"Translating targets: {kwargs['target']}"
+        ]
+
     def render(self, screen, **kwargs) -> tuple[PageBase, dict]:
         resources = get_resources()
         novel_code = kwargs["novel_url_code"]
@@ -20,6 +26,9 @@ class PageNovelTranslating(PageBase):
 
         # Print title
         last_y = print_title(screen, resources["title"], 0)
+        
+        last_y += 2
+        screen.print_at(f"Translating targets: {targets}", 2, last_y)
 
         while True:
             last_y += 2

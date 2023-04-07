@@ -32,9 +32,11 @@ class PageNovelExporting(PageBase):
         if not all(item.isdigit() for value in targets.values() for item in value):
             raise TypeError("Sub chapter numbers must be digits as strings")
         
+        config = Config()
+
         sub_chapters = get_targeted_sub_chapters(novel, targets)
 
-        metadata = f"---\ntitle: \"{novel.title_translation}\"\nauthor: \"{novel.author_translation}\"\nlanguage: en-US\n---\n\n"
+        metadata = f"---\ntitle: \"{novel.title_translation}\"\nauthor: \"{novel.author_translation}\"\nlanguage: {config.data.config.translator.target_language}\n---\n\n"
 
         md_text = metadata
         # md_text += "# **{}**\n\n".format(novel.title_translation)
@@ -50,8 +52,7 @@ class PageNovelExporting(PageBase):
             for line in lines:
                 md_text += "{}\n\n".format(line.strip('\n\t '))
 
-        config = Config()
-        output = os.path.join(config.vars["output_path"], "{}.epub".format(novel.novel_code))
+        output = os.path.join(config.vars["output_path"], f"{novel.novel_code}-{config.data.config.translator.target_language}.epub")
         write_md_as_epub(md_text, output)
 
 
@@ -63,6 +64,9 @@ class PageNovelExporting(PageBase):
 
         # Print title
         last_y = print_title(screen, resources["title"], 0)
+        
+        last_y += 2
+        screen.print_at(f"Exporting targets: {targets}", 2, last_y)
 
         while True:
             last_y += 2

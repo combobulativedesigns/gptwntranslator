@@ -20,18 +20,23 @@ class PageNovelScraping(PageBase):
 
         # Print title
         last_y = print_title(screen, resources["title"], 0)
+        
+        last_y += 2
+        screen.print_at(f"Downloading targets: {targets}", 2, last_y)
 
         while True:
             last_y += 2
             try:
-                screen.print_at("Parsing chapter targets...", 2, last_y)
+                message = "(1/4) Parsing chapter targets... "
+                screen.print_at(message, 2, last_y)
                 screen.refresh()
                 targets = parse_chapters(targets)
-                screen.print_at("Chapter targets parsed successfully.", 2, last_y + 1)
+                screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
-                last_y += 2
+                last_y += 1
             except Exception as e:
-                screen.print_at("Chapter targets parsing failed.", 2, last_y)
+                screen.print_at("failed.", 2 + len(message), last_y)
+                last_y += 1
                 messages = [
                     f"Error: Chapter targets parsing failed.",
                     f"Error: {e}"]
@@ -40,14 +45,16 @@ class PageNovelScraping(PageBase):
                 break
             
             try:
-                screen.print_at("Loading local storage...", 2, last_y)
+                message = "(2/4) Loading local storage... "
+                screen.print_at(message, 2, last_y)
                 screen.refresh()
                 novels = storage.get_data()
-                screen.print_at("Local storage loaded successfully.", 2, last_y + 1)
+                screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
-                last_y += 2
+                last_y += 1
             except Exception as e:
-                screen.print_at("Error loading local storage.", 2, last_y)
+                screen.print_at("failed.", 2 + len(message), last_y)
+                last_y += 1
                 messages = [
                     f"Error: Error loading local storage.",
                     f"Error: {e}"]
@@ -56,15 +63,17 @@ class PageNovelScraping(PageBase):
                 break
             
             try:
-                screen.print_at("Downloading chapters targets...", 2, last_y)
+                message = "(3/4) Downloading chapters targets... "
+                screen.print_at(message, 2, last_y)
                 screen.refresh()
                 novel = [novel for novel in novels if novel.novel_code == novel_code][0]
                 process_targets(novel, targets)
-                screen.print_at("Chapters downloaded successfully.", 2, last_y + 1)
+                screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
-                last_y += 2
+                last_y += 1
             except Exception as e:
-                screen.print_at("Chapters downloading failed.", 2, last_y)
+                screen.print_at("failed.", 2 + len(message), last_y)
+                last_y += 1
                 messages = [
                     f"Error: Chapters downloading failed.",
                     f"Error: {e}"]
@@ -73,14 +82,17 @@ class PageNovelScraping(PageBase):
                 break
 
             try:
-                screen.print_at("Saving novel to local storage...", 2, last_y)
+                message = "(4/4) Saving novel to local storage... "
+                screen.print_at(message, 2, last_y)
                 screen.refresh()
                 storage.set_data(novels)
-                screen.print_at("Novel saved to local storage.", 2, last_y + 1)
+                screen.print_at("success.", 2 + len(message), last_y)
+                screen.refresh()
+                last_y += 1
                 target, params = self.args["return_page"], self.args["return_kwargs"]
-                last_y += 2
             except Exception as e:
-                screen.print_at("Novel saving failed.", 2, last_y)
+                screen.print_at("failed.", 2 + len(message), last_y)
+                last_y += 1
                 messages = [
                     f"Error: Novel saving failed.",
                     f"Error: {e}"]
@@ -88,7 +100,7 @@ class PageNovelScraping(PageBase):
                 params = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
             break
 
-        last_y += 2
+        last_y += 1
         screen.refresh()
         wait_for_user_input(screen, 2, last_y)
         return target, params
