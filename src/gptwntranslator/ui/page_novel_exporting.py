@@ -36,23 +36,25 @@ class PageNovelExporting(PageBase):
 
         sub_chapters = get_targeted_sub_chapters(novel, targets)
 
-        metadata = f"---\ntitle: \"{novel.title_translation}\"\nauthor: \"{novel.author_translation}\"\nlanguage: {config.data.config.translator.target_language}\n---\n\n"
+        target_language = config.data.config.translator.target_language
+
+        metadata = f"---\ntitle: \"{novel.title_translation[target_language]}\"\nauthor: \"{novel.author_translation[target_language]}\"\nlanguage: {target_language}\n---\n\n"
 
         md_text = metadata
-        # md_text += "# **{}**\n\n".format(novel.title_translation)
+        # md_text += "# **{}**\n\n".format(novel.title_translation[target_language])
         md_text += "# **Contents**\n\n"
-        md_text += "\n".join([f"- [{sub_chapter.translated_name if sub_chapter.translated_name is not None else sub_chapter.name}](#chapter-{sub_chapter.chapter_index}-{sub_chapter.sub_chapter_index})" for sub_chapter in sub_chapters])
+        md_text += "\n".join([f"- [{sub_chapter.translated_name[target_language] if target_language in sub_chapter.translated_name is not None else sub_chapter.name}](#chapter-{sub_chapter.chapter_index}-{sub_chapter.sub_chapter_index})" for sub_chapter in sub_chapters])
         md_text += "\n\n"
         
         for sub_chapter in sub_chapters:
-            name = sub_chapter.translated_name if sub_chapter.translated_name is not None else sub_chapter.name
+            name = sub_chapter.translated_name[target_language] if target_language in sub_chapter.translated_name is not None else sub_chapter.name
             # md_text += f"# **Chapter {sub_chapter.chapter_index}-{sub_chapter.sub_chapter_index}**\n\n"
             md_text += f"<h1 id=\"chapter-{sub_chapter.chapter_index}-{sub_chapter.sub_chapter_index}\"><strong>{name}</strong></h1>"
-            lines = sub_chapter.translation.splitlines()
+            lines = sub_chapter.translation[target_language].splitlines()
             for line in lines:
                 md_text += "{}\n\n".format(line.strip('\n\t '))
 
-        output = os.path.join(config.vars["output_path"], f"{novel.novel_code}-{config.data.config.translator.target_language}.epub")
+        output = os.path.join(config.vars["output_path"], f"{novel.novel_code}-{target_language}.epub")
         write_md_as_epub(md_text, output)
 
 

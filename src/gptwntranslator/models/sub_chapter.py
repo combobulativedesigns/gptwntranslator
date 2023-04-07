@@ -6,7 +6,7 @@ from gptwntranslator.models.chunk import Chunk
 class SubChapter:
     """This class represents a sub chapter in a chapter."""
 
-    def __init__(self, novel_code: str, chapter_index: int, sub_chapter_index: int, link: str, name: str, contents: str, release_date: str, translated_name: str="", translation: str="", summary: str="", ) -> None:
+    def __init__(self, novel_code: str, chapter_index: int, sub_chapter_index: int, link: str, name: str, contents: str, release_date: str, translated_name: dict[str, str]={}, translation: dict[str, str]={}, summary: dict[str, str]={}) -> None:
         """Initialize a SubChapter object.
 
         Parameters
@@ -48,12 +48,24 @@ class SubChapter:
             raise TypeError("Contents must be a string")
         if not isinstance(release_date, str):
             raise TypeError("Release date must be a string")
-        if not isinstance(translated_name, str):
-            raise TypeError("Translated name must be a string")
-        if not isinstance(translation, str):
-            raise TypeError("Translation must be a string")
-        if not isinstance(summary, str):
-            raise TypeError("Summary must be a string")
+        if not isinstance(translated_name, dict):
+            raise TypeError("Translated name must be a dictionary")
+        if not all(isinstance(key, str) for key in translated_name.keys()):
+            raise TypeError("Translated name keys must be strings")
+        if not all(isinstance(value, str) for value in translated_name.values()):
+            raise TypeError("Translated name values must be strings")
+        if not isinstance(translation, dict):
+            raise TypeError("Translation must be a dictionary")
+        if not all(isinstance(key, str) for key in translation.keys()):
+            raise TypeError("Translation keys must be strings")
+        if not all(isinstance(value, str) for value in translation.values()):
+            raise TypeError("Translation values must be strings")
+        if not isinstance(summary, dict):
+            raise TypeError("Summary must be a dictionary")
+        if not all(isinstance(key, str) for key in summary.keys()):
+            raise TypeError("Summary keys must be strings")
+        if not all(isinstance(value, str) for value in summary.values()):
+            raise TypeError("Summary values must be strings")       
         
         # Set attributes
         self.novel_code = novel_code

@@ -3,7 +3,6 @@ import locale
 import os
 from asciimatics.screen import Screen
 from gptwntranslator.api import openai_api
-from gptwntranslator.helpers.api_helper import MultiAPICallQueue
 from gptwntranslator.helpers.config_helper import Config
 from gptwntranslator.helpers.logger_helper import CustomLogger
 from gptwntranslator.storage.json_storage import JsonStorage, JsonStorageException, JsonStorageFileException, JsonStorageFormatException
@@ -95,7 +94,7 @@ def _ui(screen):
         try:
             page, parameters = page().show(screen, **parameters)
         except KeyboardInterrupt:
-            MultiAPICallQueue().stop_all()
+            # Stop shit
             logger.info("Detected Ctrl+C.")
             messages = [
                 f"Detected Ctrl+C.",
@@ -103,7 +102,7 @@ def _ui(screen):
             page = PageMessage
             parameters = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
         except Exception as e:
-            MultiAPICallQueue().stop_all()
+            # Stop shit
             logger.error(f"An error occurred. {e}")
             messages = [
                 f"Error: {e}",

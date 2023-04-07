@@ -6,7 +6,7 @@ from gptwntranslator.models.sub_chapter import SubChapter
 class Chapter:
     """This class represents a chapter in a novel."""
 
-    def __init__(self, novel_code: str, chapter_index: int, name: str, translated_name: str="", sub_chapters: list[SubChapter]=[]) -> None:
+    def __init__(self, novel_code: str, chapter_index: int, name: str, translated_name: dict[str, str]={}, sub_chapters: list[SubChapter]=[]) -> None:
         """Initialize a Chapter object.
 
         Parameters
@@ -17,8 +17,8 @@ class Chapter:
             The index of the chapter.
         name : str
             The name of the chapter.
-        translated_name : str, optional
-            The translated name of the chapter, by default ""
+        translated_name : dict[str, str], optional
+            The translated name of the chapter per language, by default {}
         sub_chapters : list[SubChapter], optional
             The sub chapters of the chapter, by default []
         """
@@ -30,8 +30,12 @@ class Chapter:
             raise TypeError("Chapter index must be an integer")
         if not isinstance(name, str):
             raise TypeError("Name must be a string")
-        if not isinstance(translated_name, str):
-            raise TypeError("Translated name must be a string")
+        if not isinstance(translated_name, dict):
+            raise TypeError("Translated name must be a dictionary")
+        if not all(isinstance(key, str) for key in translated_name.keys()):
+            raise TypeError("Translated name keys must be strings")
+        if not all(isinstance(value, str) for value in translated_name.values()):
+            raise TypeError("Translated name values must be strings")
         if not isinstance(sub_chapters, list):
             raise TypeError("Sub chapters must be a list")
         if not all(isinstance(sub_chapter, SubChapter) for sub_chapter in sub_chapters):

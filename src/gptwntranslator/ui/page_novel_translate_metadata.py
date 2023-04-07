@@ -25,7 +25,7 @@ class PageNovelTranslateMetadata(PageBase):
         while True:
             last_y += 2
             try:
-                message = "(1) Loading novel from local storage... "
+                message = "(1/4) Loading novel from local storage... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 novels = storage.get_data()
@@ -44,7 +44,7 @@ class PageNovelTranslateMetadata(PageBase):
                 break
 
             try:
-                message = "(2) Initializing translator... "
+                message = "(2/4) Initializing translator... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 translator = GPTTranslatorSingleton()
@@ -64,7 +64,7 @@ class PageNovelTranslateMetadata(PageBase):
             
             try:
                 # Translate novel metadata
-                message = "(3) Translating novel metadata... "
+                message = "(3/4) Translating novel metadata... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 exceptions = translator.translate_novel_metadata(novel)
@@ -85,7 +85,7 @@ class PageNovelTranslateMetadata(PageBase):
                 break
 
             try:
-                message = "(4) Saving novel to local storage... "
+                message = "(4/4) Saving novel to local storage... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 storage.set_data(novels)
