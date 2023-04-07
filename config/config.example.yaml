@@ -32,7 +32,7 @@ config:
       metadata:
         models:
           - gpt-3.5
-    target_language: "es"
+    target_language: "en"
 
   languages:
     - en: "English"

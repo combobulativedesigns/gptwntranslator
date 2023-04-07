@@ -49,7 +49,7 @@ class PageNovelExporting(PageBase):
         for sub_chapter in sub_chapters:
             name = sub_chapter.translated_name[target_language] if target_language in sub_chapter.translated_name is not None else sub_chapter.name
             # md_text += f"# **Chapter {sub_chapter.chapter_index}-{sub_chapter.sub_chapter_index}**\n\n"
-            md_text += f"<h1 id=\"chapter-{sub_chapter.chapter_index}-{sub_chapter.sub_chapter_index}\"><strong>{name}</strong></h1>"
+            md_text += f"# <strong id=\"chapter-{sub_chapter.chapter_index}-{sub_chapter.sub_chapter_index}\">{name}</strong>\n\n"
             lines = sub_chapter.translation[target_language].splitlines()
             for line in lines:
                 md_text += "{}\n\n".format(line.strip('\n\t '))
