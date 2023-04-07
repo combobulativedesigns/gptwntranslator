@@ -70,8 +70,7 @@ def _ui(screen):
             storage.set_data([])
             logger.info("Persistent data file created successfully.")
             messages = [
-                f"Error: Failed to find persistent data file.",
-                f"Path: {persistent_data_file_path}",
+                f"Failed to find persistent data file.",
                 f"We'll create a new one for you."]
             page = PageMessage
             parameters = {"messages": messages, "return_page": PageNovelSelection, "return_kwargs": {"novel_objects": []}}

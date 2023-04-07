@@ -174,7 +174,7 @@ def main():
 
     logging_file_path = os.path.join(working_directory, "gptwntranslator.log")
     main_logger = SingletonLogger()
-    main_logger.initialize(logging_file_path, logging.DEBUG)
+    main_logger.initialize(logging_file_path, logging.WARNING)
 
     logger = CustomLogger(__name__)
     config = Config()

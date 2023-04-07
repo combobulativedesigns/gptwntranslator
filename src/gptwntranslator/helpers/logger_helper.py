@@ -5,6 +5,7 @@ class SingletonLogger:
         self.logger = logging.getLogger('gptwntranslator')
 
     def initialize(self, log_file_path, log_level):
+
         self.logger.setLevel(log_level)
 
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -12,6 +13,7 @@ class SingletonLogger:
         handler = logging.FileHandler(log_file_path)
         handler.setFormatter(formatter)
 
+        self.logger.handlers = []
         self.logger.addHandler(handler)
 
 
