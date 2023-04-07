@@ -1,13 +1,5 @@
 import argparse
 import sys
-import logging
-import os
-from gptwntranslator.command import run_command
-from gptwntranslator.helpers.config_helper import Config
-from gptwntranslator.helpers.logger_helper import CustomLogger, SingletonLogger
-from gptwntranslator.interactive import run_interactive
-from gptwntranslator.storage.json_storage import JsonStorage
-
 
 def show_in_depth_help():
     message = '''
@@ -144,57 +136,7 @@ def main():
     if args.mode == "command" and (args.action in ["sc", "tc", "ec"] and args.chapters is None):
         parser.error("Chapters argument is required for the selected action")
 
-    working_directory = os.getcwd()
-
-    if args.output_directory is not None:
-        if not os.path.exists(args.output_directory):
-            parser.error("The specified output directory path does not exist")
-        output_directory = args.output_directory
-    else:
-        if not os.path.exists(os.path.join(working_directory, "output")):
-            os.mkdir(os.path.join(working_directory, "output"))
-        output_directory = os.path.join(working_directory, "output")
-
-    if args.config_file is not None:
-        if not os.path.exists(args.config_file):
-            parser.error("The specified configuration file path does not exist")
-        config_file_path = args.config_file
-    else:
-        if not os.path.exists(os.path.join(working_directory, "config", "config.yaml")):
-            parser.error("The default configuration file does not exist")
-        config_file_path = os.path.join(working_directory, "config", "config.yaml")
-
-    if args.persistent_file is not None:
-        parent_dir = os.path.dirname(args.persistent_file)
-        if not os.path.exists(parent_dir):
-            parser.error("The specified persistent file path does not exist")
-        persistent_file_path = args.persistent_file
-    else:
-        persistent_file_path = os.path.join(working_directory, "persistent_data.json")
-
-    logging_file_path = os.path.join(working_directory, "gptwntranslator.log")
-    main_logger = SingletonLogger()
-    main_logger.initialize(logging_file_path, logging.DEBUG)
-
-    logger = CustomLogger(__name__)
-    config = Config()
-
-    logger.info("Starting gptwntranslator...")
-    logger.info(f"Logging to: {logging_file_path}")
-    logger.info(f"Configuration file: {config_file_path}")
-    logger.info(f"Persistent file: {persistent_file_path}")
-    logger.info(f"Output directory: {output_directory}")
-    logger.info(f"Mode set to: {args.mode}")
-
-    config.vars["config_file_path"] = config_file_path
-    config.vars["output_path"] = output_directory
-    config.vars["persistent_file_path"] = persistent_file_path
-    config.vars["verbose"] = args.verbose if "verbose" in args else False
-    
-    if args.mode in ["interactive", "i"]:
-        run_interactive()
-    elif args.mode in ["command", "c"]:
-        run_command(args)
+    print(args)
 
 if __name__ == "__main__":
     main()

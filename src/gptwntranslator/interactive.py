@@ -13,22 +13,17 @@ from gptwntranslator.ui.page_novel_selection import PageNovelSelection
 logger = CustomLogger(__name__)
 
 def _ui(screen):
-    config_file_path = os.path.join(os.getcwd(), "config", "config.yaml")
-    persistent_data_file_path = os.path.join(os.getcwd(), "persistent_data.json")
-    output_file_path = os.path.join(os.getcwd(), "output")
+    config = Config()
 
-    logger.info("Config file path: " + config_file_path)
-    logger.info("Persistent data file path: " + persistent_data_file_path)
-    logger.info("Output folder path: " + output_file_path)
+    config_file_path = config.vars["config_file_path"]
+    persistent_data_file_path = config.vars["persistent_file_path"]
 
     storage = JsonStorage()
     storage.initialize(persistent_data_file_path)
 
     while True:
         try:
-            config = Config()
             config.load(config_file_path)
-            config.vars["output_path"] = output_file_path
             language = config.get_language_name_for_code(config.data.config.translator.target_language)
             config.vars["target_language"] = language
             openai_api.initialize(config.data.config.openai.api_key)

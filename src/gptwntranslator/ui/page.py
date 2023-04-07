@@ -1,9 +1,12 @@
 from types import NoneType
+from gptwntranslator.helpers.logger_helper import CustomLogger
 from gptwntranslator.helpers.ui_helper import navigate_items, print_title
 from gptwntranslator.ui.page_base import PageBase
 from gptwntranslator.ui.page_return import PageReturn
 from gptwntranslator.ui.ui_resources import get_resources
 
+
+logger = CustomLogger(__name__)
 
 class Page(PageBase):
     def __init__(self, messages: list[str], menu_items: list[tuple[int, int, int, str, PageBase, str, bool]], pre_messages: list[str]|NoneType = None, post_messages: list[str]|NoneType = None) -> None:
@@ -45,6 +48,7 @@ class Page(PageBase):
 
             screen.refresh()
             active_index = navigate_items(screen, last_y, 2, self.menu_items)
+            logger.debug(f"active_index: {active_index}")
             item = self.menu_items[active_index]
 
             if item[4] is not None:
