@@ -1,3 +1,4 @@
+from gptwntranslator.helpers.config_helper import Config
 from gptwntranslator.storage.json_storage import JsonStorage
 from gptwntranslator.ui.page_novel_editing_target import PageNovelEditingTarget
 from gptwntranslator.ui.page_novel_export_targets import PageNovelExportTargets
@@ -32,13 +33,14 @@ class PageNovelMenu(PageTypeA):
         storage = JsonStorage()
         novels = storage.get_data()
         novel = [novel for novel in novels if novel.novel_code == kwargs["novel_url_code"]][0]
+        cf = Config()
         self.pre_messages = []
-        if novel.title_translation:
-            self.pre_messages.append(u"Novel: {}".format(novel.title_translation))
+        if cf.data.config.translator.target_language in novel.title_translation:
+            self.pre_messages.append(u"Novel: {}".format(novel.title_translation[cf.data.config.translator.target_language]))
         else:
             self.pre_messages.append(u"Novel: {}".format(novel.title))
-        if novel.author_translation:
-            self.pre_messages.append(u"Author: {}".format(novel.author_translation))
+        if cf.data.config.translator.target_language in novel.author_translation:
+            self.pre_messages.append(u"Author: {}".format(novel.author_translation[cf.data.config.translator.target_language]))
         else:
             self.pre_messages.append(u"Author: {}".format(novel.author))
         self.pre_messages.append(u"Language: {}".format(novel.original_language))

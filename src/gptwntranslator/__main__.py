@@ -6,7 +6,7 @@ from gptwntranslator.interactive import run_interactive
 def main():
     logging_file_path = os.path.join(os.getcwd(), "gptwntranslator.log")
     main_logger = SingletonLogger()
-    main_logger.initialize(logging_file_path, logging.WARNING)
+    main_logger.initialize(logging_file_path, logging.DEBUG)
 
     logger = CustomLogger(__name__)
 

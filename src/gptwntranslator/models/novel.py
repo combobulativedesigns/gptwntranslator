@@ -8,7 +8,7 @@ from gptwntranslator.models.term_sheet import TermSheet
 class Novel:
     """Model for a japanese web novel."""
 
-    def __init__(self, novel_code: str, title: str, author: str, description: str, original_language: str, title_translation: str="", author_translation: str="", author_link: str="", description_translation: str="", chapters: list[Chapter]=[], terms_sheet: TermSheet|NoneType=None) -> None:
+    def __init__(self, novel_code: str, title: str, author: str, description: str, original_language: str, title_translation: dict[str, str]={}, author_translation: dict[str, str]={}, author_link: str="", description_translation: dict[str, str]={}, chapters: list[Chapter]=[], terms_sheet: TermSheet|NoneType=None) -> None:
         """Initialize a novel object.
 
         Parameters
@@ -48,14 +48,26 @@ class Novel:
             raise TypeError("Description must be a string")
         if not isinstance(original_language, str):
             raise TypeError("Original language must be a string")
-        if not isinstance(title_translation, str):
-            raise TypeError("Title translation must be a string")
-        if not isinstance(author_translation, str):
-            raise TypeError("Author translation must be a string")
+        if not isinstance(title_translation, dict):
+            raise TypeError("Title translation must be a dictionary")
+        if not all(isinstance(key, str) for key in title_translation.keys()):
+            raise TypeError("Title translation keys must be strings")
+        if not all(isinstance(value, str) for value in title_translation.values()):
+            raise TypeError("Title translation values must be strings")
+        if not isinstance(author_translation, dict):
+            raise TypeError("Author translation must be a dictionary")
+        if not all(isinstance(key, str) for key in author_translation.keys()):
+            raise TypeError("Author translation keys must be strings")
+        if not all(isinstance(value, str) for value in author_translation.values()):
+            raise TypeError("Author translation values must be strings")
         if not isinstance(author_link, str):
             raise TypeError("Author link must be a string")
-        if not isinstance(description_translation, str):
-            raise TypeError("Description translation must be a string")
+        if not isinstance(description_translation, dict):
+            raise TypeError("Description translation must be a dictionary")
+        if not all(isinstance(key, str) for key in description_translation.keys()):
+            raise TypeError("Description translation keys must be strings")
+        if not all(isinstance(value, str) for value in description_translation.values()):
+            raise TypeError("Description translation values must be strings")
         if not isinstance(chapters, list):
             raise TypeError("Chapters must be a list of Chapter objects")
         if not all(isinstance(chapter, Chapter) for chapter in chapters):

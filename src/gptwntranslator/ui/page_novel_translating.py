@@ -55,7 +55,10 @@ class PageNovelTranslating(PageBase):
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 novels = storage.get_data()
-                novel = [novel for novel in novels if novel.novel_code == novel_code][0]
+                novel_index = next((i for i, n in enumerate(novels) if n.novel_code == novel_code), None)
+                if novel_index is None:
+                    raise ValueError(f"Novel with code {novel_code} not found in local storage.")
+                novel = novels[novel_index]
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
                 last_y += 1
@@ -66,7 +69,7 @@ class PageNovelTranslating(PageBase):
                     f"Error: Error loading local storage.",
                     f"Error: {e}"]
                 target = PageMessage
-                params = {"messages": messages, "return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
+                params = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
                 break
 
             try:
@@ -92,7 +95,7 @@ class PageNovelTranslating(PageBase):
                 message = "(4/12) Generating summary for targets... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
-                novel = [novel for novel in novels if novel.novel_code == novel_code][0]
+                # exceptions = []
                 exceptions = translator.summarize_sub_chapters(novel, targets)
                 if exceptions:
                     raise Exception("Summary generation failed for some sub chapters. {}".format(exceptions[0]))
@@ -100,6 +103,7 @@ class PageNovelTranslating(PageBase):
                     screen.print_at("success.", 2 + len(message), last_y)
                     screen.refresh()
                     last_y += 1
+                novels[novel_index] = novel
             except Exception as e:
                 screen.print_at("failed.", 2 + len(message), last_y)
                 last_y += 1
@@ -125,7 +129,7 @@ class PageNovelTranslating(PageBase):
                     f"Error: Novel saving failed.",
                     f"Error: {e}"]
                 target = PageMessage
-                params = {"messages": messages, "return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
+                params = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
                 break
 
             try:
@@ -133,12 +137,14 @@ class PageNovelTranslating(PageBase):
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 exceptions = translator.gather_terms_for_sub_chapters(novel, targets)
+                exceptions = []
                 if exceptions:
                     raise Exception("Terms sheet update failed for some chapters. {}".format(exceptions[0]))
                 else:
                     screen.print_at("success.", 2 + len(message), last_y)
                     screen.refresh()
                     last_y += 1
+                novels[novel_index] = novel
             except Exception as e:
                 screen.print_at("failed.", 2 + len(message), last_y)
                 last_y += 1
@@ -164,7 +170,7 @@ class PageNovelTranslating(PageBase):
                     f"Error: Novel saving failed.",
                     f"Error: {e}"]
                 target = PageMessage
-                params = {"messages": messages, "return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
+                params = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
                 break
 
             try:
@@ -189,6 +195,7 @@ class PageNovelTranslating(PageBase):
                 message = "(9/12) Translating targets... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
+                exceptions = []
                 exceptions = translator.translate_sub_chapters(novel, targets)
                 if exceptions:
                     raise Exception("Translation failed for some sub chapters. {}".format(exceptions[0]))
@@ -196,6 +203,7 @@ class PageNovelTranslating(PageBase):
                     screen.print_at("success.", 2 + len(message), last_y)
                     screen.refresh()
                     last_y += 1
+                novels[novel_index] = novel
             except Exception as e:
                 screen.print_at("failed.", 2 + len(message), last_y)
                 last_y += 1
@@ -228,6 +236,7 @@ class PageNovelTranslating(PageBase):
                 message = "(11/12) Translating targets' metadata... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
+                exceptions = []
                 exceptions = translator.translate_sub_chapters_metadata(novel, targets)
                 if exceptions:
                     raise Exception("Translation of metadata failed for some sub chapters. {}".format(exceptions[0]))
@@ -235,6 +244,7 @@ class PageNovelTranslating(PageBase):
                     screen.print_at("success.", 2 + len(message), last_y)
                     screen.refresh()
                     last_y += 1
+                novels[novel_index] = novel
             except Exception as e:
                 screen.print_at("failed.", 2 + len(message), last_y)
                 last_y += 1
@@ -242,7 +252,7 @@ class PageNovelTranslating(PageBase):
                     f"Error: Error translating metadata.",
                     f"Error: {e}"]
                 target = PageMessage
-                params = {"messages": messages, "return_page": PageExit, "return_kwargs": {}}
+                params = {"messages": messages, "return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
                 break
 
             try:

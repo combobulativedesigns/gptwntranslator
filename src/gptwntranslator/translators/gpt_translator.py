@@ -1,13 +1,11 @@
 """This module contains the Japanese to English translator functions"""
 
-import asyncio
-from functools import partial
 import openai
+import html
 from yattag import Doc
 import xml.etree.ElementTree as ET
 
 from gptwntranslator.api.openai_api import call_api, get_line_token_count, validate_model
-from gptwntranslator.helpers.api_helper import MultiAPICallQueue
 from gptwntranslator.helpers.config_helper import Config
 from gptwntranslator.helpers.data_helper import get_targeted_sub_chapters
 from gptwntranslator.helpers.design_patterns_helper import singleton
@@ -106,7 +104,6 @@ class GPTTranslator:
         self._original_language_str = cf.get_language_name_for_code(original_language) if original_language in cf.get_languages() else ""
 
     def _get_api_model(self, model: str) -> dict:
-        logger.debug(f"Getting API model for '{model}'")
         # Validate the parameters
         if not isinstance(model, str):
             logger.error(f"Model ({model}) must be a string")
@@ -119,8 +116,6 @@ class GPTTranslator:
         return self._available_models[model]
     
     def _split_text_into_chunks(self, text: str, division_size: int, line_token_counts: list[int]) -> list[str]:
-        logger.debug(f"Splitting text into chunks of size '{division_size}'")
-
         # Validate the parameters
         if not isinstance(text, str):
             logger.error(f"Text must be a string")
@@ -163,8 +158,6 @@ class GPTTranslator:
         return chunks
     
     def _estimate_chunks(self, total_lines: int, division_size: int, line_token_counts: list[int]) -> int:
-        logger.debug(f"Estimating chunks for '{total_lines}' lines, '{division_size}' division size, and '{line_token_counts}' line token counts")
-
         # Validate the input
         if not isinstance(total_lines, int):
             logger.error(f"Total lines ({total_lines}) must be an integer")
@@ -197,8 +190,6 @@ class GPTTranslator:
         return len(chunks)
     
     def _original_language_token_limit_worst_case(self, N: int, worst_case_ratio: float|int=1.125, safety_factor: float|int=0.8) -> int:
-        logger.debug(f"Calculating original language token limit for '{N}' tokens, '{worst_case_ratio}' worst case ratio, and '{safety_factor}' safety factor")
-        
         # Validate the input
         if not isinstance(N, int):
             logger.error(f"N ({N}) must be an integer")
@@ -290,8 +281,6 @@ class GPTTranslator:
         return best_combination
     
     def _calculate_line_token_counts(self, text: str) -> list[int]:
-        logger.debug(f"Calculating line token counts for text")
-
         # Validate input
         if not isinstance(text, str):
             logger.error(f"Text ({text}) must be a string")
@@ -362,6 +351,8 @@ class GPTTranslator:
             logger.error(f"Error performing relevant terms action: {e}")
             self._handle_api_exceptions(e)
         
+        logger.debug(f"Response: {response}")
+
         return response
     
     def _perform_translation_action(self, **kwargs) -> str:
@@ -429,6 +420,8 @@ class GPTTranslator:
         except Exception as e:
             logger.error(f"Error performing translation action: {e}")
             self._handle_api_exceptions(e)
+
+        logger.debug(f"Response: {response}")
             
         return response
     
@@ -477,6 +470,8 @@ class GPTTranslator:
         except Exception as e:
             logger.error(f"Error performing summary action: {e}")
             self._handle_api_exceptions(e)
+
+        logger.debug(f"Summary action response: {response}")
         
         return response
     
@@ -529,12 +524,24 @@ class GPTTranslator:
             logger.error(f"Error performing novel metadata action: {e}")
             self._handle_api_exceptions(e)
 
+        logger.debug(f"Response: {response}")
+
         try:
             logger.debug(f"Parsing response.")
             root = ET.fromstring(response)
-            novel.title_translation = root.find('title').text
-            novel.author_translation = root.find('author').text
-            novel.description_translation = root.find('description').text
+            novel_title_translation = novel.title_translation.copy()
+            novel_author_translation = novel.author_translation.copy()
+            novel_description_translation = novel.description_translation.copy()
+            novel_title_translation[self._target_language] = root.find('title').text
+            novel_author_translation[self._target_language] = root.find('author').text
+            novel_description_translation[self._target_language] = root.find('description').text
+            novel.title_translation = novel_title_translation
+            novel.author_translation = novel_author_translation
+            novel.description_translation = novel_description_translation
+            logger.debug(f"Novel metadata updated.")
+            logger.debug(f"New title: {novel.title_translation[self._target_language]}")
+            logger.debug(f"New author: {novel.author_translation[self._target_language]}")
+            logger.debug(f"New description: {novel.description_translation[self._target_language]}")
         except Exception as e:
             logger.error(f"Error parsing response: {e}")
             raise GPTTranslatorGPTFormatException("Invalid metadata format {}".format(e))
@@ -589,7 +596,8 @@ class GPTTranslator:
                     for sub_chapter in chapter.sub_chapters:
                         if sub_chapter in sub_chapters:
                             with tag('sub_chapter', id=str(sub_chapter.sub_chapter_index)):
-                                text(sub_chapter.name)
+                                with tag('title'):
+                                    text(sub_chapter.name)
 
         metadata = doc.getvalue()
 
@@ -599,32 +607,45 @@ class GPTTranslator:
             {"role": "user", "content": 
                 f"You are translating a novel's metadata. I'll provide the novel's metadata in {self._original_language_str}. Please translate the metadata to {self._target_language_str}. Do not repeat the {self._original_language_str} text, nor clarify your actions. Mantain the xml format."},
             {"role": "assistant", "content": f"Understood. Please provide the metadata in {self._original_language_str}. I'll translate it to {self._target_language_str}."},
-            {"role": "user", "content": f"{metadata}"}
+            {"role": "user", "content": html.escape(metadata)}
         ]
 
         # Call the API
         try:
             logger.debug(f"Calling API.")
             response = call_api(messages, model=metadata_model)
-            response = response['choices'][0]['message']['content']
+            response = html.unescape(response['choices'][0]['message']['content'])
         except Exception as e:
             logger.error(f"Error performing novel metadata action: {e}")
             self._handle_api_exceptions(e)
 
+        logger.debug(f"Response: {response}")
+
         try:
             logger.debug(f"Parsing response.")
             root = ET.fromstring(response)
+            logger.debug(f"Root: {ET.dump(root)}")
             chapters = root.findall('chapter')
             for chapter_data in chapters:
                 chapter = novel.get_chapter(int(chapter_data.attrib['id']))
-                chapter.translated_name = chapter_data.find('title').text
+                new_translated_name = chapter.translated_name.copy()
+                new_translated_name[self._target_language] = chapter_data.find('title').text
                 sub_chapters = chapter_data.findall('sub_chapter')
                 for sub_chapter_data in sub_chapters:
                     sub_chapter = chapter.get_sub_chapter(int(sub_chapter_data.attrib['id']))
-                    sub_chapter.translated_name = sub_chapter_data.text
+                    new_translated_sub_name = sub_chapter.translated_name.copy()
+                    new_translated_sub_name[self._target_language] = sub_chapter_data.find('title').text
+                    sub_chapter.translated_name = new_translated_sub_name
+                    logger.debug(f"Assigned new translated name to chapter {chapter.chapter_index} sub chapter {sub_chapter.sub_chapter_index}")
+                    logger.debug(f"New translated name: {sub_chapter.translated_name[self._target_language]}")
+                chapter.translated_name = new_translated_name
+                logger.debug(f"Assigned new translated name to chapter {chapter.chapter_index}")
+                logger.debug(f"New translated name: {chapter.translated_name[self._target_language]}")
         except Exception as e:
             logger.error(f"Error parsing response: {e}")
             raise GPTTranslatorGPTFormatException("Invalid metadata format")
+        
+        return None
 
     def _summarize_sub_chapter(self,  **kwargs) -> str:
         logger.debug(f"Summarizing sub chapter.")
@@ -656,8 +677,10 @@ class GPTTranslator:
             if isinstance(result, Exception):
                 raise result
             previous_summary = result
+        
+        logger.debug(f"Summary: {previous_summary}")
 
-        return previous_summary
+        return chunks[0].chapter_index, chunks[0].sub_chapter_index, previous_summary
     
     def _gather_terms_for_sub_chapter(self,  **kwargs) -> str:
         logger.debug(f"Gathering terms for sub chapter.")
@@ -693,7 +716,8 @@ class GPTTranslator:
 
         results = task.run_subtasks()
 
-        logger.info(f"Results: {results}")
+        logger.debug("Getting terms for sub chapter complete.")
+        logger.debug(f"Results: {results}")
 
         for task_id in previous_terms:
             result = results[task_id]
@@ -741,6 +765,9 @@ class GPTTranslator:
         translation = {key[0]: translation[key] for key in sorted_keys}
 
         results = task.run_subtasks()
+
+        logger.info("Translating sub chapter complete.") 
+        logger.info(f"Results: {results}")
 
         for task_id in translation:
             result = results[task_id]
@@ -811,6 +838,9 @@ class GPTTranslator:
         model = self._get_api_model(self._metadata_models[0])['name']
 
         result = self._perform_novel_metadata_action(novel=novel, metadata_model=model)
+
+        logger.debug("Translating novel metadata completed.")
+        logger.debug(f"Result: {result}")
         
         if isinstance(result, Exception):
             return [result]
@@ -852,6 +882,9 @@ class GPTTranslator:
 
         # Translate the metadata
         result = self._perform_chapters_metadata_action(novel=novel, sub_chapters=sub_chapters, metadata_model=model)
+
+        logger.debug("Translating sub chapters metadata complete.")
+        logger.debug(f"Result: {result}")
         
         if isinstance(result, Exception):
             return [result]
@@ -888,7 +921,7 @@ class GPTTranslator:
 
         tasks = {}
 
-        if all(sub_chapter.summary for sub_chapter in sub_chapters):
+        if all(self._target_language in sub_chapter.summary for sub_chapter in sub_chapters):
             logger.debug(f"All sub chapters are already summarized.")
             return []
 
@@ -896,7 +929,7 @@ class GPTTranslator:
 
         # Summarize the sub chapters
         for sub_chapter in sub_chapters:
-            if sub_chapter.summary:
+            if self._target_language in sub_chapter.summary:
                 continue
 
             prev_sub_chapter, next_sub_chapter = self._get_sub_chapter_context(novel, sub_chapter.chapter_index, sub_chapter.sub_chapter_index)
@@ -929,16 +962,26 @@ class GPTTranslator:
             tasks[(sub_chapter.chapter_index, sub_chapter.sub_chapter_index)] = sub_task
 
         results = task.run_subtasks()
+
+        logger.debug(f"Summarizing sub chapters complete.")
+        logger.debug(f"Results: {results}")
         
         exceptions = []
-        for key, value in tasks.items():
-            result = results[value]
+        for (chapter_index, sub_chapter_index), sub_task in tasks.items():
+            logger.debug(f"Processing sub task {sub_task} for chapter {chapter_index} sub chapter {sub_chapter_index}")
+            result = results[sub_task]
+            logger.debug(f"Result: {result}")
             if isinstance(result, Exception):
                 exceptions.append(result)
             else: 
-                active_chapter = novel.get_chapter(key[0])
-                active_sub_chapter = active_chapter.get_sub_chapter(key[1])
-                active_sub_chapter.summary = result
+                returned_chapter_index, returned_sub_chapter_index, summary = result
+                active_chapter = novel.get_chapter(returned_chapter_index)
+                active_sub_chapter = active_chapter.get_sub_chapter(returned_sub_chapter_index)
+                new_summary = active_sub_chapter.summary.copy()
+                new_summary[self._target_language] = summary
+                active_sub_chapter.summary = new_summary
+                logger.debug(f"Assigned summary to chapter {chapter_index} sub chapter {sub_chapter_index}")
+                logger.debug(f"Current summary: {active_sub_chapter.summary[self._target_language]}")
 
         return exceptions
     
@@ -1007,7 +1050,8 @@ class GPTTranslator:
 
         results = task.run_subtasks()
 
-        logger.info(f"{results}")
+        logger.debug(f"Gathering terms for sub chapters complete.")
+        logger.debug(f"{results}")
 
         terms = ""
         exceptions = []
@@ -1058,7 +1102,7 @@ class GPTTranslator:
 
         # Summarize the sub chapters
         for sub_chapter in sub_chapters:
-            if sub_chapter.translation:
+            if self._target_language in sub_chapter.translation:
                 continue
 
             prev_sub_chapter, next_sub_chapter = self._get_sub_chapter_context(novel, sub_chapter.chapter_index, sub_chapter.sub_chapter_index)
@@ -1087,21 +1131,28 @@ class GPTTranslator:
                     chunk_prev_line,
                     chunk_next_line))
                 
-            sub_task = task.add_subtask(self._translate_sub_chapter, chunks=terms_chunks_objects, model=translate_model, summary=sub_chapter.summary, term_lists=novel.terms_sheet)
+            sub_task = task.add_subtask(self._translate_sub_chapter, chunks=terms_chunks_objects, model=translate_model, summary=sub_chapter.summary[self._target_language], term_lists=novel.terms_sheet)
             tasks[(sub_chapter.chapter_index, sub_chapter.sub_chapter_index)] = sub_task
 
         results = task.run_subtasks()
 
+        logger.debug(f"Translating sub chapters complete.")
+        logger.debug(f"{results}")
+
         translation = ""
         exceptions = []
-        for key, value in tasks.items():
-            result = results[value]
+        for (chapter_index, sub_chapter_index), sub_task in tasks.items():
+            result = results[sub_task]
             if isinstance(result, Exception):
                 exceptions.append(result)
             else:
-                active_chapter = novel.get_chapter(key[0])
-                active_sub_chapter = active_chapter.get_sub_chapter(key[1])
-                active_sub_chapter.translation = result
+                active_chapter = novel.get_chapter(chapter_index)
+                active_sub_chapter = active_chapter.get_sub_chapter(sub_chapter_index)
+                new_translation = active_sub_chapter.translation.copy()
+                new_translation[self._target_language] = result
+                active_sub_chapter.translation = new_translation
+                logger.debug(f"Assigned translation to chapter {chapter_index} sub chapter {sub_chapter_index}")
+                logger.debug(f"Translation: {result}")
 
         return exceptions
 
