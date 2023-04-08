@@ -1,7 +1,12 @@
 """Contains helper functions for text processing."""
 
+import os
 import sys
 import re
+from gptwntranslator.helpers.config_helper import Config
+from gptwntranslator.helpers.data_helper import get_targeted_sub_chapters
+
+from gptwntranslator.models.novel import Novel
 
 
 def parse_chapters(input_string: str) -> dict[str, list[str]]:
@@ -158,3 +163,40 @@ def txt_to_md(input_txt: str) -> str:
             output_txt += f"{line}\n\n"
 
     return output_txt
+
+def write_novel_md(novel: Novel, targets: dict[str, list[str]]) -> None:
+    # Validate parameters
+    if not isinstance(novel, Novel):
+        raise TypeError("Novel must be a Novel object")
+    if not isinstance(targets, dict):
+        raise TypeError("Targets must be a dictionary")
+    if not all(isinstance(key, str) for key in targets.keys()):
+        raise TypeError("Chapter numbers must be strings")
+    if not all(key.isdigit() for key in targets.keys()):
+        raise TypeError("Chapter numbers must be digits as strings")
+    if not all(isinstance(value, list) for value in targets.values()):
+        raise TypeError("Sub chapter numbers must be lists")
+    if not all(isinstance(item, str) for value in targets.values() for item in value):
+        raise TypeError("Sub chapter numbers must be strings")
+    if not all(item.isdigit() for value in targets.values() for item in value):
+        raise TypeError("Sub chapter numbers must be digits as strings")
+    
+    config = Config()
+    sub_chapters = get_targeted_sub_chapters(novel, targets)
+    target_language = config.data.config.translator.target_language
+
+    metadata = f"---\ntitle: \"{novel.title_translation[target_language]}\"\nauthor: \"{novel.author_translation[target_language]}\"\nlanguage: {target_language}\n---\n\n"
+
+    md_text = metadata
+    md_text += "# **Contents**\n\n"
+    md_text += "\n".join([f"- [{sub_chapter.translated_name[target_language] if target_language in sub_chapter.translated_name is not None else sub_chapter.name}](#chapter-{sub_chapter.chapter_index}-{sub_chapter.sub_chapter_index})" for sub_chapter in sub_chapters])
+    md_text += "\n\n"
+    
+    for sub_chapter in sub_chapters:
+        name = sub_chapter.translated_name[target_language] if target_language in sub_chapter.translated_name is not None else sub_chapter.name
+        md_text += f"# <strong id=\"chapter-{sub_chapter.chapter_index}-{sub_chapter.sub_chapter_index}\">{name}</strong>\n\n"
+        lines = sub_chapter.translation[target_language].splitlines()
+        for line in lines:
+            md_text += "{}\n\n".format(line.strip('\n\t '))
+
+    return md_text
