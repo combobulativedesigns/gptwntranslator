@@ -1,5 +1,6 @@
 """Novel model."""
 
+import copy
 from types import NoneType
 from gptwntranslator.models.chapter import Chapter
 from gptwntranslator.models.term_sheet import TermSheet
@@ -125,6 +126,35 @@ class Novel:
             body += chapter.original_body()
 
         return body
+    
+    def __deepcopy__(self, memo) -> 'Novel':
+        """Return a copy of the novel object.
+
+        Parameters
+        ----------
+        memo : dict
+            The memoization dictionary
+
+        Returns
+        -------
+        Novel
+            A copy of the novel object.
+        """
+
+        # Return a copy of the novel object
+        return Novel(
+            self.novel_code,
+            self.title,
+            self.author,
+            self.description,
+            self.original_language,
+            title_translation=copy.deepcopy(self.title_translation, memo),
+            author_translation=copy.deepcopy(self.author_translation, memo),
+            author_link=self.author_link,
+            description_translation=copy.deepcopy(self.description_translation, memo),
+            chapters=copy.deepcopy(self.chapters, memo),
+            terms_sheet=copy.deepcopy(self.terms_sheet, memo)
+        )
 
     def __str__(self):
         """Return the string representation of a Novel object."""

@@ -624,7 +624,6 @@ class GPTTranslator:
         try:
             logger.debug(f"Parsing response.")
             root = ET.fromstring(response)
-            logger.debug(f"Root: {ET.dump(root)}")
             chapters = root.findall('chapter')
             for chapter_data in chapters:
                 chapter = novel.get_chapter(int(chapter_data.attrib['id']))

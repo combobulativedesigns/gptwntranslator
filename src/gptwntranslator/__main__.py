@@ -2,11 +2,10 @@ import argparse
 import sys
 import logging
 import os
-from gptwntranslator.command import run_command
+from gptwntranslator.command import run_export_chapters, run_scrape_chapters, run_scrape_metadata, run_translate_chapters, run_translate_metadata
 from gptwntranslator.helpers.config_helper import Config
 from gptwntranslator.helpers.logger_helper import CustomLogger, SingletonLogger
 from gptwntranslator.interactive import run_interactive
-from gptwntranslator.storage.json_storage import JsonStorage
 
 
 def show_in_depth_help():
@@ -194,7 +193,16 @@ def main():
     if args.mode in ["interactive", "i"]:
         run_interactive()
     elif args.mode in ["command", "c"]:
-        run_command(args)
+        if args.action == "sm":
+            run_scrape_metadata(args.novel)
+        elif args.action == "sc":
+            run_scrape_chapters(args.novel, args.chapters)
+        elif args.action == "tm":
+            run_translate_metadata(args.novel)
+        elif args.action == "tc":
+            run_translate_chapters(args.novel, args.chapters)
+        elif args.action == "ec":
+            run_export_chapters(args.novel, args.chapters)
 
 if __name__ == "__main__":
     main()

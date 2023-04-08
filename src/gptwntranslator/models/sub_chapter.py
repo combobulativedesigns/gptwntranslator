@@ -1,5 +1,6 @@
 """Sub chapter model."""
 
+import copy
 from gptwntranslator.models.chunk import Chunk
 
 
@@ -78,6 +79,20 @@ class SubChapter:
         self.translated_name = translated_name
         self.translation = translation
         self.summary = summary
+
+    def __deepcopy__(self, memo):
+        return SubChapter(
+            self.novel_code,
+            self.chapter_index,
+            self.sub_chapter_index,
+            self.link,
+            self.name,
+            self.contents,
+            self.release_date,
+            translated_name=copy.deepcopy(self.translated_name, memo),
+            translation=copy.deepcopy(self.translation, memo),
+            summary=copy.deepcopy(self.summary, memo)
+        )
 
     def __str__(self):
         return f"Sub-chapter {self.sub_chapter_index} from chapter {self.chapter_index}"
