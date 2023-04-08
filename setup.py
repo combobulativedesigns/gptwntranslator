@@ -23,7 +23,6 @@ setup(
         "openai==0.27.2",
         "pypandoc==1.11",
         "pypandoc_binary==1.11",
-        "PyYAML==6.0",
         "spacy==3.5.1",
         "tiktoken==0.3.2",
         "yattag==1.15.1",
