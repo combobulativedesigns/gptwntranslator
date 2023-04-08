@@ -1,5 +1,6 @@
 """Chapter model"""
 
+import copy
 from gptwntranslator.models.sub_chapter import SubChapter
 
 
@@ -84,6 +85,27 @@ class Chapter:
             body += sub_chapter.contents
 
         return body
+    
+    def __deepcopy__(self, memo) -> "Chapter":
+        """Return a copy of the Chapter object.
+
+        Parameters
+        ----------
+        memo : dict
+            The memoization dictionary
+
+        Returns
+        -------
+        Chapter
+            A copy of the Chapter object.
+        """
+
+        return Chapter(
+            self.novel_code, 
+            self.chapter_index, 
+            self.name, 
+            translated_name=copy.deepcopy(self.translated_name, memo), 
+            sub_chapters=copy.deepcopy(self.sub_chapters, memo))
 
 
     def __str__(self) -> str:

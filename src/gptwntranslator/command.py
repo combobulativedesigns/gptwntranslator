@@ -1,9 +1,9 @@
+import copy
 import os
 import sys
 
-from confection import Config
-
 from gptwntranslator.api import openai_api
+from gptwntranslator.helpers.config_helper import Config
 from gptwntranslator.helpers.file_helper import write_md_as_epub
 from gptwntranslator.helpers.text_helper import parse_chapters, write_novel_md
 from gptwntranslator.scrapers.syosetu_scraper import process_novel, process_targets
@@ -46,9 +46,9 @@ def setup() -> None:
         sys.exit(1)
 
 
-def run_scrape_metadata(novel: str) -> None:
+def run_scrape_metadata(novel_code: str) -> None:
     setup()
-    print(f"Scraping metadata for novel: {novel}")
+    print(f"Scraping metadata for novel: {novel_code}")
     
     try:
         print("(1/3) Loading local storage... ", end="")
@@ -63,7 +63,7 @@ def run_scrape_metadata(novel: str) -> None:
     try:
         print("(2/3) Scraping metadata... ", end="")
         sys.stdout.flush()
-        novel_data = process_novel(novel)
+        novel_data = process_novel(novel_code)
         print("success.")
     except Exception as e:
         print("failed.")
@@ -73,16 +73,18 @@ def run_scrape_metadata(novel: str) -> None:
     try:
         print("(3/3) Saving novel data to local storage... ", end="")
         sys.stdout.flush()
-        novel_original = [novel for novel in novels if novel.novel_code == novel][0]
-        novel_old = novel_original.copy()
-        novel_old.title = novel_data.title
-        novel_old.author = novel_data.author
-        novel_old.description = novel_data.description
-        novel_old.author_link = novel_data.author_link if novel_data.author_link else novel_old.author_link
-        for chapter in novel_data.chapters:
-            if chapter not in novel_old.chapters:
-                novel_old.chapters.append(chapter)
-        novels.remove(novel_old)
+        if any(novel_old.novel_code == novel_data.novel_code for novel_old in novels):
+            novel_original = [novel for novel in novels if novel.novel_code == novel_code][0]
+            novel_old = copy.deepcopy(novel_original)
+            novel_old.title = novel_data.title
+            novel_old.author = novel_data.author
+            novel_old.description = novel_data.description
+            novel_old.author_link = novel_data.author_link if novel_data.author_link else novel_old.author_link
+            for chapter in novel_data.chapters:
+                if chapter not in novel_old.chapters:
+                    novel_old.chapters.append(chapter)
+            novel_data = novel_old
+            novels.remove(novel_original)
         novels.append(novel_data)
         storage.set_data(novels)
         print("success.")
@@ -93,10 +95,9 @@ def run_scrape_metadata(novel: str) -> None:
 
     print("Done.")
 
-
-def run_scrape_chapters(novel: str, chapter_targets_str: str) -> None:
+def run_scrape_chapters(novel_code: str, chapter_targets_str: str) -> None:
     setup()
-    print(f"Scraping chapters for novel: {novel}")
+    print(f"Scraping chapters for novel: {novel_code}")
 
     try:
         print("(1/4) Parsing targets... ", end="")
@@ -112,8 +113,8 @@ def run_scrape_chapters(novel: str, chapter_targets_str: str) -> None:
         print("(2/4) Loading local storage... ", end="")
         storage = JsonStorage()
         novels = storage.get_data()
-        novel_old = [novel for novel in novels if novel.novel_code == novel][0]
-        novel_data = novel_old.copy()
+        novel_old = [novel for novel in novels if novel.novel_code == novel_code][0]
+        novel_data = copy.deepcopy(novel_old)
         print("success.")
     except Exception as e:
         print("failed.")
@@ -144,16 +145,16 @@ def run_scrape_chapters(novel: str, chapter_targets_str: str) -> None:
 
     print("Done.")
 
-def run_translate_metadata(novel: str) -> None:
+def run_translate_metadata(novel_code: str) -> None:
     setup()
-    print(f"Translating metadata for novel: {novel}")
+    print(f"Translating metadata for novel: {novel_code}")
 
     try:
         print(f"(1/4) Loading local storage... ", end="")
         storage = JsonStorage()
         novels = storage.get_data()
-        novel_old = [novel for novel in novels if novel.novel_code == novel][0]
-        novel_data = novel_old.copy()
+        novel_old = [novel for novel in novels if novel.novel_code == novel_code][0]
+        novel_data = copy.deepcopy(novel_old)
         print("success.")
     except Exception as e:
         print("failed.")
@@ -198,9 +199,9 @@ def run_translate_metadata(novel: str) -> None:
 
     print("Done.")
 
-def run_translate_chapters(novel: str, chapter_targets_str: str) -> None:
+def run_translate_chapters(novel_code: str, chapter_targets_str: str) -> None:
     setup()
-    print(f"Translating chapters for novel: {novel}")
+    print(f"Translating chapters for novel: {novel_code}")
 
     try:
         print("(1/13) Parsing targets... ", end="")
@@ -216,8 +217,8 @@ def run_translate_chapters(novel: str, chapter_targets_str: str) -> None:
         print("(2/13) Loading local storage... ", end="")
         storage = JsonStorage()
         novels = storage.get_data()
-        novel_old = [novel for novel in novels if novel.novel_code == novel][0]
-        novel_data = novel_old.copy()
+        novel_old = [novel for novel in novels if novel.novel_code == novel_code][0]
+        novel_data = copy.deepcopy(novel_old)
         print("success.")
     except Exception as e:
         print("failed.")
@@ -255,7 +256,7 @@ def run_translate_chapters(novel: str, chapter_targets_str: str) -> None:
         novels.append(novel_data)
         storage.set_data(novels)
         novel_old = novel_data
-        novel_data = novel_old.copy()
+        novel_data = copy.deepcopy(novel_old)
         print("success.")
     except Exception as e:
         print("failed.")
@@ -282,7 +283,7 @@ def run_translate_chapters(novel: str, chapter_targets_str: str) -> None:
         novels.append(novel_data)
         storage.set_data(novels)
         novel_old = novel_data
-        novel_data = novel_old.copy()
+        novel_data = copy.deepcopy(novel_old)
         print("success.")
     except Exception as e:
         print("failed.")
@@ -306,7 +307,7 @@ def run_translate_chapters(novel: str, chapter_targets_str: str) -> None:
         novels.append(novel_data)
         storage.set_data(novels)
         novel_old = novel_data
-        novel_data = novel_old.copy()
+        novel_data = copy.deepcopy(novel_old)
         print("success.")
     except Exception as e:
         print("failed.")
@@ -333,7 +334,7 @@ def run_translate_chapters(novel: str, chapter_targets_str: str) -> None:
         novels.append(novel_data)
         storage.set_data(novels)
         novel_old = novel_data
-        novel_data = novel_old.copy()
+        novel_data = copy.deepcopy(novel_old)
         print("success.")
     except Exception as e:
         print("failed.")
@@ -367,9 +368,9 @@ def run_translate_chapters(novel: str, chapter_targets_str: str) -> None:
 
     print("Done.")
 
-def run_export_chapters(novel: str, chapter_targets_str: str) -> None:
+def run_export_chapters(novel_code: str, chapter_targets_str: str) -> None:
     setup()
-    print(f"Exporting chapters from {novel}...")
+    print(f"Exporting chapters from {novel_code}...")
 
     try:
         print("(1/3) Parsing targets... ", end="")
@@ -386,8 +387,8 @@ def run_export_chapters(novel: str, chapter_targets_str: str) -> None:
         sys.stdout.flush()
         storage = JsonStorage()
         novels = storage.get_data()
-        novel_old = [novel for novel in novels if novel.novel_code == novel][0]
-        novel_data = novel_old.copy()
+        novel_old = [novel for novel in novels if novel.novel_code == novel_code][0]
+        novel_data = copy.deepcopy(novel_old)
         print("success.")
     except Exception as e:
         print("failed.")

@@ -1,5 +1,6 @@
 """Terms sheet model."""
 
+import copy
 from types import NoneType
 import spacy
 import re
@@ -12,7 +13,7 @@ from gptwntranslator.models.term import Term
 class TermSheet:
     """This class represents a terms sheet."""
 
-    def __init__(self, novel_code: str, terms: dict[str, Term]|NoneType=None) -> None:
+    def __init__(self, novel_code: str, terms: dict[str, Term]={}) -> None:
         """Initialize a terms sheet object.
 
         Parameters
@@ -31,7 +32,27 @@ class TermSheet:
         
         # Initialize properties
         self.novel_code = novel_code
-        self.terms = dict() if terms is None else terms
+        self.terms = terms
+
+    def __deepcopy__(self, memo: dict) -> 'TermSheet':
+        """Deep copy the terms sheet.
+
+        Parameters
+        ----------
+        memo : dict
+            The memoization dictionary
+
+        Returns
+        -------
+        TermSheet
+            The deep copy of the terms sheet
+        """
+
+        # Deep copy the terms
+        terms = copy.deepcopy(self.terms, memo)
+
+        # Return the deep copy
+        return TermSheet(self.novel_code, terms=terms)
 
     def process_new_terms(self, term_list_str: str):
         """Parse a string of terms into a dictionary of terms.

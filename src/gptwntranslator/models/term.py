@@ -1,9 +1,12 @@
 """Term model."""
 
+import copy
+
+
 class Term:
     """This class represents a term."""
 
-    def __init__(self, original_term, pho_rom_term, document_frequency: int=0, context_relevance: int=0, ner: int=0, translations: dict[str, str]=None) -> None:
+    def __init__(self, original_term, pho_rom_term, document_frequency: int=0, context_relevance: int=0, ner: int=0, translations: dict[str, str]=dict()) -> None:
         """Initialize the term.
 
         Parameters
@@ -38,7 +41,32 @@ class Term:
         self.document_frequency = document_frequency
         self.context_relevance = context_relevance
         self.ner = ner
-        self.translations = dict()
+        self.translations = translations
+
+    def __deepcopy__(self, memo) -> "Term":
+        """Deep copy the term.
+
+        Parameters
+        ----------
+        memo : dict
+            The memo.
+
+        Returns
+        -------
+        Term
+            The deep copy of the term.
+        """
+
+        # Create a deep copy of the term
+        copy_term = Term(
+            self.original_term, 
+            self.pho_rom_term, 
+            document_frequency=self.document_frequency, 
+            context_relevance=self.context_relevance, 
+            ner=self.ner, 
+            translations=copy.deepcopy(self.translations, memo))
+
+        return copy_term
 
     def add_translation(self, language: str, translation: str):
         """Add a translation to the term.
