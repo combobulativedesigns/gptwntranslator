@@ -7,17 +7,18 @@ with open("README.md", "r") as readme_file:
 
 setup(
     name="gptwntranslator",
-    version="1.1.2",
+    version="2.0.0",
     author="Rodrigo S. Jauregui",
-    author_email="ro.sjda42@gmail.com",
+    author_email="combobulativedesigns@gmail.com",
     description="A web novel translator using OpenAI's GPT API",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/CombobulativeDesigns/gptwntranslator",
+    url="https://github.com/combobulativedesigns/gptwntranslator",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     install_requires=[
-        "beautifulsoup4==4.12.0",
+        "asciimatics==1.14.0",
+        "beautifulsoup4==4.12.2",
         "Janome==0.4.2",
         "openai==0.27.2",
         "pypandoc==1.11",
@@ -25,7 +26,18 @@ setup(
         "PyYAML==6.0",
         "spacy==3.5.1",
         "tiktoken==0.3.2",
+        "yattag==1.15.1",
+        "en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.5.0/en_core_web_sm-3.5.0-py3-none-any.whl",
+        "de_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.5.0/de_core_news_sm-3.5.0-py3-none-any.whl",
+        "es_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.5.0/es_core_news_sm-3.5.0-py3-none-any.whl",
+        "fr_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/fr_core_news_sm-3.5.0/fr_core_news_sm-3.5.0-py3-none-any.whl",
+        "it_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/it_core_news_sm-3.5.0/it_core_news_sm-3.5.0-py3-none-any.whl",
         "ja_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/ja_core_news_sm-3.5.0/ja_core_news_sm-3.5.0-py3-none-any.whl",
+        "ko_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/ko_core_news_sm-3.5.0/ko_core_news_sm-3.5.0-py3-none-any.whl",
+        "nl_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/nl_core_news_sm-3.5.0/nl_core_news_sm-3.5.0-py3-none-any.whl",
+        "pt_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/pt_core_news_sm-3.5.0/pt_core_news_sm-3.5.0-py3-none-any.whl",
+        "ru_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/ru_core_news_sm-3.5.0/ru_core_news_sm-3.5.0-py3-none-any.whl",
+        "zh_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/zh_core_web_sm-3.5.0/zh_core_web_sm-3.5.0-py3-none-any.whl"
     ],
     extras_require={
         "dev": [

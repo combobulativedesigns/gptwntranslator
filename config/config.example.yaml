@@ -22,12 +22,42 @@ config:
     api:
       terms_list:
         models: 
-          - gpt-4
+          - gpt-3.5
       translation:
         models:
           - gpt-3.5
-          - gpt-4
       summary:
         models:
           - gpt-3.5
-          - gpt-4
+      metadata:
+        models:
+          - gpt-3.5
+    target_language: "en"
+
+  languages:
+    - en: "English"
+    - de: "German"
+    - es: "Spanish"
+    - fr: "French"
+    - it: "Italian"
+    - ja: "Japanese"
+    - ko: "Korean"
+    - nl: "Dutch"
+    - pt: "Portuguese"
+    - ru: "Russian"
+    - zh: "Chinese"
+
+  spacy:
+    pipelines:
+      - en: "en_core_web_sm"
+      - de: "de_core_news_sm"
+      - es: "es_core_news_sm"
+      - fr: "fr_core_news_sm"
+      - it: "it_core_news_sm"
+      - ja: "ja_core_news_sm"
+      - ko: "ko_core_news_sm"
+      - nl: "nl_core_news_sm"
+      - pt: "pt_core_news_sm"
+      - ru: "ru_core_news_sm"
+      - zh: "zh_core_web_sm"
+      
