@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>gptwntranslator</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@100&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://kit.fontawesome.com/777160d4a1.js" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+
+</head>
+
+<body
+    style="font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif;">
+
+    <nav class="navbar navbar-expand-lg sticky-top" data-bs-theme="dark"
+        style="background: linear-gradient(90deg, #111136, #321c44);">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html" style="font-family: Raleway, sans-serif; letter-spacing: 0.3em;">
+                <img width="30" height="30" src="img/logo.png" alt="Logo">
+                gptwntranslator
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active link-underline-light" aria-current="page" href="#">Home</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="installation.html">Installation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="usage.html">Usage</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/combobulativedesigns/gptwntranslator">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid my-0" style="background: linear-gradient(90deg, #111136, #321c44);">
+
+        <div class="row py-lg-5">
+            <div class="col-12">
+                <div class="container-sm my-5 text-white">
+                    <div class="row">
+                        <div class="col-12 col-lg-3 my-5 my-lg-0">
+                            <img src="img/logo.png" alt="Logo" width="200" height="200" class="d-block mx-auto">
+                        </div>
+                        <div class="col-12 col-lg-9 align-items-center align-items-lg-start d-flex flex-column">
+                            <h1 class="h1 text-center text-lg-start"
+                                style="font-family: Raleway, sans-serif; letter-spacing: 0.2em;">
+                                gptwntranslator
+                            </h1>
+                            <p class="lead text-center text-lg-start"
+                                style="font-family: Raleway, sans-serif; letter-spacing: 0.05em;">
+                                A simple python package to translate web novels using OpenAI's GPT models' API.
+                            </p>
+                            <a href="installation.html" class="btn btn-primary btn-lg" role="button"
+                                aria-pressed="true">Get
+                                Started</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="row py-4">
+            <div class="col-12">
+                <div class="container-sm py-5 bg-light rounded-4">
+                    <div class="row">
+                        <div class="col-2 d-none d-lg-inline">
+                        </div>
+                        <div class="col-12 col-lg-8">
+
+                            <video src="video/showcase.mp4" type="video/mp4" class="mt-5 object-fit-scale w-100"
+                                autoplay loop muted playsinline>
+                                Your browser does not support the video tag.
+                            </video>
+
+                            <h2 class="h2 my-4" style="letter-spacing: 0.05em;">
+                                About
+                            </h2>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                gptwntranslator is a web novel translation tool that utilizes OpenAI's GPT models to
+                                provide okay-ish/medium-quality translations of mainly Japanese web novels. The tool
+                                uses web scraping to extract the original text, translates it with the help of AI
+                                models, and then generates an epub file for easy reading.
+                            </p>
+
+                            <h2 class="h2 my-4" style="letter-spacing: 0.05em;">
+                                Capabilities
+                            </h2>
+
+                            <ul class="list-group">
+                                <li class="list-group-item">Scraping Japanese web novels from Syosetu.</li>
+                                <li class="list-group-item">Translating Japanese text using OpenAI's advanced AI
+                                    models.
+                                </li>
+                                <li class="list-group-item">Selection of destination language, if GPT understands
+                                    it, it
+                                    can translate to it. With various levels of quality.</li>
+                                <li class="list-group-item">Generating epub files for the translated content.</li>
+                                <li class="list-group-item">Customizable translation by specifying chapters or
+                                    sub-chapters.</li>
+                                <li class="list-group-item">Selection of AI models to use for translation.</li>
+                                <li class="list-group-item">Optimization of API calls to OpenAI's API.</li>
+                                <li class="list-group-item">Mix and match of AI models for the various steps of the
+                                    translation process.</li>
+                                <li class="list-group-item">Parallelization of the translation process for faster
+                                    translations.</li>
+                            </ul>
+
+                            <h2 class="h2 my-4" style="letter-spacing: 0.05em;">
+                                Translation Quality
+                            </h2>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                This tool by no means provides a perfect translation. And does not offer any
+                                guarantees
+                                on its quality.
+                            </p>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                All translation is done by OpenAI's GPT models. The quality of the translation
+                                depends
+                                on the model used, on the model's ability to understand the language, and a bit of
+                                luck.
+                            </p>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                Translation quality itself can also vary if retrying the translation even with the
+                                same
+                                models. The same input will not always produce the same output. The tool tries to
+                                use
+                                several techniques to mitigate this, but it's not perfect.
+                            </p>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                The tool will also be able to use any other model that OpenAI releases in the
+                                future,
+                                assuming it uses the same API endpoints.
+                            </p>
+
+                            <h2 class="h2 my-4" style="letter-spacing: 0.05em;">
+                                Disclaimer
+                            </h2>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                This tool is not affiliated with OpenAI in any way. Nor is it endorsed by OpenAI.
+                                It is just an experiment to see how well OpenAI's GPT models can be used
+                                for translation. It works as an interface to OpenAI's API, while just automating
+                                some of the steps. Everything that this tool does can be done manually, with copy
+                                and paste, and a bit of patience.
+                            </p>
+
+                            <hr class="mt-5">
+
+                            <p class="text-center text-muted">
+                                Copyright &copy; 2023 Rodrigo Jauregui | <a
+                                    href="https://www.gnu.org/licenses/gpl-3.0.en.html"
+                                    class="text-reset link-underline-opacity-0">Licensed under GPL v3.0</a> | <a
+                                    href="privacy.html" class="text-reset link-underline-opacity-0">Privacy Policy</a>
+                            </p>
+
+                        </div>
+                        <div class="col-2 d-none d-lg-inline">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

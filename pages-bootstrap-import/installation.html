@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>gptwntranslator</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@100&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://kit.fontawesome.com/777160d4a1.js" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg sticky-top" data-bs-theme="dark"
+        style="background: linear-gradient(90deg, #111136, #321c44);">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html" style="font-family: Raleway, sans-serif; letter-spacing: 0.3em;">
+                <img width="30" height="30" src="img/logo.png" alt="Logo">
+                gptwntranslator
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link active link-underline-light" aria-current="page" href="#">Installation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="usage.html">Usage</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/combobulativedesigns/gptwntranslator">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid my-0" style="background: linear-gradient(90deg, #111136, #321c44);">
+
+        <div class="row py-4">
+            <div class="col-12">
+                <div class="container-sm py-5 bg-light rounded-4">
+                    <div class="row">
+                        <div class="col-2 d-none d-lg-inline">
+                        </div>
+                        <div class="col-12 col-lg-8">
+
+                            <h2 class="h2 my-4" style="letter-spacing: 0.05em;">
+                                Installation
+                            </h2>
+
+                            <p class="fs-6" style="text-align: start;">
+                                Installing gptwntranslator requires cloning the repository from GitHub and installing
+                                the tool using python's pip.
+                            </p>
+
+                            <div>
+                                <h5 class="h5 my-4" style="letter-spacing: 0.05em;" id="section_requirements">
+                                    Requirements
+                                </h5>
+
+                                <nav>
+                                    <div class="nav nav-tabs" id="requirements-tab" role="tablist">
+                                        <button class="nav-link active" id="requirements-win-tab" data-bs-toggle="tab"
+                                            data-bs-target="#requirements-win" type="button" role="tab"
+                                            aria-controls="requirements-win" aria-selected="true">Windows</button>
+                                        <button class="nav-link" id="requirements-linux-tab" data-bs-toggle="tab"
+                                            data-bs-target="#requirements-linux" type="button" role="tab"
+                                            aria-controls="requirements-linux"
+                                            aria-selected="false">Ubuntu/Debian</button>
+                                        <button class="nav-link" id="requirements-mac-tab" data-bs-toggle="tab"
+                                            data-bs-target="#requirements-mac" type="button" role="tab"
+                                            aria-controls="requirements-mac" aria-selected="false" disabled>Mac</button>
+                                    </div>
+                                </nav>
+
+                                <div class="tab-content" id="requirements-tabContent">
+                                    <div class="tab-pane fade" id="requirements-linux" role="tabpanel"
+                                        aria-labelledby="requirements-linux-tab" tabindex="0">
+
+                                        <h6 class="h6 my-4" style="letter-spacing: 0.05em;">
+                                            <a class="text-decoration-none text-reset add-collapse-indicator"
+                                                data-bs-toggle="collapse" href="#requirements-linux-python-collapse"
+                                                role="button" aria-expanded="false"
+                                                aria-controls="requirements-linux-python-collapse">
+                                                1. Install Python 3.10 or greater
+                                            </a>
+                                        </h6>
+
+                                        <div class="collapse" id="requirements-linux-python-collapse">
+                                            <p class="fs-6" style="text-align: start;">
+                                                First you must ensure that you have python 3.10 or greater installed on
+                                                your
+                                                system. You can test this by opening a terminal and typing the
+                                                following.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                                    $
+                                                </code>
+                                                <code>
+                                                    python3 --version
+                                                </code>
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Should python be installed, you should see the version of python
+                                                installed
+                                                on
+                                                your system.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <samp class="text-white">
+                                                    Python &lt;version&gt;
+                                                </samp>
+                                            </div>
+
+                                            <div class="alert alert-info" role="alert">
+                                                <strong>Info:</strong> If you do see the version of python installed on
+                                                your system, and this version is equal or greater than 3.10, you can
+                                                skip
+                                                this step.
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                If you do not see the version of python installed on your system, you
+                                                can
+                                                install python using the following command in the terminal.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                                $
+                                            </code>
+                                                <code>
+                                                sudo apt update && sudo apt install python3
+                                            </code>
+                                            </div>
+
+                                            <div class="alert alert-info" role="alert">
+                                                <strong>Info:</strong>
+                                                Once installed, test again to ensure that the version of python
+                                                installed is
+                                                3.10 or greater. If so, you can go to the next step.
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                If the version available in the repositories is not
+                                                3.10 or greater, you can setup a PPA to install a newer version of
+                                                python.
+                                                For this you will need to run through the following steps.
+                                            </p>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                First install the software-properties-common package.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                                $
+                                            </code>
+                                                <code>
+                                                sudo apt install -y software-properties-common
+                                            </code>
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Next, add the deadsnakes PPA.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                                $
+                                            </code>
+                                                <code>
+                                                sudo add-apt-repository -y ppa:deadsnakes/ppa
+                                            </code>
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Then update the package list.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                                $
+                                            </code>
+                                                <code>
+                                                sudo apt update
+                                            </code>
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Install python 3.10 or a newer version.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                                $
+                                            </code>
+                                                <code>
+                                                sudo apt install python3.10
+                                            </code>
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Finally, update your PATH variable to show the new version of python.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                                $
+                                            </code>
+                                                <code>
+                                                export PATH="$HOME/.local/bin:$PATH"
+                                            </code>
+                                            </div>
+
+                                            <div class="alert alert-warning" role="alert">
+                                                <strong>Warning:</strong>
+                                                Be aware that if you install python through this method, you will need
+                                                to
+                                                use the command <kbd>python3.10</kbd> to run python instead of just
+                                                <kbd>python3</kbd>.
+                                            </div>
+                                        </div>
+
+                                        <h6 class="h6 my-4" style="letter-spacing: 0.05em;">
+                                            <a class="text-decoration-none text-reset add-collapse-indicator"
+                                                data-bs-toggle="collapse" href="#requirements-linux-pip-collapse"
+                                                role="button" aria-expanded="false"
+                                                aria-controls="requirements-linux-pip-collapse">
+                                                2. Install pip
+                                            </a>
+                                        </h6>
+
+                                        <div class="collapse" id="requirements-linux-pip-collapse">
+                                            <p class="fs-6" style="text-align: start;">
+                                                You should also have pip installed on your system. You can test this by
+                                                typing
+                                                the
+                                                following into the command prompt.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                            $
+                                        </code>
+                                                <code>
+                                            pip3 --version
+                                        </code>
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Should pip be installed, you should see the version of pip installed on
+                                                your
+                                                system.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <samp class="text-white">
+                                                    pip &lt;version&gt; from ...
+                                                </samp>
+                                            </div>
+
+                                            <div class="alert alert-info" role="alert">
+                                                <strong>Info:</strong> If you do see the version of pip installed on
+                                                your
+                                                system, you can skip this step.
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                If you do not see the version of pip installed on your system, you can
+                                                install
+                                                pip using the following command in the terminal.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                            $
+                                        </code>
+                                                <code>
+                                            sudo apt update && sudo apt install python3-pip
+                                        </code>
+                                            </div>
+                                        </div>
+
+                                        <h6 class="h6 my-4" style="letter-spacing: 0.05em;">
+                                            <a class="text-decoration-none text-reset add-collapse-indicator"
+                                                data-bs-toggle="collapse" href="#requirements-linux-git-collapse"
+                                                role="button" aria-expanded="false"
+                                                aria-controls="requirements-linux-git-collapse">
+                                                3. Install git
+                                            </a>
+                                        </h6>
+
+
+                                        <div class="collapse" id="requirements-linux-git-collapse">
+                                            <p class="fs-6" style="text-align: start;">
+                                                You should also have git installed on your system. You can test this
+                                                by typing the following into the command prompt.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                            $
+                                        </code>
+                                                <code>
+                                            git --version
+                                        </code>
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Should git be installed, you should see the version of git
+                                                installed on your system.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <samp class="text-white">
+                                                    git version &lt;version&gt;
+                                                </samp>
+                                            </div>
+
+                                            <div class="alert alert-info" role="alert">
+                                                <strong>Info:</strong> If you do see the version of git installed
+                                                on your system, you can skip this step.
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                If you do not see the version of git installed on your system, you
+                                                can install git using the following command in the terminal.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                            $
+                                        </code>
+                                                <code>
+                                            sudo apt update && sudo apt install git-all
+                                        </code>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="tab-pane fade show active" id="requirements-win" role="tabpanel"
+                                        aria-labelledby="requirements-win-tab" tabindex="1">
+
+                                        <h6 class="h6 my-4" style="letter-spacing: 0.05em;">
+                                            <a class="text-decoration-none text-reset add-collapse-indicator"
+                                                data-bs-toggle="collapse" href="#requirements-win-python-collapse"
+                                                role="button" aria-expanded="false"
+                                                aria-controls="requirements-win-python-collapse">
+                                                1. Install Python 3.10 or greater
+                                            </a>
+                                        </h6>
+
+                                        <div class="collapse" id="requirements-win-python-collapse">
+                                            <p class="fs-6" style="text-align: start;">
+                                                First you must ensure that you have python 3.10 or greater installed on
+                                                your
+                                                system. You can test this by opening a command prompt and typing the
+                                                following.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                            C:\>
+                                        </code>
+                                                <code>
+                                            python --version
+                                        </code>
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Should python be installed, you should see the version of python
+                                                installed
+                                                on
+                                                your system.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <samp class="text-white">
+                                                    Python &lt;version&gt;
+                                                </samp>
+                                            </div>
+
+                                            <div class="alert alert-info" role="alert">
+                                                <strong>Info:</strong> If you do see the version of python installed on
+                                                your system, and this version is equal or greater than 3.10, you can
+                                                skip
+                                                this step.
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                If you do not see the version of python installed on your system, or
+                                                this
+                                                version is lower than 3.10, you can install python by downloading it
+                                                from
+                                                the
+                                                <a href="https://www.python.org/downloads/" target="_blank"
+                                                    rel="noopener noreferrer">
+                                                    official website</a>. Make sure to select a version equal or greater
+                                                than
+                                                3.10.
+                                            </p>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Once downloaded, run the installer and select &quot;Customize
+                                                installation&quot;.
+                                            </p>
+
+                                            <img src="img/install_guide_win_python_1.png"
+                                                class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Then, make sure to check &quot;pip&quot;.
+                                            </p>
+
+                                            <img src="img/install_guide_win_python_2.png"
+                                                class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Finally, select &quot;Add Python to environment variables&quot; and
+                                                click
+                                                &quot;Install&quot;.
+                                            </p>
+
+                                            <img src="img/install_guide_win_python_3.png"
+                                                class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Once done, follow through to the next steps.
+                                            </p>
+                                        </div>
+
+                                        <h6 class="h6 my-4" style="letter-spacing: 0.05em;">
+                                            <a class="text-decoration-none text-reset add-collapse-indicator"
+                                                data-bs-toggle="collapse" href="#requirements-win-pip-collapse"
+                                                role="button" aria-expanded="false"
+                                                aria-controls="requirements-win-pip-collapse">
+                                                2. Install pip
+                                            </a>
+                                        </h6>
+
+                                        <div class="collapse" id="requirements-win-pip-collapse">
+                                            <p class="fs-6" style="text-align: start;">
+                                                You should also have pip installed on your system. If you installed
+                                                python
+                                                following the steps above, pip should be installed by default. You can
+                                                test
+                                                this by typing the following into the command prompt.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                            C:\>
+                                        </code>
+                                                <code>
+                                            pip --version
+                                        </code>
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Should pip be installed, you should see the version of pip installed on
+                                                your
+                                                system.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <samp class="text-white">
+                                                    pip &lt;version&gt; from ...
+                                                </samp>
+                                            </div>
+
+                                            <div class="alert alert-info" role="alert">
+                                                <strong>Info:</strong> If you do see the version of pip installed on
+                                                your
+                                                system, you can skip this step.
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                If you do not see the version of pip installed on your system, you can
+                                                install
+                                                pip using the following command in the command prompt.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                            C:\>
+                                        </code>
+                                                <code>
+                                            python -m ensurepip --upgrade
+                                        </code>
+                                            </div>
+                                        </div>
+
+                                        <h6 class="h6 my-4" style="letter-spacing: 0.05em;">
+                                            <a class="text-decoration-none text-reset add-collapse-indicator"
+                                                data-bs-toggle="collapse" href="#requirements-win-git-collapse"
+                                                role="button" aria-expanded="false"
+                                                aria-controls="requirements-win-git-collapse">
+                                                3. Install git
+                                            </a>
+                                        </h6>
+
+                                        <div class="collapse" id="requirements-win-git-collapse">
+                                            <p class="fs-6" style="text-align: start;">
+                                                You should also have git installed on your system. You can test this
+                                                by typing the following into the command prompt.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <code class="text-white">
+                                            C:\>
+                                        </code>
+                                                <code>
+                                            git --version
+                                        </code>
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Should git be installed, you should see the version of git
+                                                installed on your system.
+                                            </p>
+
+                                            <div class="bg-dark rounded-3 p-3 m-3">
+                                                <samp class="text-white">
+                                                    git version &lt;version&gt;
+                                                </samp>
+                                            </div>
+
+                                            <div class="alert alert-info" role="alert">
+                                                <strong>Info:</strong> If you do see the version of git installed
+                                                on your system, you can skip this step.
+                                            </div>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                If you do not see the version of git installed on your system, you
+                                                can install git by downloading it from the <a
+                                                    href="https://git-scm.com/download/win" target="_blank"
+                                                    rel="noopener noreferrer">official website</a>.
+                                            </p>
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Once downloaded, run the installer and run through the installation
+                                                process. You will be presented with a lot of options but defaults should
+                                                be sane enough. The only option to pay attention to is &quot;Adjusting
+                                                your PATH environment&quot;. Make sure to select &quot;Git from the
+                                                command line and also from 3rd-party software&quot;,
+                                            </p>
+
+                                            <img src="img/install_guide_win_git_1.png"
+                                                class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+
+                                            <p class="fs-6" style="text-align: start;">
+                                                Proceed with the installation and you should be good to go.
+                                            </p>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="tab-pane fade" id="requirements-mac" role="tabpanel"
+                                        aria-labelledby="requirements-mac-tab" tabindex="3">
+
+                                        <p class="fs-6" style="text-align: start;">
+                                            Researching...
+                                        </p>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <div>
+                                <h5 class="h5 my-4" style="letter-spacing: 0.05em;" id="section_installation">
+                                    Installation
+                                </h5>
+
+                                <nav>
+                                    <div class="nav nav-tabs" id="installation-tab" role="tablist">
+                                        <button class="nav-link active" id="installation-win-tab" data-bs-toggle="tab"
+                                            data-bs-target="#installation-win" type="button" role="tab"
+                                            aria-controls="installation-win" aria-selected="true">Windows</button>
+                                        <button class="nav-link" id="installation-linux-tab" data-bs-toggle="tab"
+                                            data-bs-target="#installation-linux" type="button" role="tab"
+                                            aria-controls="installation-linux"
+                                            aria-selected="false">Ubuntu/Debian</button>
+                                        <button class="nav-link" id="installation-mac-tab" data-bs-toggle="tab"
+                                            data-bs-target="#installation-mac" type="button" role="tab"
+                                            aria-controls="installation-mac" aria-selected="false" disabled>Mac</button>
+                                    </div>
+                                </nav>
+
+                                <div class="tab-content" id="installation-tabContent">
+                                    <div class="tab-pane fade show active" id="installation-win" role="tabpanel"
+                                        aria-labelledby="installation-win-tab" tabindex="4">
+
+                                        <p class="fs-6" style="text-align: start;">
+                                            Open a command prompt and navigate to the directory where you want to clone
+                                            the
+                                            repository. Then, type the following command.
+                                        </p>
+
+                                        <div class="bg-dark rounded-3 p-3 m-3">
+                                            <code class="text-white">
+                                                C:\path\to\folder>
+                                            </code>
+                                            <code>
+                                                git clone https://github.com/combobulativedesigns/gptwntranslator.git
+                                            </code>
+                                        </div>
+
+                                        <p class="fs-6" style="text-align: start;">
+                                            You should now have a folder named gptwntranslator in the directory you
+                                            specified. Navigate to the folder and use pip to install the tool itself.
+                                        </p>
+
+                                        <div class="bg-dark rounded-3 p-3 m-3">
+                                            <code class="text-white">
+                                            C:\path\to\folder>
+                                        </code>
+                                            <code>
+                                            cd gptwntranslator
+                                        </code>
+                                            <br>
+                                            <code class="text-white">
+                                            C:\path\to\folder\gptwntranslator>
+                                        </code>
+                                            <code>
+                                            python -m pip install .
+                                        </code>
+                                        </div>
+
+                                    </div>
+
+                                    <div class=" tab-pane fade" id="installation-linux" role="tabpanel"
+                                        aria-labelledby="installation-linux-tab" tabindex="5">
+
+                                        <p class="fs-6" style="text-align: start;">
+                                            Open a terminal and navigate to the directory where you want to clone the
+                                            repository. Then, type the following command.
+                                        </p>
+
+                                        <div class="bg-dark rounded-3 p-3 m-3">
+                                            <code class="text-white">
+                                            /path/to/folder$
+                                        </code>
+                                            <code>
+                                            git clone https://github.com/combobulativedesigns/gptwntranslator.git
+                                        </code>
+                                        </div>
+
+                                        <p class="fs-6" style="text-align: start;">
+                                            You should now have a folder named gptwntranslator in the directory you
+                                            specified. Navigate to the folder and use pip to install the tool itself.
+                                        </p>
+
+                                        <div class="bg-dark rounded-3 p-3 m-3">
+                                            <code class="text-white">
+                                            /path/to/folder$
+                                        </code>
+                                            <code>
+                                            cd gptwntranslator
+                                        </code>
+                                            <br>
+                                            <code class="text-white">
+                                            /path/to/folder/gptwntranslator$
+                                        </code>
+                                            <code>
+                                            python3 -m pip install .
+                                        </code>
+                                        </div>
+
+                                        <div class="alert alert-warning" role="alert">
+                                            <strong>Warning:</strong>
+                                            Remember that in case of having used the PPA to install python3.10, you will
+                                            need to use <kbd>python3.10 -m pip install .</kbd> to install the tool.
+                                        </div>
+
+                                    </div>
+
+                                    <div class="tab-pane fade" id="installation-mac" role="tabpanel"
+                                        aria-labelledby="installation-mac-tab" tabindex="6">
+
+                                        <p class="fs-6" style="text-align: start;">
+                                            Researching...
+                                        </p>
+
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <div>
+                                <h5 class="h5 my-4" style="letter-spacing: 0.05em;" id="section_requirements">
+                                    Configuration
+                                </h5>
+
+                                <p class="fs-6" style="text-align: start;">
+                                    All configuration is done through the config.yaml file. You can find an example
+                                    config.example.yaml file in the repository, inside the config folder. You can
+                                    rename it to config.yaml and edit it to your liking.
+                                </p>
+
+                                <p class="fs-6" style="text-align: start;">
+                                    Here is a sample config.yaml file.
+                                </p>
+
+                                <div class="bg-dark rounded-3 p-3 m-3">
+                                    <pre class="text-white">
+config:
+    openai:
+        api_key: "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        models:
+            gpt-3.5:
+                name: "gpt-3.5-turbo"
+                cost_per_1k_tokens: 0.002
+                max_tokens: 4096
+                enabled: true
+            gpt-4:
+                name: "gpt-4"
+                cost_per_1k_tokens: 0.03
+                max_tokens: 8192
+                enabled: true
+            gpt-4-32k:
+                name: "gpt-4-32k"
+                cost_per_1k_tokens: 0.06
+                max_tokens: 32768
+                enabled: true
+
+    translator:
+        api:
+            terms_list:
+                models: 
+                    - gpt-3.5
+            translation:
+                models:
+                    - gpt-3.5
+            summary:
+                models:
+                    - gpt-3.5
+            metadata:
+                models:
+                    - gpt-3.5
+        target_language: "en"
+
+    languages:
+        - en: "English"
+        - de: "German"
+        - es: "Spanish"
+        - fr: "French"
+        - it: "Italian"
+        - ja: "Japanese"
+        - ko: "Korean"
+        - nl: "Dutch"
+        - pt: "Portuguese"
+        - ru: "Russian"
+        - zh: "Chinese"
+
+    spacy:
+        pipelines:
+            - en: "en_core_web_sm"
+            - de: "de_core_news_sm"
+            - es: "es_core_news_sm"
+            - fr: "fr_core_news_sm"
+            - it: "it_core_news_sm"
+            - ja: "ja_core_news_sm"
+            - ko: "ko_core_news_sm"
+            - nl: "nl_core_news_sm"
+            - pt: "pt_core_news_sm"
+            - ru: "ru_core_news_sm"
+            - zh: "zh_core_web_sm"
+                                    </pre>
+                                </div>
+
+                                <p class="fs-6" style="text-align: start;">
+                                    The config.yaml file is divided into 4 main sections: openai, languages, spacy and
+                                    translator.
+                                </p>
+
+                                <h6 class="h6 my-4" style="letter-spacing: 0.05em;">
+                                    OpenAI
+                                </h6>
+
+                                <p class="fs-6" style="text-align: start;">
+                                    The OpenAI section contains the API key and the models you want to use. You can
+                                    find your API key in the OpenAI dashboard. You can also find the list of models
+                                    available and their cost per 1k tokens. You can also enable or disable models
+                                    here. The cost and max tokens are used to calculate the cost of the translation,
+                                    and optimizing model usage by using the most appropriate model for the task.
+                                    So make sure to update the cost and max tokens OpenAI updates them.
+                                </p>
+
+                                <p class="fs-6" style="text-align: start;">
+                                    Should new models come out, you can add them here. As long as they use the same
+                                    API endpoint, they should work. And if old models are updated in their cost or
+                                    max tokens, you can update them here as well.
+                                </p>
+
+                                <h6 class="h6 my-4" style="letter-spacing: 0.05em;">
+                                    Translator
+                                </h6>
+
+                                <p class="fs-6" style="text-align: start;">
+                                    The Translator section contains both the models to be used for each section of
+                                    the translation process and the target language. The target language should be
+                                    in the same 2 letter format as the languages in the languages section.
+                                </p>
+
+                                <p class="fs-6" style="text-align: start;">
+                                    The models section contains the models to be used for each section of the
+                                    translation process. You can add or remove models from the list. The order of
+                                    the models in the list is not important, as the tool will try to optimize based
+                                    on cost which model to use.
+                                </p>
+
+                                <h6 class="h6 my-4" style="letter-spacing: 0.05em;">
+                                    Languages
+                                </h6>
+
+                                <p class="fs-6" style="text-align: start;">
+                                    The Languages section contains the list of languages supported by the tool. The
+                                    list is in the format <code>language_code: "Language Name"</code>. The
+                                    language code should be in the same 2 letter as seen before.
+                                </p>
+
+                                <p class="fs-6" style="text-align: start;">
+                                    The language code is used to identify the language in the config.yaml file. The
+                                    language name is used to feed the prompts to the OpenAI API.
+                                </p>
+
+                                <h6 class="h6 my-4" style="letter-spacing: 0.05em;">
+                                    Spacy
+                                </h6>
+
+                                <p class="fs-6" style="text-align: start;">
+                                    Spacy is used as part of the translation process to improve consistency and
+                                    accuracy.
+                                </p>
+
+                                <p class="fs-6" style="text-align: start;">
+                                    The Spacy section contains the list of pipelines to be used for each language.
+                                    They are required for the tool to work, and installed as part of the setup
+                                    process. The list is in the format <code>language_code: "pipeline_name"</code>.
+                                    The language code should be in the same 2 letter as seen before.
+                                </p>
+
+                            </div>
+
+                            <hr class="mt-5">
+
+                            <p class="text-center text-muted">
+                                Copyright &copy; 2023 Rodrigo Jauregui | <a
+                                    href="https://www.gnu.org/licenses/gpl-3.0.en.html"
+                                    class="text-reset link-underline-opacity-0">Licensed under GPL v3.0</a> | <a
+                                    href="privacy.html" class="text-reset link-underline-opacity-0">Privacy Policy</a>
+                            </p>
+
+
+
+                        </div>
+
+
+
+                        <div class="col-2 d-none d-lg-inline">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+            crossorigin="anonymous"></script>
+</body>
+
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>gptwntranslator</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@100&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://kit.fontawesome.com/777160d4a1.js" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+
+</head>
+
+<body
+    style="font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif;">
+
+    <nav class="navbar navbar-expand-lg sticky-top" data-bs-theme="dark"
+        style="background: linear-gradient(90deg, #111136, #321c44);">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html" style="font-family: Raleway, sans-serif; letter-spacing: 0.3em;">
+                <img width="30" height="30" src="img/logo.png" alt="Logo">
+                gptwntranslator
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="installation.html">Installation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active link-underline-light" aria-current="page" href="#">Usage</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/combobulativedesigns/gptwntranslator">
+                            <i class="fa-brands fa-github"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid my-0" style="background: linear-gradient(90deg, #111136, #321c44);">
+
+        <div class="row py-4">
+            <div class="col-12">
+                <div class="container-sm py-5 bg-light rounded-4">
+                    <div class="row">
+                        <div class="col-2 d-none d-lg-inline">
+                        </div>
+                        <div class="col-12 col-lg-8">
+
+                            <h1 class="h1 my-4" style="letter-spacing: 0.05em;">
+                                How to use
+                            </h1>
+
+                            <h4 class="h4 my-4" style="letter-spacing: 0.05em;">
+                                Relevant/Irrelevant arguments
+                            </h4>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                Usage of this tool depends on 3 files and 1 folder. This 4 items are setup through
+                                the specific arguments. But they offer sane defaults. So, if you don't want to
+                                specify them, you don't have to. The 4 items are:
+                            </p>
+
+                            <ul class="fs-6" style="text-align: justify;">
+                                <li>
+                                    <code>Config File</code> - This file contains the settings for the tool.
+                                </li>
+                                <li>
+                                    <code>Local Storage File</code> - The json file where the tool stores all data.
+                                </li>
+                                <li>
+                                    <code>Log File</code> - The log file for the tool.
+                                </li>
+                                <li>
+                                    <code>Output Folder</code> - The folder where the tool will export translations.
+                                </li>
+                            </ul>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                The <code>config file</code> is the only file that is required to exist before running
+                                the tool.
+                                By default the tool looks for a file named <code>config.yaml</code> in a config
+                                subfolder
+                                in the current working directory. If you want to use a different file, you can specify
+                                it using the <code>--config-file</code> or <code>-cf</code> argument.
+                            </p>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                The <code>local storage file</code> is the file where the tool stores all data. By
+                                default
+                                the tool looks for a file named <code>persistent_data.json</code> in the current working
+                                directory. If you want to use a different file, you can specify it using the
+                                <code>--persistent-file</code> or <code>-pf</code> argument. There's no need to create
+                                this
+                                file before running the tool. The tool will create it if it doesn't exist.
+                            </p>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                The <code>log file</code> is the file where the tool stores all logs. By default the
+                                tool
+                                looks for a file named <code>gptwntranslator.log</code> in the current working
+                                directory.
+                                There's no option to specify a different log file.
+                            </p>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                The <code>output folder</code> is the folder where the tool will export translations. By
+                                default the tool looks for a folder named <code>output</code> in the current working
+                                directory. If you want to use a different folder, you can specify it using the
+                                <code>--output-directory</code> or <code>-od</code> argument.
+                            </p>
+
+                            <h4 class="h4 my-4" style="letter-spacing: 0.05em;">
+                                Modes
+                            </h4>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                gptwntranslator provides 2 ways of operation. While both ways are through the command
+                                line, one is an interactive mode and the other is a non-interactive mode. The
+                                interactive mode guides the user through the process of scraping and translating a
+                                web novel. The non-interactive mode is for those who are familiar with the tool and
+                                want to use it for batch processing.
+                            </p>
+
+                            <h4 class="h4 my-4" style="letter-spacing: 0.05em;">
+                                <a class="text-decoration-none text-reset add-collapse-indicator"
+                                    data-bs-toggle="collapse" href="#mode-interactive" role="button"
+                                    aria-expanded="false" aria-controls="mode-interactive">
+                                    Interactive mode
+                                </a>
+                            </h4>
+
+                            <div class="collapse" id="mode-interactive">
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    The interactive mode is the easiest way to use gptwntranslator. Running the
+                                    following command will start the interactive mode:
+                                </p>
+
+                                <nav>
+                                    <div class="nav nav-tabs" id="usage-interactive-tab" role="tablist">
+                                        <button class="nav-link active" id="usage-interactive-win-tab"
+                                            data-bs-toggle="tab" data-bs-target="#usage-interactive-win" type="button"
+                                            role="tab" aria-controls="usage-interactive-win"
+                                            aria-selected="true">Windows</button>
+                                        <button class="nav-link" id="usage-interactive-linux-tab" data-bs-toggle="tab"
+                                            data-bs-target="#usage-interactive-linux" type="button" role="tab"
+                                            aria-controls="usage-interactive-linux"
+                                            aria-selected="false">Ubuntu/Debian</button>
+                                        <button class="nav-link" id="usage-interactive-mac-tab" data-bs-toggle="tab"
+                                            data-bs-target="#usage-interactive-mac" type="button" role="tab"
+                                            aria-controls="usage-interactive-mac" aria-selected="false"
+                                            disabled>Mac</button>
+                                    </div>
+                                </nav>
+
+                                <div class="tab-content" id="usage-interactive-tabContent">
+                                    <div class="tab-pane fade show active" id="usage-interactive-win" role="tabpanel"
+                                        aria-labelledby="usage-interactive-win-tab" tabindex="4">
+
+                                        <div class="bg-dark rounded-3 p-3 m-3">
+                                            <code class="text-white">
+                                                C:\>
+                                            </code>
+                                            <code>
+                                                gptwntranslator i
+                                            </code>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="tab-pane fade" id="usage-interactive-linux" role="tabpanel"
+                                        aria-labelledby="usage-interactive-linux-tab" tabindex="4">
+
+                                        <div class="bg-dark rounded-3 p-3 m-3">
+                                            <code class="text-white">
+                                                $
+                                            </code>
+                                            <code>
+                                                gptwntranslator i
+                                            </code>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="tab-pane fade" id="usage-interactive-mac" role="tabpanel"
+                                        aria-labelledby="usage-interactive-mac-tab" tabindex="4">
+
+                                        <div class="bg-dark rounded-3 p-3 m-3">
+                                            <code class="text-white">
+                                                C:\>
+                                            </code>
+                                            <code>
+                                                gptwntranslator i
+                                            </code>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <h5 class="h5 my-4" style="letter-spacing: 0.05em;">
+                                    Novel Selection
+                                </h5>
+
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    Once the interactive mode is started, the user will be prompted to enter the URL
+                                    code of the web novel they want to translate. The URL code is the part of the
+                                    URL that comes after the domain name. For example, the URL code of
+                                    <a href="https://ncode.syosetu.com/n5177et/">https://ncode.syosetu.com/n5177et/
+                                    </a> is "n5177et".
+                                </p>
+
+                                <img src="img/usage_win_entry.png"
+                                    class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    Once the code is entered, and the user selects "Search novel" from the menu, the
+                                    tool will try to load the web novel from the local storage. If the web novel is
+                                    not found, the tool will try to download it from the web.
+                                </p>
+
+                                <h5 class="h5 my-4" style="letter-spacing: 0.05em;">
+                                    Novel Menu
+                                </h5>
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    Once the web novel is loaded, the user will be presented with the novel menu. The
+                                    novel menu is the main menu of the interactive mode.
+                                </p>
+
+                                <img src="img/usage_win_menu_untranslated.png"
+                                    class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    The novel menu presents the user with 5 main actions:
+                                </p>
+
+                                <ul class="fs-6" style="text-align: justify;">
+                                    <li>
+                                        <b>Update metadata</b>: This option will update the metadata of the web novel.
+                                    </li>
+                                    <li>
+                                        <b>Download chapters</b>: This option will download a range of chapters of the
+                                        web novel.
+                                    </li>
+                                    <li>
+                                        <b>Translate metadata</b>: This option will translate the metadata of the web
+                                        novel. The metadata includes the title, author, description, etc.
+                                    </li>
+                                    <li>
+                                        <b>Translate chapters</b>: This option will translate a range of chapters of the
+                                        web novel.
+                                    </li>
+                                    <li>
+                                        <b>Export chapters</b>: This option will export selected chapters to a
+                                        .epub file.
+                                    </li>
+                                </ul>
+
+                                <h5 class="h5 my-4" style="letter-spacing: 0.05em;">
+                                    Actions
+                                </h5>
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    The <strong>Update metadata</strong> action will update the metadata of the web
+                                    novel. The metadata includes the title, author, description, etc. The metadata
+                                    also includes the list of chapters of the web novel with their titles, and the
+                                    list of sub chapters of each chapter.
+                                </p>
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    The <strong>Download chapters</strong> action will download a range of chapters of
+                                    the web novel. The user will be prompted to enter the range of chapters to
+                                    download. For a guide on how to enter the range of chapters, see the section on
+                                    chapter targeting at the end of this page.
+                                </p>
+
+                                <img src="img/usage_win_scraping_chapters.png"
+                                    class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    The <strong>Translate metadata</strong> action will translate the metadata of the
+                                    web novel. The metadata includes the title, author, description, etc. This
+                                    translation action only targets the general metadata of the web novel, and not
+                                    the chapter titles.
+                                </p>
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    Once the novel metadata is translated, the user will be able to see the
+                                    translated metadata in the novel menu.
+                                </p>
+
+                                <img src="img/usage_win_menu_translated.png"
+                                    class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    The <strong>Translate chapters</strong> action will translate a range of chapters
+                                    of the web novel. The user will be prompted to enter the range of chapters to
+                                    translate. For a guide on how to enter the range of chapters, see the section on
+                                    chapter targeting at the end of this page.
+                                </p>
+
+                                <img src="img/usage_win_translating_chapters.png"
+                                    class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    The <strong>Export chapters</strong> action will export selected chapters to a
+                                    .epub file. The user will be prompted to enter the range of chapters to export.
+                                    For a guide on how to enter the range of chapters, see the section on chapter
+                                    targeting at the end of this page.
+                                </p>
+
+                                <img src="img/usage_win_exporting_chapters.png"
+                                    class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+
+                            </div>
+
+                            <h4 class="h4 my-4" style="letter-spacing: 0.05em;">
+                                <a class="text-decoration-none text-reset add-collapse-indicator"
+                                    data-bs-toggle="collapse" href="#mode-command" role="button" aria-expanded="false"
+                                    aria-controls="mode-command">
+                                    Command mode
+                                </a>
+                            </h4>
+
+                            <div class="collapse" id="mode-command">
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    The command mode acts as a single command that performs a single action. The
+                                    command mode is useful for automation and scripting.
+                                </p>
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    Currently, this section is under construction.
+                                </p>
+
+                            </div>
+
+                            <h4 class="h4 my-4" style="letter-spacing: 0.05em;">
+                                Chapter Targeting
+                            </h4>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                When the user is prompted to enter a range of chapters, the user can enter a string
+                                representing this range using the following syntax:
+                            </p>
+
+                            <ul class="fs-6" style="text-align: justify;">
+                                <li>
+                                    Chapter numbers are represented by one or more digits (e.g., "3" or "12").
+                                </li>
+                                <li>
+                                    Sub-chapter numbers are also represented by one or more digits (e.g., "4" or "23").
+                                </li>
+                                <li>
+                                    Chapter ranges are represented by two chapter numbers separated by a hyphen (e.g.,
+                                    "2-5").
+                                </li>
+                                <li>
+                                    Sub-chapter ranges are represented by two sub-chapter numbers separated by a hyphen
+                                    (e.g., "6-9")
+                                </li>
+                                <li>
+                                    A chapter can be followed by a colon and a list of sub-chapters or sub-chapter
+                                    ranges (e.g., "3:2,5,7-9").
+                                </li>
+                                <li>
+                                    Individual chapters or chapter ranges can be separated by semicolons (e.g.,
+                                    "3;5-7;8").
+                                </li>
+                            </ul>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                Here's an example input that would match this pattern.
+                            </p>
+
+                            <div class="bg-dark rounded-3 p-3 m-3">
+                                <samp class="text-white">
+                                    1:1,3,5-7;2-4;5:1-3,6;6-8
+                                </samp>
+                            </div>
+
+                            <p class="fs-6" style="text-align: justify;">
+                                This input would match the following chapters and sub-chapters:
+                            </p>
+
+                            <ul class="fs-6" style="text-align: justify;">
+                                <li>
+                                    Chapter 1, sub-chapters 1,3,5,6,7
+                                </li>
+                                <li>
+                                    Chapters 2,3,4, all sub-chapters
+                                </li>
+                                <li>
+                                    Chapter 5, sub-chapters 1,2,3,6
+                                </li>
+                                <li>
+                                    Chapters 6,7,8, all sub-chapters
+                                </li>
+                            </ul>
+
+                            <div class="alert alert-warning" role="alert">
+                                <strong>Warning:</strong>
+                                While a working example, keep in mind that the nomenclature of the web novel
+                                chapters and sub-chapters may vary. For example, the web novel may use "volume",
+                                "arc", "part", or "book" instead of "chapter" and "chapter" instead of "sub-chapter".
+                                In these cases, one chapter as we call it might contain dozens of sub-chapters,
+                                and a simple chapter target of "1" would lead to processing all of them. Be careful
+                                when setting targets. We recommend always specifying the sub-chapters you want to
+                                process.
+                            </div>
+
+                            <hr class="mt-5">
+
+                            <p class="text-center text-muted">
+                                Copyright &copy; 2023 Rodrigo Jauregui | <a
+                                    href="https://www.gnu.org/licenses/gpl-3.0.en.html"
+                                    class="text-reset link-underline-opacity-0">Licensed under GPL v3.0</a> | <a
+                                    href="privacy.html" class="text-reset link-underline-opacity-0">Privacy Policy</a>
+                            </p>
+
+                        </div>
+                        <div class="col-2 d-none d-lg-inline">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
