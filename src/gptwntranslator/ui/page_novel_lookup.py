@@ -1,5 +1,6 @@
 from gptwntranslator.helpers.ui_helper import print_title, wait_for_user_input
-from gptwntranslator.scrapers.syosetu_scraper import process_novel
+from gptwntranslator.origins.origin_factory import OriginFactory
+from gptwntranslator.origins.syosetu_scraper import process_novel
 from gptwntranslator.storage.json_storage import JsonStorage
 from gptwntranslator.ui.page_base import PageBase
 from gptwntranslator.ui.page_exit import PageExit
@@ -15,7 +16,9 @@ class PageNovelLookup(PageBase):
     def render(self, screen, **kwargs) -> tuple[PageBase, dict]:
         resources = get_resources()
         novel_code = kwargs["novel_url_code"]
+        novel_origin = kwargs["novel_origin"]
         storage = JsonStorage()
+        origin = OriginFactory.get_origin(novel_origin)
 
         # Print title
         last_y = print_title(screen, resources["title"], 0)
@@ -51,17 +54,17 @@ class PageNovelLookup(PageBase):
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
                 last_y += 1
-                target, params = PageNovelMenu, {"novel_url_code": novel_code, "return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
+                target, params = PageNovelMenu, {"novel_origin": novel_origin, "novel_url_code": novel_code, "return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
                 break
             except IndexError:
                 screen.print_at("failed.", 2 + len(message), last_y)
                 last_y += 1
 
             try:
-                message = "(3/4) Scraping Syosetu... "
+                message = "(3/4) Scraping Origin... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
-                novel = process_novel(novel_code)
+                novel = origin.process_novel(novel_code)
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
                 last_y += 1
@@ -83,7 +86,7 @@ class PageNovelLookup(PageBase):
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
                 last_y += 1
-                target, params = PageNovelMenu, {"novel_url_code": novel_code, "return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
+                target, params = PageNovelMenu, {"novel_origin": novel_origin, "novel_url_code": novel_code, "return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
             except Exception as e:
                 screen.print_at("failed.", 2 + len(message), last_y)
                 last_y += 1

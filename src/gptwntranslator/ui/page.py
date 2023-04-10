@@ -1,6 +1,7 @@
+from abc import abstractmethod
 from types import NoneType
 from gptwntranslator.helpers.logger_helper import CustomLogger
-from gptwntranslator.helpers.ui_helper import navigate_items, print_title
+from gptwntranslator.helpers.ui_helper import UIMenuItem, navigate_items, print_title
 from gptwntranslator.ui.page_base import PageBase
 from gptwntranslator.ui.page_return import PageReturn
 from gptwntranslator.ui.ui_resources import get_resources
@@ -51,7 +52,7 @@ class Page(PageBase):
             logger.debug(f"active_index: {active_index}")
             item = self.menu_items[active_index]
 
-            if item[4] is not None:
+            if item.page_target is not None:
                 page, content = self.process_actions(item, active_index)
                 if page is not None:
                     return page, content
@@ -62,7 +63,9 @@ class Page(PageBase):
 
         return None, {}
 
-    def process_actions(self, item, content) -> tuple[PageBase, dict]:
-        if item[4] == PageReturn:
-            return item[4], {"return_page": item[5], "return_kwargs": {}}
-        return item[4], item[5]
+    @abstractmethod
+    def process_actions(self, item: UIMenuItem, content) -> tuple[PageBase, dict]:
+        pass
+        # if item.page_target is PageReturn:
+        #     return item.page_target, {**item.page_data, **{"return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}}
+        # return item.page_target, {**item.page_data, **{"return_page": self.__class__, "return_kwargs": self.args}}

@@ -6,7 +6,8 @@ from gptwntranslator.api import openai_api
 from gptwntranslator.helpers.config_helper import Config
 from gptwntranslator.helpers.file_helper import write_md_as_epub
 from gptwntranslator.helpers.text_helper import parse_chapters, write_novel_md
-from gptwntranslator.scrapers.syosetu_scraper import process_novel, process_targets
+from gptwntranslator.origins.syosetu_ncode_origin import SyosetuNCodeOrigin
+from gptwntranslator.origins.syosetu_scraper import process_novel, process_targets
 from gptwntranslator.storage.json_storage import JsonStorage, JsonStorageException, JsonStorageFileException, JsonStorageFormatException
 from gptwntranslator.translators.gpt_translator import GPTTranslatorSingleton
 
@@ -63,7 +64,8 @@ def run_scrape_metadata(novel_code: str) -> None:
     try:
         print("(2/3) Scraping metadata... ", end="")
         sys.stdout.flush()
-        novel_data = process_novel(novel_code)
+        origin = SyosetuNCodeOrigin()
+        novel_data = origin.process_novel(novel_code)
         print("success.")
     except Exception as e:
         print("failed.")
@@ -124,7 +126,8 @@ def run_scrape_chapters(novel_code: str, chapter_targets_str: str) -> None:
     try:
         print("(3/4) Scraping chapters... ", end="")
         sys.stdout.flush()
-        process_targets(novel_data, chapter_targets)
+        origin = SyosetuNCodeOrigin()
+        origin.process_targets(novel_data, chapter_targets)
         print("success.")
     except Exception as e:
         print("failed.")
