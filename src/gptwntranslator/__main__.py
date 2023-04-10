@@ -106,6 +106,7 @@ def main():
     interactive_parser.add_argument("-cf", "--config-file", type=str, help="Specify the path to a custom configuration file")
     interactive_parser.add_argument("-pf", "--persistent-file", type=str, help="Specify the path to a custom persistent file for tracking progress")
     interactive_parser.add_argument("-od", "--output-directory", type=str, help="Specify the output directory for generated files")
+    interactive_parser.add_argument("-id", "--input-directory", type=str, help="Specify the input directory for reading files")
 
     # Command mode
     command_parser = subparsers.add_parser("command", help="Run the tool in command mode, providing actions and options as arguments", aliases=["c"])
@@ -141,6 +142,7 @@ def main():
         subparser.add_argument("-cf", "--config-file", type=str, help="Specify the path to a custom configuration file")
         subparser.add_argument("-pf", "--persistent-file", type=str, help="Specify the path to a custom persistent file for tracking progress")
         subparser.add_argument("-od", "--output-directory", type=str, help="Specify the output directory for generated files")
+        subparser.add_argument("-id", "--input-directory", type=str, help="Specify the input directory for reading files")
 
     args = parser.parse_args()
 
@@ -164,6 +166,15 @@ def main():
         if not os.path.exists(os.path.join(working_directory, "output")):
             os.mkdir(os.path.join(working_directory, "output"))
         output_directory = os.path.join(working_directory, "output")
+
+    if args.input_directory is not None:
+        if not os.path.exists(args.input_directory):
+            parser.error("The specified input directory path does not exist")
+        input_directory = args.input_directory
+    else:
+        if not os.path.exists(os.path.join(working_directory, "input")):
+            os.mkdir(os.path.join(working_directory, "input"))
+        input_directory = os.path.join(working_directory, "input")
 
     if args.config_file is not None:
         if not os.path.exists(args.config_file):
@@ -194,10 +205,12 @@ def main():
     logger.info(f"Configuration file: {config_file_path}")
     logger.info(f"Persistent file: {persistent_file_path}")
     logger.info(f"Output directory: {output_directory}")
+    logger.info(f"Input directory: {input_directory}")
     logger.info(f"Mode set to: {args.mode}")
 
     config.vars["config_file_path"] = config_file_path
     config.vars["output_path"] = output_directory
+    config.vars["input_path"] = input_directory
     config.vars["persistent_file_path"] = persistent_file_path
     config.vars["verbose"] = args.verbose if "verbose" in args else False
     

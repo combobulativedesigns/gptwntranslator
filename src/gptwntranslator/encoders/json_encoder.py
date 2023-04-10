@@ -39,6 +39,7 @@ class JsonEncoder(json.JSONEncoder):
         
         if isinstance(o, TermSheet):
             return {
+                "novel_origin": o.novel_origin,
                 "novel_code": o.novel_code,
                 "terms": o.terms,
                 "_type": "TermSheet"

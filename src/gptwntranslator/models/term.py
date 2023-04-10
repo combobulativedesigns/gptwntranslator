@@ -84,9 +84,12 @@ class Term:
             raise TypeError("Language must be a string")
         if not isinstance(translation, str):
             raise TypeError("Translation must be a string")
-        
+
         # Add the translation
-        self.translations[language] = translation
+        if language in self.translations:
+            pass
+        else:
+            self.translations[language] = translation
 
     def _get_weight(self) -> int:
         """Get the weight of the term.

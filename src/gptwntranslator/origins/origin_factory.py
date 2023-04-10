@@ -8,8 +8,8 @@ class OriginFactory:
     @classmethod
     def origins(cls) -> dict:
         return {
-            SyosetuNovel18Origin.code: SyosetuNovel18Origin,
-            SyosetuNCodeOrigin.code: SyosetuNCodeOrigin
+            SyosetuNCodeOrigin.code: SyosetuNCodeOrigin,
+            SyosetuNovel18Origin.code: SyosetuNovel18Origin
         }
     
     @classmethod

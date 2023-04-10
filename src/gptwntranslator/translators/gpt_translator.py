@@ -1062,7 +1062,7 @@ class GPTTranslator:
                 terms += result + "\n\n"
 
         if not novel.terms_sheet:
-            novel.terms_sheet = TermSheet(novel.novel_code)
+            novel.terms_sheet = TermSheet(novel.novel_origin, novel.novel_code)
         novel.terms_sheet.process_new_terms(terms)
 
         return exceptions

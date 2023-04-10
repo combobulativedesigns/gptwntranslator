@@ -92,7 +92,7 @@ class Novel:
         self.author_link = author_link
         self.description_translation = description_translation
         self.chapters = chapters
-        self.terms_sheet = terms_sheet if terms_sheet is not None else TermSheet(novel_code)
+        self.terms_sheet = terms_sheet if terms_sheet is not None else TermSheet(novel_origin, novel_code)
 
     def get_chapter(self, chapter_number: int) -> Chapter:
         """Return the chapter object of the given chapter number.

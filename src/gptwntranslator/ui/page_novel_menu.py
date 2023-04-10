@@ -2,9 +2,9 @@ from gptwntranslator.helpers.config_helper import Config
 from gptwntranslator.helpers.ui_helper import UIMenuItem, UIMenuItemType
 from gptwntranslator.storage.json_storage import JsonStorage
 from gptwntranslator.ui.page_base import PageBase
-from gptwntranslator.ui.page_message import PageMessage
 from gptwntranslator.ui.page_novel_export_targets import PageNovelExportTargets
 from gptwntranslator.ui.page_novel_index_update import PageNovelIndexUpdate
+from gptwntranslator.ui.page_novel_management import PageNovelManagement
 from gptwntranslator.ui.page_novel_scraping_targets import PageNovelScrapingTargets
 from gptwntranslator.ui.page_novel_translate_metadata import PageNovelTranslateMetadata
 from gptwntranslator.ui.page_novel_translation_targets import PageNovelTranslationTargets
@@ -20,7 +20,7 @@ class PageNovelMenu(PageTypeA):
         menu_item_3 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 2, 0, 3, "Translate metadata", None, None, PageNovelTranslateMetadata, {}, None)
         menu_item_4 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 3, 0, 4, "Translate chapters", None, None, PageNovelTranslationTargets, {}, None)
         menu_item_5 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 4, 0, 5, "Export novel", None, None, PageNovelExportTargets, {}, None)
-        menu_item_6 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 6, 0, 6, "Novel management", None, None, PageMessage, {"messages": ["Under construction"]}, None)
+        menu_item_6 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 6, 0, 6, "Novel management", None, None, PageNovelManagement, {}, None)
         menu_item_7 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 8, 0, 0, "Go back", None, None, PageReturn, {}, None)
 
         menu = {
