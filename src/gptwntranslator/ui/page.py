@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from types import NoneType
 from gptwntranslator.helpers.logger_helper import CustomLogger
-from gptwntranslator.helpers.ui_helper import UIMenuItem, navigate_items, print_title
+from gptwntranslator.helpers.ui_helper import UIMenuItem, navigate_items, print_messages, print_title
 from gptwntranslator.ui.page_base import PageBase
 from gptwntranslator.ui.page_return import PageReturn
 from gptwntranslator.ui.ui_resources import get_resources
@@ -28,22 +28,16 @@ class Page(PageBase):
 
             if self.pre_messages is not None:
                 last_y += 2
-                for message in self.pre_messages:
-                    screen.print_at(message, 2, last_y)
-                    last_y += 1
+                last_y = print_messages(screen, self.pre_messages, 2, last_y)
             else:
                 last_y += 1
 
             last_y += 1
-            for message in self.messages:
-                screen.print_at(message, 2, last_y)
-                last_y += 1
+            last_y = print_messages(screen, self.messages, 2, last_y)
 
             if self.post_messages is not None:
                 last_y += 1
-                for message in self.post_messages:
-                    screen.print_at(message, 2, last_y)
-                    last_y += 1
+                last_y = print_messages(screen, self.post_messages, 2, last_y)
             else:
                 last_y += 1
 

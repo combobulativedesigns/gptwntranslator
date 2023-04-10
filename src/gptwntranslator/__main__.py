@@ -107,20 +107,25 @@ def main():
 
     # Define subparsers for each action
     sm_parser = actions_parser.add_parser("sm", help="Scrape metadata", aliases=["scrape-metadata"])
+    sm_parser.add_argument("origin", type=str, help="Provide the novel origin (check help for supported origins)")
     sm_parser.add_argument("novel", type=str, help="Provide the novel identifier (e.g.,n5177as)")
 
     sc_parser = actions_parser.add_parser("sc", help="Scrape chapters", aliases=["scrape-chapters"])
+    sc_parser.add_argument("origin", type=str, help="Provide the novel origin (check help for supported origins)")
     sc_parser.add_argument("novel", type=str, help="Provide the novel identifier (e.g., n5177as)")
     sc_parser.add_argument("chapters", type=str, help="Specify chapters to process (e.g., '1:1,3,5-7;2-4;5:1-3,6;6-8')")
 
     tm_parser = actions_parser.add_parser("tm", help="Translate metadata", aliases=["translate-metadata"])
+    tm_parser.add_argument("origin", type=str, help="Provide the novel origin (check help for supported origins)")
     tm_parser.add_argument("novel", type=str, help="Provide the novel identifier (e.g., n5177as)")
 
     tc_parser = actions_parser.add_parser("tc", help="Translate chapters", aliases=["translate-chapters"])
+    tc_parser.add_argument("origin", type=str, help="Provide the novel origin (check help for supported origins)")
     tc_parser.add_argument("novel", type=str, help="Provide the novel identifier (e.g., n5177as)")
     tc_parser.add_argument("chapters", type=str, help="Specify chapters to process (e.g., '1:1,3,5-7;2-4;5:1-3,6;6-8')")
 
     ec_parser = actions_parser.add_parser("ec", help="Export chapters", aliases=["export-chapters"])
+    ec_parser.add_argument("origin", type=str, help="Provide the novel origin (check help for supported origins)")
     ec_parser.add_argument("novel", type=str, help="Provide the novel identifier (e.g., n5177as)")
     ec_parser.add_argument("chapters", type=str, help="Specify chapters to process (e.g., '1:1,3,5-7;2-4;5:1-3,6;6-8')")
 
@@ -194,15 +199,15 @@ def main():
         run_interactive()
     elif args.mode in ["command", "c"]:
         if args.action == "sm":
-            run_scrape_metadata(args.novel)
+            run_scrape_metadata(args.origin, args.novel)
         elif args.action == "sc":
-            run_scrape_chapters(args.novel, args.chapters)
+            run_scrape_chapters(args.origin, args.novel, args.chapters)
         elif args.action == "tm":
-            run_translate_metadata(args.novel)
+            run_translate_metadata(args.origin, args.novel)
         elif args.action == "tc":
-            run_translate_chapters(args.novel, args.chapters)
+            run_translate_chapters(args.origin, args.novel, args.chapters)
         elif args.action == "ec":
-            run_export_chapters(args.novel, args.chapters)
+            run_export_chapters(args.origin, args.novel, args.chapters)
 
 if __name__ == "__main__":
     main()

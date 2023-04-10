@@ -1,7 +1,6 @@
 from gptwntranslator.helpers.text_helper import parse_chapters
 from gptwntranslator.helpers.ui_helper import print_title, wait_for_user_input
 from gptwntranslator.origins.origin_factory import OriginFactory
-from gptwntranslator.origins.syosetu_scraper import process_targets
 from gptwntranslator.storage.json_storage import JsonStorage
 from gptwntranslator.ui.page_base import PageBase
 from gptwntranslator.ui.page_exit import PageExit
@@ -69,7 +68,7 @@ class PageNovelScraping(PageBase):
                 message = "(3/4) Downloading chapters targets... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
-                novel = [novel for novel in novels if novel.novel_code == novel_code][0]
+                novel = [novel for novel in novels if novel.novel_code == novel_code and novel.novel_origin == novel_origin][0]
                 origin.process_targets(novel, targets)
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()

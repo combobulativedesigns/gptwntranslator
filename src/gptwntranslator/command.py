@@ -6,8 +6,7 @@ from gptwntranslator.api import openai_api
 from gptwntranslator.helpers.config_helper import Config
 from gptwntranslator.helpers.file_helper import write_md_as_epub
 from gptwntranslator.helpers.text_helper import parse_chapters, write_novel_md
-from gptwntranslator.origins.syosetu_ncode_origin import SyosetuNCodeOrigin
-from gptwntranslator.origins.syosetu_scraper import process_novel, process_targets
+from gptwntranslator.origins.origin_factory import OriginFactory
 from gptwntranslator.storage.json_storage import JsonStorage, JsonStorageException, JsonStorageFileException, JsonStorageFormatException
 from gptwntranslator.translators.gpt_translator import GPTTranslatorSingleton
 
@@ -47,8 +46,9 @@ def setup() -> None:
         sys.exit(1)
 
 
-def run_scrape_metadata(novel_code: str) -> None:
+def run_scrape_metadata(novel_origin: str, novel_code: str) -> None:
     setup()
+    origin = OriginFactory.get_origin(novel_origin)
     print(f"Scraping metadata for novel: {novel_code}")
     
     try:
@@ -64,7 +64,6 @@ def run_scrape_metadata(novel_code: str) -> None:
     try:
         print("(2/3) Scraping metadata... ", end="")
         sys.stdout.flush()
-        origin = SyosetuNCodeOrigin()
         novel_data = origin.process_novel(novel_code)
         print("success.")
     except Exception as e:
@@ -75,8 +74,8 @@ def run_scrape_metadata(novel_code: str) -> None:
     try:
         print("(3/3) Saving novel data to local storage... ", end="")
         sys.stdout.flush()
-        if any(novel_old.novel_code == novel_data.novel_code for novel_old in novels):
-            novel_original = [novel for novel in novels if novel.novel_code == novel_code][0]
+        if any(novel_old.novel_code == novel_data.novel_code and novel_old.novel_origin == novel_data.novel_origin for novel_old in novels):
+            novel_original = [novel for novel in novels if novel.novel_code == novel_code and novel.novel_origin == novel_origin][0]
             novel_old = copy.deepcopy(novel_original)
             novel_old.title = novel_data.title
             novel_old.author = novel_data.author
@@ -97,8 +96,9 @@ def run_scrape_metadata(novel_code: str) -> None:
 
     print("Done.")
 
-def run_scrape_chapters(novel_code: str, chapter_targets_str: str) -> None:
+def run_scrape_chapters(novel_origin: str, novel_code: str, chapter_targets_str: str) -> None:
     setup()
+    origin = OriginFactory.get_origin(novel_origin)
     print(f"Scraping chapters for novel: {novel_code}")
 
     try:
@@ -115,7 +115,7 @@ def run_scrape_chapters(novel_code: str, chapter_targets_str: str) -> None:
         print("(2/4) Loading local storage... ", end="")
         storage = JsonStorage()
         novels = storage.get_data()
-        novel_old = [novel for novel in novels if novel.novel_code == novel_code][0]
+        novel_old = [novel for novel in novels if novel.novel_code == novel_code and novel.novel_origin == novel_origin][0]
         novel_data = copy.deepcopy(novel_old)
         print("success.")
     except Exception as e:
@@ -126,7 +126,6 @@ def run_scrape_chapters(novel_code: str, chapter_targets_str: str) -> None:
     try:
         print("(3/4) Scraping chapters... ", end="")
         sys.stdout.flush()
-        origin = SyosetuNCodeOrigin()
         origin.process_targets(novel_data, chapter_targets)
         print("success.")
     except Exception as e:
@@ -148,7 +147,7 @@ def run_scrape_chapters(novel_code: str, chapter_targets_str: str) -> None:
 
     print("Done.")
 
-def run_translate_metadata(novel_code: str) -> None:
+def run_translate_metadata(novel_origin: str, novel_code: str) -> None:
     setup()
     print(f"Translating metadata for novel: {novel_code}")
 
@@ -156,7 +155,7 @@ def run_translate_metadata(novel_code: str) -> None:
         print(f"(1/4) Loading local storage... ", end="")
         storage = JsonStorage()
         novels = storage.get_data()
-        novel_old = [novel for novel in novels if novel.novel_code == novel_code][0]
+        novel_old = [novel for novel in novels if novel.novel_code == novel_code and novel.novel_origin == novel_origin][0]
         novel_data = copy.deepcopy(novel_old)
         print("success.")
     except Exception as e:
@@ -202,7 +201,7 @@ def run_translate_metadata(novel_code: str) -> None:
 
     print("Done.")
 
-def run_translate_chapters(novel_code: str, chapter_targets_str: str) -> None:
+def run_translate_chapters(novel_origin: str, novel_code: str, chapter_targets_str: str) -> None:
     setup()
     print(f"Translating chapters for novel: {novel_code}")
 
@@ -220,7 +219,7 @@ def run_translate_chapters(novel_code: str, chapter_targets_str: str) -> None:
         print("(2/13) Loading local storage... ", end="")
         storage = JsonStorage()
         novels = storage.get_data()
-        novel_old = [novel for novel in novels if novel.novel_code == novel_code][0]
+        novel_old = [novel for novel in novels if novel.novel_code == novel_code and novel.novel_origin == novel_origin][0]
         novel_data = copy.deepcopy(novel_old)
         print("success.")
     except Exception as e:
@@ -371,7 +370,7 @@ def run_translate_chapters(novel_code: str, chapter_targets_str: str) -> None:
 
     print("Done.")
 
-def run_export_chapters(novel_code: str, chapter_targets_str: str) -> None:
+def run_export_chapters(novel_origin: str, novel_code: str, chapter_targets_str: str) -> None:
     setup()
     print(f"Exporting chapters from {novel_code}...")
 
@@ -390,7 +389,7 @@ def run_export_chapters(novel_code: str, chapter_targets_str: str) -> None:
         sys.stdout.flush()
         storage = JsonStorage()
         novels = storage.get_data()
-        novel_old = [novel for novel in novels if novel.novel_code == novel_code][0]
+        novel_old = [novel for novel in novels if novel.novel_code == novel_code and novel.novel_origin == novel_origin][0]
         novel_data = copy.deepcopy(novel_old)
         print("success.")
     except Exception as e:
@@ -403,7 +402,7 @@ def run_export_chapters(novel_code: str, chapter_targets_str: str) -> None:
         sys.stdout.flush()
         cf = Config()
         md_text = write_novel_md(novel_data, chapter_targets)
-        output = os.path.join(cf.vars["output_path"], f"{novel_data.novel_code}-{cf.data.config.translator.target_language}.epub")
+        output = os.path.join(cf.vars["output_path"], f"{novel_origin}-{novel_data.novel_code}-{cf.data.config.translator.target_language}.epub")
         write_md_as_epub(md_text, output)
         print("success.")
     except Exception as e:

@@ -20,6 +20,7 @@ class PageNovelExporting(PageBase):
         resources = get_resources()
         novel_code = kwargs["novel_url_code"]
         targets = kwargs["target"]
+        novel_origin = kwargs["novel_origin"]
         storage = JsonStorage()
         config = Config()
         target_language = config.data.config.translator.target_language
@@ -55,7 +56,7 @@ class PageNovelExporting(PageBase):
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 novels = storage.get_data()
-                novel = [novel for novel in novels if novel.novel_code == novel_code][0]
+                novel = [novel for novel in novels if novel.novel_code == novel_code and novel.novel_origin == novel_origin][0]
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
                 last_y += 1
@@ -74,7 +75,7 @@ class PageNovelExporting(PageBase):
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 md_text = write_novel_md(novel, targets)
-                output = os.path.join(config.vars["output_path"], f"{novel.novel_code}-{target_language}.epub")
+                output = os.path.join(config.vars["output_path"], f"{novel_origin}-{novel.novel_code}-{target_language}.epub")
                 write_md_as_epub(md_text, output)
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()

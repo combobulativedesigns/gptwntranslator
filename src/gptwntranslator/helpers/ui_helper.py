@@ -69,6 +69,31 @@ def print_title(screen, title, y):
 
     return y
 
+def print_messages(screen, messages: list[str], x: int, y: int, character_limit: int=60):
+    last_y = y
+
+    for message in messages:
+        if len(message) > character_limit:
+            sub_messages = message.split(" ")
+            while len(sub_messages) > 0:
+                sub_message = ""
+                if len(sub_messages[0]) > character_limit:
+                    sub_message += sub_messages[0][:int(character_limit-1)] + "-"
+                    sub_messages[0] = sub_messages[0][int(character_limit-1):]
+                else:
+                    while len(sub_message) + len(sub_messages[0]) < character_limit:
+                        sub_message += sub_messages[0] + " "
+                        sub_messages.pop(0)
+                        if len(sub_messages) == 0:
+                            break
+                screen.print_at(sub_message, x, last_y)
+                last_y += 1
+        else:
+            screen.print_at(message, x, last_y)
+            last_y += 1
+
+    return last_y
+
 def read_user_input(screen, old_input, x, y):
     # screen.show_cursor(True)
     input_str = ""

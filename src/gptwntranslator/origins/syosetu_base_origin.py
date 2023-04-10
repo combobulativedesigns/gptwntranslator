@@ -285,7 +285,7 @@ class SyosetuBaseOrigin(BaseOrigin):
         chapters.sort()
 
         return Novel(
-            self.__class__.name,
+            self.__class__.code,
             novel_identifier,
             title,
             author,

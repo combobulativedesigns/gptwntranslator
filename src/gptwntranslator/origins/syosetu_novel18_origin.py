@@ -1,3 +1,4 @@
+from subprocess import CREATE_NO_WINDOW
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 from selenium import webdriver
@@ -43,7 +44,9 @@ class SyosetuNovel18Origin(SyosetuBaseOrigin):
         options.add_argument("--silent");
 
         try:
-            with webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options) as driver:
+            svc = Service(ChromeDriverManager().install())
+            svc.creation_flags = CREATE_NO_WINDOW
+            with webdriver.Chrome(service=svc, options=options) as driver:
                 driver.get(url)
 
                 timeout = 15

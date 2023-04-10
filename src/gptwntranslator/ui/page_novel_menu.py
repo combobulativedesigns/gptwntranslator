@@ -2,6 +2,7 @@ from gptwntranslator.helpers.config_helper import Config
 from gptwntranslator.helpers.ui_helper import UIMenuItem, UIMenuItemType
 from gptwntranslator.storage.json_storage import JsonStorage
 from gptwntranslator.ui.page_base import PageBase
+from gptwntranslator.ui.page_message import PageMessage
 from gptwntranslator.ui.page_novel_export_targets import PageNovelExportTargets
 from gptwntranslator.ui.page_novel_index_update import PageNovelIndexUpdate
 from gptwntranslator.ui.page_novel_scraping_targets import PageNovelScrapingTargets
@@ -19,7 +20,8 @@ class PageNovelMenu(PageTypeA):
         menu_item_3 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 2, 0, 3, "Translate metadata", None, None, PageNovelTranslateMetadata, {}, None)
         menu_item_4 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 3, 0, 4, "Translate chapters", None, None, PageNovelTranslationTargets, {}, None)
         menu_item_5 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 4, 0, 5, "Export novel", None, None, PageNovelExportTargets, {}, None)
-        menu_item_6 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 6, 0, 0, "Go back", None, None, PageReturn, {}, None)
+        menu_item_6 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 6, 0, 6, "Novel management", None, None, PageMessage, {"messages": ["Under construction"]}, None)
+        menu_item_7 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 8, 0, 0, "Go back", None, None, PageReturn, {}, None)
 
         menu = {
             "message_lines": [
@@ -41,6 +43,7 @@ class PageNovelMenu(PageTypeA):
                 menu_item_4,
                 menu_item_5,
                 menu_item_6,
+                menu_item_7
             ]
         }
 
@@ -63,6 +66,7 @@ class PageNovelMenu(PageTypeA):
             self.pre_messages.append(u"Author: {}".format(novel.author))
         self.pre_messages.append(u"Language: {}".format(novel.original_language))
         self.pre_messages.append(f"Code: {novel.novel_code}")
+        self.pre_messages.append(f"Origin: {novel.novel_origin}")
 
     def process_actions(self, item: UIMenuItem, content) -> tuple[PageBase, dict]:
         if item.page_target is PageReturn:

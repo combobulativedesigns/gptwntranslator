@@ -18,9 +18,7 @@ class PageNovelSelection(PageTypeA):
 
         menu = {
             "message_lines": [
-                "Please enter the URL code of the novel you want to scrape.",
-                "For example, the URL code of https://ncode.syosetu.com/n5177as/",
-                "is n5177as.",
+                "Please enter the URL code of the novel you want to scrape. For example, the URL code of https://ncode.syosetu.com/n5177as/ is n5177as.",
             ],
             "menu_items": [
                 (0, 0, None, "Novel URL code:", 1, "", True),

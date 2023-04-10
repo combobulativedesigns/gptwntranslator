@@ -14,6 +14,7 @@ class PageNovelTranslateMetadata(PageBase):
     def render(self, screen, **kwargs) -> tuple[PageBase, dict]:
         resources = get_resources()
         novel_code = kwargs["novel_url_code"]
+        novel_origin = kwargs["novel_origin"]
         storage = JsonStorage()
 
         # Print title
@@ -29,7 +30,7 @@ class PageNovelTranslateMetadata(PageBase):
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 novels = storage.get_data()
-                novel = [novel for novel in novels if novel.novel_code == novel_code][0]
+                novel = [novel for novel in novels if novel.novel_code == novel_code and novel.novel_origin == novel_origin][0]
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
                 last_y += 1

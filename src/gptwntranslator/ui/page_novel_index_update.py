@@ -1,6 +1,5 @@
 from gptwntranslator.helpers.ui_helper import print_title, wait_for_user_input
 from gptwntranslator.origins.origin_factory import OriginFactory
-from gptwntranslator.origins.syosetu_scraper import process_novel
 from gptwntranslator.storage.json_storage import JsonStorage
 from gptwntranslator.ui.page_base import PageBase
 from gptwntranslator.ui.page_exit import PageExit
@@ -67,7 +66,7 @@ class PageNovelIndexUpdate(PageBase):
                 message = "(3/3) Updating local data... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
-                novel_old = [novel for novel in novels if novel.novel_code == novel_code][0]
+                novel_old = [novel for novel in novels if novel.novel_code == novel_code and novel.novel_origin == novel_origin][0]
                 novel_old.title = novel.title
                 novel_old.author = novel.author
                 novel_old.description = novel.description
