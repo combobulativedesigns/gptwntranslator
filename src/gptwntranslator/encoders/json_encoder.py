@@ -84,6 +84,7 @@ class JsonEncoder(json.JSONEncoder):
         
         if isinstance(o, Novel):
             return {
+                "novel_origin": o.novel_origin,
                 "novel_code": o.novel_code,
                 "title": o.title,
                 "author": o.author,

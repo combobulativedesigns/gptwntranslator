@@ -29,14 +29,14 @@ This tool supports two main modes: interactive and command. You can also access 
 
     Run the tool in command mode by using the 'command' or 'c' command:
 
-        python -m gptwntranslator c ACTION NOVEL_IDENTIFIER [CHAPTERS]
+        python -m gptwntranslator c ACTION ORIGIN NOVEL_IDENTIFIER [CHAPTERS]
             or
-        python src/gptwntranslator/__main__.py c ACTION NOVEL_IDENTIFIER [CHAPTERS]
+        python src/gptwntranslator/__main__.py c ACTION ORIGIN NOVEL_IDENTIFIER [CHAPTERS]
             or
-        gptwntranslator c ACTION NOVEL_IDENTIFIER [CHAPTERS]
+        gptwntranslator c ACTION ORIGIN NOVEL_IDENTIFIER [CHAPTERS]
 
 
-    Command mode requires an action, a novel identifier, and optionally chapters depending on the action. Available actions:
+    Command mode requires an action, a novel origin, a novel identifier, and optionally chapters depending on the action. Available actions:
 
         - scrape-metadata (sm): Scrape novel metadata
         - scrape-chapters (sc): Scrape novel chapters
@@ -44,7 +44,7 @@ This tool supports two main modes: interactive and command. You can also access 
         - translate-chapters (tc): Translate novel chapters
         - export-chapters (ec): Export novel chapters
 
-    Provide the novel identifier (e.g., URL code). If the action is 'sc', 'tc', or 'ec', specify the chapters to process (e.g., 1:1, 1-2, 10:2-5;11).
+    Provide the novel origin and identifier (e.g., URL code). If the action is 'sc', 'tc', or 'ec', specify the chapters to process (e.g., 1:1, 1-2, 10:2-5;11).
     All actions but 'sm' require previously scraped metadata. If the metadata is not found, the tool will terminate.
     Translate actions require a previous scrape action. If the chapters are not found, the tool will terminate.
     Export actions require a previous translate action. If the chapters are not found, the tool will terminate. 
@@ -55,11 +55,11 @@ This tool supports two main modes: interactive and command. You can also access 
 
     Scrape novel metadata:
 
-        gptwntranslator c sm n5177as
+        gptwntranslator c sm syosetu_ncode n5177as
 
     Enable verbose output using the -v or --verbose flag:
 
-        gptwntranslator c -v sm n5177as
+        gptwntranslator c -v sm syosetu_ncode n5177as
 
 Both modes support the following optional arguments:
 
@@ -77,6 +77,12 @@ Chapters can be specified in the following formats:
     - Individual chapters or chapter ranges can be separated by semicolons (e.g., \"3:2,5;5-7;8:1-3,5\").
 
     Here's an example input that would match this pattern: \"1:1,3,5-7;2-4;5:1-3,6;6-8\".
+
+Available origins:
+
+    - syosetu_ncode: https://ncode.syosetu.com/
+    - syosetu_novel18: https://novel18.syosetu.com/
+    - local_xml: Local XML file
 
     '''
 
@@ -107,20 +113,25 @@ def main():
 
     # Define subparsers for each action
     sm_parser = actions_parser.add_parser("sm", help="Scrape metadata", aliases=["scrape-metadata"])
+    sm_parser.add_argument("origin", type=str, help="Provide the novel origin (check help for supported origins)")
     sm_parser.add_argument("novel", type=str, help="Provide the novel identifier (e.g.,n5177as)")
 
     sc_parser = actions_parser.add_parser("sc", help="Scrape chapters", aliases=["scrape-chapters"])
+    sc_parser.add_argument("origin", type=str, help="Provide the novel origin (check help for supported origins)")
     sc_parser.add_argument("novel", type=str, help="Provide the novel identifier (e.g., n5177as)")
     sc_parser.add_argument("chapters", type=str, help="Specify chapters to process (e.g., '1:1,3,5-7;2-4;5:1-3,6;6-8')")
 
     tm_parser = actions_parser.add_parser("tm", help="Translate metadata", aliases=["translate-metadata"])
+    tm_parser.add_argument("origin", type=str, help="Provide the novel origin (check help for supported origins)")
     tm_parser.add_argument("novel", type=str, help="Provide the novel identifier (e.g., n5177as)")
 
     tc_parser = actions_parser.add_parser("tc", help="Translate chapters", aliases=["translate-chapters"])
+    tc_parser.add_argument("origin", type=str, help="Provide the novel origin (check help for supported origins)")
     tc_parser.add_argument("novel", type=str, help="Provide the novel identifier (e.g., n5177as)")
     tc_parser.add_argument("chapters", type=str, help="Specify chapters to process (e.g., '1:1,3,5-7;2-4;5:1-3,6;6-8')")
 
     ec_parser = actions_parser.add_parser("ec", help="Export chapters", aliases=["export-chapters"])
+    ec_parser.add_argument("origin", type=str, help="Provide the novel origin (check help for supported origins)")
     ec_parser.add_argument("novel", type=str, help="Provide the novel identifier (e.g., n5177as)")
     ec_parser.add_argument("chapters", type=str, help="Specify chapters to process (e.g., '1:1,3,5-7;2-4;5:1-3,6;6-8')")
 
@@ -194,15 +205,15 @@ def main():
         run_interactive()
     elif args.mode in ["command", "c"]:
         if args.action == "sm":
-            run_scrape_metadata(args.novel)
+            run_scrape_metadata(args.origin, args.novel)
         elif args.action == "sc":
-            run_scrape_chapters(args.novel, args.chapters)
+            run_scrape_chapters(args.origin, args.novel, args.chapters)
         elif args.action == "tm":
-            run_translate_metadata(args.novel)
+            run_translate_metadata(args.origin, args.novel)
         elif args.action == "tc":
-            run_translate_chapters(args.novel, args.chapters)
+            run_translate_chapters(args.origin, args.novel, args.chapters)
         elif args.action == "ec":
-            run_export_chapters(args.novel, args.chapters)
+            run_export_chapters(args.origin, args.novel, args.chapters)
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,8 @@
 from gptwntranslator.helpers.config_helper import Config
+from gptwntranslator.helpers.ui_helper import UIMenuItem, UIMenuItemType
 from gptwntranslator.storage.json_storage import JsonStorage
-from gptwntranslator.ui.page_novel_editing_target import PageNovelEditingTarget
+from gptwntranslator.ui.page_base import PageBase
+from gptwntranslator.ui.page_message import PageMessage
 from gptwntranslator.ui.page_novel_export_targets import PageNovelExportTargets
 from gptwntranslator.ui.page_novel_index_update import PageNovelIndexUpdate
 from gptwntranslator.ui.page_novel_scraping_targets import PageNovelScrapingTargets
@@ -12,6 +14,15 @@ from gptwntranslator.ui.page_type_a import PageTypeA
 
 class PageNovelMenu(PageTypeA):
     def __init__(self) -> None:
+
+        menu_item_1 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 0, 0, 1, "Update metadata", None, None, PageNovelIndexUpdate, {}, None)
+        menu_item_2 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 1, 0, 2, "Download chapters", None, None, PageNovelScrapingTargets, {}, None)
+        menu_item_3 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 2, 0, 3, "Translate metadata", None, None, PageNovelTranslateMetadata, {}, None)
+        menu_item_4 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 3, 0, 4, "Translate chapters", None, None, PageNovelTranslationTargets, {}, None)
+        menu_item_5 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 4, 0, 5, "Export novel", None, None, PageNovelExportTargets, {}, None)
+        menu_item_6 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 6, 0, 6, "Novel management", None, None, PageMessage, {"messages": ["Under construction"]}, None)
+        menu_item_7 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 8, 0, 0, "Go back", None, None, PageReturn, {}, None)
+
         menu = {
             "message_lines": [
                 "Actions menu for the novel:",
@@ -23,7 +34,17 @@ class PageNovelMenu(PageTypeA):
                 (3, 0, 4, "4) Translate chapters", PageNovelTranslationTargets, "", False), 
                 # (4, 0, 5, "5) Edit novel", PageNovelEditingTarget, "", False), 
                 (4, 0, 5, "5) Export novel", PageNovelExportTargets, "", False), 
-                (6, 0, 0, "0) Go back", PageReturn, "", False)]
+                (6, 0, 0, "0) Go back", PageReturn, "", False)
+            ],
+            "menu_items2": [
+                menu_item_1,
+                menu_item_2,
+                menu_item_3,
+                menu_item_4,
+                menu_item_5,
+                menu_item_6,
+                menu_item_7
+            ]
         }
 
         super().__init__(menu)
@@ -45,8 +66,9 @@ class PageNovelMenu(PageTypeA):
             self.pre_messages.append(u"Author: {}".format(novel.author))
         self.pre_messages.append(u"Language: {}".format(novel.original_language))
         self.pre_messages.append(f"Code: {novel.novel_code}")
+        self.pre_messages.append(f"Origin: {novel.novel_origin}")
 
-    def process_actions(self, item, content):
-        if item[4] is PageReturn:
-            return item[4], {"return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
-        return item[4], {"novel_url_code": self.args["novel_url_code"], "return_page": self.__class__, "return_kwargs": self.args}
+    def process_actions(self, item: UIMenuItem, content) -> tuple[PageBase, dict]:
+        if item.page_target is PageReturn:
+            return item.page_target, {**item.page_data, **{"return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}}
+        return item.page_target, {**item.page_data, **{"novel_origin": self.args["novel_origin"], "novel_url_code": self.args["novel_url_code"], "return_page": self.__class__, "return_kwargs": self.args}}

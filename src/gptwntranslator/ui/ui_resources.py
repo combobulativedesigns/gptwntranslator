@@ -6,7 +6,7 @@ def get_resources():
     title = "gptwntranslator"
 
     # Version of the program
-    version = "v2.0.0"
+    version = "v2.1.0"
 
     # Title string
     title_string = f"{title} {version}"
