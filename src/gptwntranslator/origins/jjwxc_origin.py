@@ -7,9 +7,10 @@ from gptwntranslator.models.chapter import Chapter
 from gptwntranslator.models.novel import Novel
 from gptwntranslator.models.sub_chapter import SubChapter
 from gptwntranslator.origins.base_origin import BaseOrigin
+from gptwntranslator.origins.base_web_origin import BaseWebOrigin
 
 
-class JJWXCOrigin(BaseOrigin):
+class JJWXCOrigin(BaseWebOrigin):
     @classmethod
     @property
     def code(cls):
@@ -21,49 +22,53 @@ class JJWXCOrigin(BaseOrigin):
         return "JJWXC"
     
     def __init__(self) -> None:
-        location = "https://www.jjwxc.net/onebook.php?novelid="
-        super().__init__(location)
+        location = "https://www.jjwxc.net"
+        novel_path = "/onebook.php?novelid="
+        sub_chapter_path = "..&chapterid="
+        encoding = "GB18030"
+        language = "zh"
+        super().__init__(location, novel_path, sub_chapter_path, language, encoding)
 
-    def _get_soup(self, url: str) -> BeautifulSoup:
-        if not isinstance(url, str):
-            raise ValueError(f"URL {url} should be a string")
-        if not urlparse(url).scheme:
-            raise ValueError(f"URL {url} should have a scheme")
-        if not urlparse(url).netloc:
-            raise ValueError(f"URL {url} should have a netloc")
+    # def _get_soup(self, url: str) -> BeautifulSoup:
+    #     if not isinstance(url, str):
+    #         raise ValueError(f"URL {url} should be a string")
+    #     if not urlparse(url).scheme:
+    #         raise ValueError(f"URL {url} should have a scheme")
+    #     if not urlparse(url).netloc:
+    #         raise ValueError(f"URL {url} should have a netloc")
         
-        response = urlopen(url)
-        html_bytes = response.read()
+    #     response = urlopen(url)
+    #     html_bytes = response.read()
 
-        while True:
-            # try:
-            #     html = html_bytes.decode("utf-8", errors="replace")
-            #     break
-            # except UnicodeDecodeError:
-            #     pass
+    #     while True:
+    #         # try:
+    #         #     html = html_bytes.decode("utf-8", errors="replace")
+    #         #     break
+    #         # except UnicodeDecodeError:
+    #         #     pass
 
-            # try:
-            #     html = html_bytes.decode("GB18030", errors="replace")
-            #     break
-            # except UnicodeDecodeError:
-            #     pass
+    #         # try:
+    #         #     html = html_bytes.decode("GB18030", errors="replace")
+    #         #     break
+    #         # except UnicodeDecodeError:
+    #         #     pass
 
-            try:
-                html = gzip.decompress(html_bytes).decode("GB18030", errors="replace")
-                break
-            except UnicodeDecodeError:
-                pass
+    #         try:
+    #             html = gzip.decompress(html_bytes).decode("GB18030", errors="replace")
+    #             break
+    #         except UnicodeDecodeError:
+    #             pass
 
-            # try:
-            #     html = gzip.decompress(html_bytes).decode("utf-8", errors="replace")
-            #     break
-            # except UnicodeDecodeError:
-            #     pass
+    #         # try:
+    #         #     html = gzip.decompress(html_bytes).decode("utf-8", errors="replace")
+    #         #     break
+    #         # except UnicodeDecodeError:
+    #         #     pass
 
-            raise UnicodeDecodeError("Cannot decode the html")
+    #         raise UnicodeDecodeError("Cannot decode the html")
         
-        soup = BeautifulSoup(html, "html.parser")
-        return soup
+    #     soup = BeautifulSoup(html, "html.parser")
+    #     return soup
     
     def _get_title(self, soup: BeautifulSoup) -> str:
         if not isinstance(soup, BeautifulSoup):
@@ -114,21 +119,21 @@ class JJWXCOrigin(BaseOrigin):
             sub_chapter_number = 1
 
             for sub_chapter in index.find_all("tr", {"itemprop": "chapter", "itemtype": "http://schema.org/Chapter"}):
-                
-                # sub_chapter_number = sub_chapter.find("td", {"class": "chapterclick"})['clickchapterid']
-                sub_chapter_name = sub_chapter.find_all("td")[2].text.strip('\r\n\t ')
-                sub_chapter_link = sub_chapter.find("a", {"itemprop": "url"})["href"]
-                sub_chapter_release_date = sub_chapter.find("td", {"align": "center"}).find("span").text.strip('\r\n\t ')
+                if sub_chapter.find("font", {"color": "red"}) is None:
+                    # sub_chapter_number = sub_chapter.find("td", {"class": "chapterclick"})['clickchapterid']
+                    sub_chapter_name = sub_chapter.find_all("td")[2].text.strip('\r\n\t ')
+                    sub_chapter_link = sub_chapter.find("a", {"itemprop": "url"})["href"].rstrip("/").split("=")[-1]
+                    sub_chapter_release_date = sub_chapter.find("td", {"align": "center"}).find("span").text.strip('\r\n\t ')
 
-                sub_chapters.append(SubChapter(
-                    novel_code,
-                    chapter_number,
-                    sub_chapter_number,
-                    sub_chapter_link,
-                    sub_chapter_name,
-                    "",
-                    sub_chapter_release_date
-                ))
+                    sub_chapters.append(SubChapter(
+                        novel_code,
+                        chapter_number,
+                        sub_chapter_number,
+                        sub_chapter_link,
+                        sub_chapter_name,
+                        "",
+                        sub_chapter_release_date
+                    ))
 
                 sub_chapter_number += 1
 
@@ -158,21 +163,22 @@ class JJWXCOrigin(BaseOrigin):
                     if "itemprop" not in next_element.attrs:
                         break
 
-                    if next_element["itemprop"] == "chapter":                
-                        sub_chapter_name = next_element.find_all("td")[2].text.strip('\r\n\t ')
-                        sub_chapter_link = next_element.find("a", {"itemprop": "url"})["href"]
-                        sub_chapter_release_date = next_element.find_all("td", {"align": "center"})[-1].find("span").text.strip('\r\n\t ')
+                    if next_element["itemprop"] == "chapter":
+                        if next_element.find("font", {"color": "red"}) is None:
+                            sub_chapter_name = next_element.find_all("td")[2].text.strip('\r\n\t ')
+                            sub_chapter_link = next_element.find("a", {"itemprop": "url"})["href"].rstrip("/").split("=")[-1]
+                            sub_chapter_release_date = next_element.find_all("td", {"align": "center"})[-1].find("span").text.strip('\r\n\t ')
 
-                        sub_chapters.append(SubChapter(
-                            novel_code,
-                            chapter_number,
-                            sub_chapter_number,
-                            sub_chapter_link,
-                            sub_chapter_name,
-                            "",
-                            sub_chapter_release_date
-                        ))
-
+                            sub_chapters.append(SubChapter(
+                                novel_code,
+                                chapter_number,
+                                sub_chapter_number,
+                                sub_chapter_link,
+                                sub_chapter_name,
+                                "",
+                                sub_chapter_release_date
+                            ))
+                            
                         sub_chapter_number += 1
 
                     chapter_row = next_element
@@ -207,78 +213,78 @@ class JJWXCOrigin(BaseOrigin):
 
         return sub_chapter_text_contents.strip('\r\n\t ')
         
-    def process_targets(self, novel: Novel, targets: dict[str, list[str]]) -> None:
-        if not isinstance(novel, Novel):
-            raise ValueError(f"Novel {novel} should be a Novel object")
-        if not isinstance(targets, dict):
-            raise ValueError(f"Targets {targets} should be a dictionary")
-        if not all(isinstance(key, str) for key in targets.keys()):
-            raise ValueError(f"Targets keys {targets.keys()} should be strings")
-        if not all(isinstance(value, list) for value in targets.values()):
-            raise ValueError(f"Targets values {targets.values()} should be lists")
-        if not all(isinstance(item, str) for value in targets.values() for item in value):
-            raise ValueError(f"Targets items {targets.items()} should be strings")
+    # def process_targets(self, novel: Novel, targets: dict[str, list[str]]) -> None:
+    #     if not isinstance(novel, Novel):
+    #         raise ValueError(f"Novel {novel} should be a Novel object")
+    #     if not isinstance(targets, dict):
+    #         raise ValueError(f"Targets {targets} should be a dictionary")
+    #     if not all(isinstance(key, str) for key in targets.keys()):
+    #         raise ValueError(f"Targets keys {targets.keys()} should be strings")
+    #     if not all(isinstance(value, list) for value in targets.values()):
+    #         raise ValueError(f"Targets values {targets.values()} should be lists")
+    #     if not all(isinstance(item, str) for value in targets.values() for item in value):
+    #         raise ValueError(f"Targets items {targets.items()} should be strings")
         
-        for chapter in novel.chapters:
-            chapter.sub_chapters.sort()
+    #     for chapter in novel.chapters:
+    #         chapter.sub_chapters.sort()
 
-            if targets is not None:
-                if str(chapter.chapter_index) not in targets:
-                    continue
+    #         if targets is not None:
+    #             if str(chapter.chapter_index) not in targets:
+    #                 continue
 
-                sub_chapter_targets = targets[str(chapter.chapter_index)]
-                for sub_chapter in chapter.sub_chapters:
-                    if len(sub_chapter_targets) > 0 and str(sub_chapter.sub_chapter_index) not in sub_chapter_targets:
-                        continue
+    #             sub_chapter_targets = targets[str(chapter.chapter_index)]
+    #             for sub_chapter in chapter.sub_chapters:
+    #                 if len(sub_chapter_targets) > 0 and str(sub_chapter.sub_chapter_index) not in sub_chapter_targets:
+    #                     continue
 
-                    try:
-                        # Get soup
-                        soup = self._get_soup(sub_chapter.link)
+    #                 try:
+    #                     # Get soup
+    #                     soup = self._get_soup(sub_chapter.link)
 
-                        # Get sub chapter contents
-                        sub_chapter_contents = self._get_sub_chapter_contents(soup)
+    #                     # Get sub chapter contents
+    #                     sub_chapter_contents = self._get_sub_chapter_contents(soup)
 
-                        # Set sub chapter contents
-                        sub_chapter.contents = sub_chapter_contents
+    #                     # Set sub chapter contents
+    #                     sub_chapter.contents = sub_chapter_contents
 
-                    except Exception as e:
-                        raise Exception("Failed to scrape " + sub_chapter.link + ": " + str(e))
+    #                 except Exception as e:
+    #                     raise Exception("Failed to scrape " + sub_chapter.link + ": " + str(e))
                     
-    def process_novel(self, novel_identifier: str) -> None:
-        if not isinstance(novel_identifier, str):
-            raise ValueError(f"Novel identifier {novel_identifier} should be a string")
+    # def process_novel(self, novel_identifier: str) -> None:
+    #     if not isinstance(novel_identifier, str):
+    #         raise ValueError(f"Novel identifier {novel_identifier} should be a string")
         
-        url = self.location + novel_identifier
+    #     url = self.location + novel_identifier
         
-        try:
-            # Get soup
-            soup = self._get_soup(url)
+    #     try:
+    #         # Get soup
+    #         soup = self._get_soup(url)
 
-            # Get title
-            title = self._get_title(soup)
+    #         # Get title
+    #         title = self._get_title(soup)
 
-            # Get author
-            author, link = self._get_author(soup)
+    #         # Get author
+    #         author, link = self._get_author(soup)
 
-            # Get description
-            description = self._get_description(soup)
+    #         # Get description
+    #         description = self._get_description(soup)
 
-            # Get index
-            index = self._get_index(soup)
+    #         # Get index
+    #         index = self._get_index(soup)
 
-            # Process index
-            chapters = self._process_index(index, novel_identifier)
-        except Exception as e:
-            raise Exception("Failed to scrape " + url + ": " + str(e))
+    #         # Process index
+    #         chapters = self._process_index(index, novel_identifier)
+    #     except Exception as e:
+    #         raise Exception("Failed to scrape " + url + ": " + str(e))
         
-        chapters.sort()
+    #     chapters.sort()
 
-        return Novel(
-            self.__class__.code,
-            novel_identifier,
-            title,
-            author,
-            description,
-            "zh",
-            author_link=link,
-            chapters=chapters)
+    #     return Novel(
+    #         self.__class__.code,
+    #         novel_identifier,
+    #         title,
+    #         author,
+    #         description,
+    #         "zh",
+    #         author_link=link,
+    #         chapters=chapters)

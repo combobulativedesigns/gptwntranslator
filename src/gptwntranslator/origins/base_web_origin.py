@@ -24,8 +24,11 @@ class BaseWebOrigin(BaseOrigin):
     def name(cls) -> str:
         pass
     
-    def __init__(self, location: str, encoding: str) -> None:
+    def __init__(self, location: str, novel_path: str, sub_chapter_path: str, language: str, encoding: str) -> None:
         self.encoding = encoding
+        self.novel_path = novel_path
+        self.sub_chapter_path = sub_chapter_path
+        self.language = language
         super().__init__(location)
 
     def _conditional_decompression(self, html_bytes: bytes) -> str:
@@ -60,7 +63,10 @@ class BaseWebOrigin(BaseOrigin):
         if not urlparse(url).netloc:
             raise ValueError(f"URL {url} should have a netloc")
         
-        response = urlopen(url)
+        try:
+            response = urlopen(url)
+        except Exception as e:
+            raise Exception(f"Cannot open URL {url}") from e
         html_bytes = response.read()
         html = self._decode_html(html_bytes)
         
@@ -102,7 +108,7 @@ class BaseWebOrigin(BaseOrigin):
             raise ValueError(f"Targets values {targets.values()} should be lists")
         if not all(isinstance(item, str) for value in targets.values() for item in value):
             raise ValueError(f"Targets items {targets.items()} should be strings")
-
+        
         for chapter in novel.chapters:
             chapter.sub_chapters.sort()
 
@@ -116,7 +122,14 @@ class BaseWebOrigin(BaseOrigin):
                         continue
 
                     try:
-                        soup = self._get_soup(sub_chapter.link)
+                        if self.sub_chapter_path.startswith(".."):
+                            sub_chapter_link = self.location + self.novel_path + novel.novel_code + self.sub_chapter_path[2:] + sub_chapter.link
+                        elif self.sub_chapter_path.startswith("/"):
+                            sub_chapter_link = self.location + self.sub_chapter_path + sub_chapter.link
+                        else:
+                            raise ValueError(f"Sub chapter link {sub_chapter.link} is not valid or can't be processed")
+
+                        soup = self._get_soup(sub_chapter_link)
                         sub_chapter_contents = self._get_sub_chapter_contents(soup)
                         sub_chapter.contents = sub_chapter_contents
 
@@ -127,7 +140,7 @@ class BaseWebOrigin(BaseOrigin):
         if not isinstance(novel_identifier, str):
             raise ValueError(f"Novel identifier {novel_identifier} should be a string")
         
-        url = self.location + novel_identifier
+        url = self.location + self.novel_path + novel_identifier
         
         try:
             soup = self._get_soup(url)
@@ -147,7 +160,7 @@ class BaseWebOrigin(BaseOrigin):
             title,
             author,
             description,
-            "ja",
+            self.language,
             author_link=link,
             chapters=chapters)
 

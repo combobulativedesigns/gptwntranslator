@@ -6,9 +6,10 @@ from gptwntranslator.models.chapter import Chapter
 from gptwntranslator.models.novel import Novel
 from gptwntranslator.models.sub_chapter import SubChapter
 from gptwntranslator.origins.base_origin import BaseOrigin
+from gptwntranslator.origins.base_web_origin import BaseWebOrigin
 
 
-class SyosetuBaseOrigin(BaseOrigin):
+class SyosetuBaseOrigin(BaseWebOrigin):
     @classmethod
     @property
     @abstractmethod
@@ -22,12 +23,15 @@ class SyosetuBaseOrigin(BaseOrigin):
         pass
     
     def __init__(self, location: str) -> None:
+        novel_path = "/"
+        sub_chapter_path = "../"
         encoding = "utf-8"
-        super().__init__(location)
+        language = "ja"
+        super().__init__(location, novel_path, sub_chapter_path, language, encoding)
 
-    @abstractmethod
-    def _get_soup(self, url: str) -> BeautifulSoup:
-        pass
+    # @abstractmethod
+    # def _get_soup(self, url: str) -> BeautifulSoup:
+    #     pass
 
     def _get_title(self, soup: BeautifulSoup) -> str:
         if not isinstance(soup, BeautifulSoup):
@@ -104,9 +108,10 @@ class SyosetuBaseOrigin(BaseOrigin):
 
                 # Get sub chapter link
                 sub_chapter_link = sub_chapter.find('dd', class_='subtitle').find('a')['href']
+                sub_chapter_link = sub_chapter_link.split('/')[-1]
 
                 # Get sub chapter release date
-                sub_chapter_release_date = sub_chapter.find('dt', class_='long_update').text
+                sub_chapter_release_date = sub_chapter_link.rstrip('/').split('/')[-1]
 
                 # Append sub chapter
                 sub_chapters.append(SubChapter(
@@ -161,6 +166,7 @@ class SyosetuBaseOrigin(BaseOrigin):
 
                         # Get sub chapter link
                         sub_chapter_link = next_element.find('dd', class_='subtitle').find('a')['href']
+                        sub_chapter_link = sub_chapter_link.rstrip('/').split('/')[-1]
 
                         # Get sub chapter release date
                         sub_chapter_release_date = next_element.find('dt', class_='long_update').text
@@ -218,80 +224,78 @@ class SyosetuBaseOrigin(BaseOrigin):
 
         return sub_chapter_text_contents
     
-    def process_targets(self, novel: Novel, targets: dict[str, list[str]]) -> None:
-        if not isinstance(novel, Novel):
-            raise ValueError(f"Novel {novel} should be a Novel object")
-        if not isinstance(targets, dict):
-            raise ValueError(f"Targets {targets} should be a dictionary")
-        if not all(isinstance(key, str) for key in targets.keys()):
-            raise ValueError(f"Targets keys {targets.keys()} should be strings")
-        if not all(isinstance(value, list) for value in targets.values()):
-            raise ValueError(f"Targets values {targets.values()} should be lists")
-        if not all(isinstance(item, str) for value in targets.values() for item in value):
-            raise ValueError(f"Targets items {targets.items()} should be strings")
+    # def process_targets(self, novel: Novel, targets: dict[str, list[str]]) -> None:
+    #     if not isinstance(novel, Novel):
+    #         raise ValueError(f"Novel {novel} should be a Novel object")
+    #     if not isinstance(targets, dict):
+    #         raise ValueError(f"Targets {targets} should be a dictionary")
+    #     if not all(isinstance(key, str) for key in targets.keys()):
+    #         raise ValueError(f"Targets keys {targets.keys()} should be strings")
+    #     if not all(isinstance(value, list) for value in targets.values()):
+    #         raise ValueError(f"Targets values {targets.values()} should be lists")
+    #     if not all(isinstance(item, str) for value in targets.values() for item in value):
+    #         raise ValueError(f"Targets items {targets.items()} should be strings")
 
-        url = self.location + novel.novel_code
+    #     for chapter in novel.chapters:
+    #         chapter.sub_chapters.sort()
+
+    #         if targets is not None:
+    #             if str(chapter.chapter_index) not in targets:
+    #                 continue
+
+    #             sub_chapter_targets = targets[str(chapter.chapter_index)]
+    #             for sub_chapter in chapter.sub_chapters:
+    #                 if len(sub_chapter_targets) > 0 and str(sub_chapter.sub_chapter_index) not in sub_chapter_targets:
+    #                     continue
+
+    #                 try:
+    #                     # Get soup
+    #                     soup = self._get_soup(self.location + sub_chapter.link)
+
+    #                     # Get sub chapter contents
+    #                     sub_chapter_contents = self._get_sub_chapter_contents(soup)
+
+    #                     # Set sub chapter contents
+    #                     sub_chapter.contents = sub_chapter_contents
+
+    #                 except Exception as e:
+    #                     raise Exception("Failed to scrape " + self.location + sub_chapter.link + ": " + str(e))
+
+    # def process_novel(self, novel_identifier: str) -> None:
+    #     if not isinstance(novel_identifier, str):
+    #         raise ValueError(f"Novel identifier {novel_identifier} should be a string")
         
-        for chapter in novel.chapters:
-            chapter.sub_chapters.sort()
-
-            if targets is not None:
-                if str(chapter.chapter_index) not in targets:
-                    continue
-
-                sub_chapter_targets = targets[str(chapter.chapter_index)]
-                for sub_chapter in chapter.sub_chapters:
-                    if len(sub_chapter_targets) > 0 and str(sub_chapter.sub_chapter_index) not in sub_chapter_targets:
-                        continue
-
-                    try:
-                        # Get soup
-                        soup = self._get_soup(self.location + sub_chapter.link)
-
-                        # Get sub chapter contents
-                        sub_chapter_contents = self._get_sub_chapter_contents(soup)
-
-                        # Set sub chapter contents
-                        sub_chapter.contents = sub_chapter_contents
-
-                    except Exception as e:
-                        raise Exception("Failed to scrape " + self.location + sub_chapter.link + ": " + str(e))
-
-    def process_novel(self, novel_identifier: str) -> None:
-        if not isinstance(novel_identifier, str):
-            raise ValueError(f"Novel identifier {novel_identifier} should be a string")
+    #     url = self.location + novel_identifier
         
-        url = self.location + novel_identifier
+    #     try:
+    #         # Get soup
+    #         soup = self._get_soup(url)
+
+    #         # Get title
+    #         title = self._get_title(soup)
+
+    #         # Get author
+    #         author, link = self._get_author(soup)
+
+    #         # Get description
+    #         description = self._get_description(soup)
+
+    #         # Get index
+    #         index = self._get_index(soup)
+
+    #         # Process index
+    #         chapters = self._process_index(index, novel_identifier)
+    #     except Exception as e:
+    #         raise Exception("Failed to scrape " + url + ": " + str(e))
         
-        try:
-            # Get soup
-            soup = self._get_soup(url)
+    #     chapters.sort()
 
-            # Get title
-            title = self._get_title(soup)
-
-            # Get author
-            author, link = self._get_author(soup)
-
-            # Get description
-            description = self._get_description(soup)
-
-            # Get index
-            index = self._get_index(soup)
-
-            # Process index
-            chapters = self._process_index(index, novel_identifier)
-        except Exception as e:
-            raise Exception("Failed to scrape " + url + ": " + str(e))
-        
-        chapters.sort()
-
-        return Novel(
-            self.__class__.code,
-            novel_identifier,
-            title,
-            author,
-            description,
-            "ja",
-            author_link=link,
-            chapters=chapters)
+    #     return Novel(
+    #         self.__class__.code,
+    #         novel_identifier,
+    #         title,
+    #         author,
+    #         description,
+    #         "ja",
+    #         author_link=link,
+    #         chapters=chapters)

@@ -20,14 +20,14 @@ class SyosetuNCodeOrigin(SyosetuBaseOrigin):
         location = "https://ncode.syosetu.com/"
         super().__init__(location)
 
-    def _get_soup(self, url: str) -> BeautifulSoup:
-        if not isinstance(url, str):
-            raise ValueError(f"URL {url} should be a string")
-        if not urlparse(url).scheme:
-            raise ValueError(f"URL {url} should have a scheme")
-        if not urlparse(url).netloc:
-            raise ValueError(f"URL {url} should have a netloc")
+    # def _get_soup(self, url: str) -> BeautifulSoup:
+    #     if not isinstance(url, str):
+    #         raise ValueError(f"URL {url} should be a string")
+    #     if not urlparse(url).scheme:
+    #         raise ValueError(f"URL {url} should have a scheme")
+    #     if not urlparse(url).netloc:
+    #         raise ValueError(f"URL {url} should have a netloc")
         
-        html = urlopen(url)
-        soup = BeautifulSoup(html, 'html.parser')
-        return soup
+    #     html = urlopen(url)
+    #     soup = BeautifulSoup(html, 'html.parser')
+    #     return soup
