@@ -1,5 +1,7 @@
 
 from gptwntranslator.origins.base_origin import BaseOrigin
+from gptwntranslator.origins.jjwxc_origin import JJWXCOrigin
+from gptwntranslator.origins.kakuyomu_origin import KakuyomuOrigin
 from gptwntranslator.origins.syosetu_ncode_origin import SyosetuNCodeOrigin
 from gptwntranslator.origins.syosetu_novel18_origin import SyosetuNovel18Origin
 
@@ -8,8 +10,10 @@ class OriginFactory:
     @classmethod
     def origins(cls) -> dict:
         return {
+            SyosetuNCodeOrigin.code: SyosetuNCodeOrigin,
             SyosetuNovel18Origin.code: SyosetuNovel18Origin,
-            SyosetuNCodeOrigin.code: SyosetuNCodeOrigin
+            JJWXCOrigin.code: JJWXCOrigin,
+            KakuyomuOrigin.code: KakuyomuOrigin,
         }
     
     @classmethod
@@ -26,3 +30,4 @@ class OriginFactory:
     
     def __init__(self) -> None:
         raise NotImplementedError("OriginFactory is a static class and should not be instantiated")
+

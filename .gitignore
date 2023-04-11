@@ -42,6 +42,7 @@ Desktop.ini
 
 # Proyect output
 output/
+input/
 persistent_data.json
 
 # Pipreqs files

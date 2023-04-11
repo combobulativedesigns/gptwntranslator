@@ -71,6 +71,7 @@ def generic_object_hook(dct: dict):
         
         elif dct['_type'] == 'TermSheet':
             return TermSheet(
+                dct['novel_origin'],
                 dct['novel_code'], 
                 terms=dct['terms']) 
         
