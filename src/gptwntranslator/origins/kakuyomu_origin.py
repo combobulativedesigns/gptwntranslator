@@ -1,114 +1,131 @@
-from abc import abstractmethod
+import gzip
+from urllib.parse import urlparse
+from urllib.request import urlopen
 from bs4 import BeautifulSoup
 from bs4.element import Tag as SoupTag
-
 from gptwntranslator.models.chapter import Chapter
 from gptwntranslator.models.novel import Novel
 from gptwntranslator.models.sub_chapter import SubChapter
 from gptwntranslator.origins.base_origin import BaseOrigin
 
 
-class SyosetuBaseOrigin(BaseOrigin):
+class KakuyomuOrigin(BaseOrigin):
     @classmethod
     @property
-    @abstractmethod
     def code(cls):
-        pass
-
+        return "kakuyomu"
+    
     @classmethod
     @property
-    @abstractmethod
-    def name(cls) -> str:
-        pass
+    def name(cls):
+        return "Kakuyomu"
     
-    def __init__(self, location: str) -> None:
-        encoding = "utf-8"
+    def __init__(self) -> None:
+        location = "https://kakuyomu.jp/works/"
         super().__init__(location)
 
-    @abstractmethod
     def _get_soup(self, url: str) -> BeautifulSoup:
-        pass
+        if not isinstance(url, str):
+            raise ValueError(f"URL {url} should be a string")
+        if not urlparse(url).scheme:
+            raise ValueError(f"URL {url} should have a scheme")
+        if not urlparse(url).netloc:
+            raise ValueError(f"URL {url} should have a netloc")
+        
+        response = urlopen(url)
+        html_bytes = response.read()
 
+        while True:
+            try:
+                html = html_bytes.decode("utf-8", errors="replace")
+                break
+            except UnicodeDecodeError:
+                pass
+
+            # try:
+            #     html = html_bytes.decode("GB18030", errors="replace")
+            #     break
+            # except UnicodeDecodeError:
+            #     pass
+
+            # try:
+            #     html = gzip.decompress(html_bytes).decode("GB18030", errors="replace")
+            #     break
+            # except UnicodeDecodeError:
+            #     pass
+
+            # try:
+            #     html = gzip.decompress(html_bytes).decode("utf-8", errors="replace")
+            #     break
+            # except UnicodeDecodeError:
+            #     pass
+
+            raise UnicodeDecodeError("Cannot decode the html")
+        
+        soup = BeautifulSoup(html, "html.parser")
+        return soup
+    
     def _get_title(self, soup: BeautifulSoup) -> str:
         if not isinstance(soup, BeautifulSoup):
             raise ValueError(f"Soup {soup} should be a BeautifulSoup object")
         
-        title = soup.find('div', id='novel_contents').find('div', id='novel_color').find('p', class_='novel_title').text
-        return title.strip('\n\t ')
+        title = soup.find("h1", {"id": "workTitle"}).find("a").text
+        return title.strip('\r\n\t ')
     
     def _get_author(self, soup: BeautifulSoup) -> str:
         if not isinstance(soup, BeautifulSoup):
             raise ValueError(f"Soup {soup} should be a BeautifulSoup object")
         
-        author_soup = soup.find('div', id='novel_contents').find('div', id='novel_color').find('div', class_='novel_writername')
-
-        # Check if the author is a link
-        if author_soup.find('a') is None:
-            # The author is not a link
-            author = author_soup.text.strip('\n\t ')
-            if author.startswith('作者：'):
-                author = author[3:]
-            link = ""
-        else:
-            # The author is a link
-            author = author_soup.find('a').text.strip('\n\t ')
-            link = author_soup.find('a').get('href').strip('\n\t ')
-
+        author_soup = soup.find("span", {"id": "workAuthor-activityName"}).find("a")
+        author = author_soup.text.strip('\r\n\t ')
+        link = author_soup["href"]
         return author, link
     
     def _get_description(self, soup: BeautifulSoup) -> str:
         if not isinstance(soup, BeautifulSoup):
             raise ValueError(f"Soup {soup} should be a BeautifulSoup object")
         
-        description = soup.find('div', id='novel_contents').find('div', id='novel_color').find('div', id='novel_ex').text
-        return description.strip('\n\t ')
+        description_items = soup.find("p", {"id": "introduction"}).find_all()
+        description = ""
+
+        for item in description_items:
+            if isinstance(item, SoupTag):
+                if item.name == "br":
+                    description += "\n"
+                else:
+                    description += item.text.strip('\r\n\t ')
+            else:
+                description += item.strip('\r\n\t ')
+
+        return description
     
-    def _get_index(self, soup: BeautifulSoup) -> BeautifulSoup:
+    def _get_index(self, soup: BeautifulSoup) -> SoupTag:
         if not isinstance(soup, BeautifulSoup):
             raise ValueError(f"Soup {soup} should be a BeautifulSoup object")
         
-        index = soup.find('div', id='novel_contents').find('div', id='novel_color').find('div', class_='index_box')
+        index = soup.find("div", {"id": "table-of-contents"}).find("section", {"class": "widget-toc"}).find("div", {"class": "widget-toc-main"}).find("ol", {"class": "widget-toc-items"})
         return index
     
     def _process_index(self, index: SoupTag, novel_code: str) -> list[Chapter]:
         if not isinstance(index, SoupTag):
-            raise ValueError(f"Index {index} should be a bs4.element.Tag object. its type is {type(index)}")
+            raise ValueError(f"Index {index} should be a bs4.element.Tag object")
         if not isinstance(novel_code, str):
             raise ValueError(f"Novel code {novel_code} should be a string")
+        
+        chapters = []
+        chapter_names = index.find_all("li", {"class": "widget-toc-chapter"})
 
-        # Initialize chapter list
-        chapters = list()
-
-        # Find chapter names
-        chapter_names = index.find_all('div', class_='chapter_title')
-
-        # Initialize chapter number
         chapter_number = 1
-
         if len(chapter_names) == 0:
-            # The novel doesn't group sub chapters into chapters, so it's just one big chapter
-
-            # Make chapter name
-            chapter_name = "Chapters"
-
-            # Get sub chapters
+            chapter_name = 'Chapters'
             sub_chapters = list()
-
-            # Initialize sub chapter number
             sub_chapter_number = 1
 
-            # Find sub chapters
-            for sub_chapter in index.find_all('dl', class_='novel_sublist2'):
-                # Get sub chapter name
-                sub_chapter_name = sub_chapter.find('dd', class_='subtitle').find('a').text
+            for sub_chapter in index.find_all("li", {"class": "widget-toc-episode"}):
+                sub_chapter_name = sub_chapter.find("span", {"class": "widget-toc-episode-titleLabel"}).text.strip('\r\n\t ')
+                sub_chapter_link = sub_chapter.find("a", {"class": "widget-toc-episode-episodeTitle"})["href"]
+                sub_chapter_release_date = sub_chapter.find("time", {"class": "widget-toc-episode-datePublished"})["datetime"]
 
-                # Get sub chapter link
-                sub_chapter_link = sub_chapter.find('dd', class_='subtitle').find('a')['href']
-
-                # Get sub chapter release date
-                sub_chapter_release_date = sub_chapter.find('dt', class_='long_update').text
-
-                # Append sub chapter
                 sub_chapters.append(SubChapter(
                     novel_code,
                     chapter_number,
@@ -116,56 +133,36 @@ class SyosetuBaseOrigin(BaseOrigin):
                     sub_chapter_link,
                     sub_chapter_name,
                     "",
-                    sub_chapter_release_date
-                ))
-
-                # Increment sub chapter number
+                    sub_chapter_release_date))
+                
                 sub_chapter_number += 1
 
-            # Append chapter
             chapters.append(Chapter(
                 novel_code,
                 chapter_number,
                 chapter_name,
                 sub_chapters=sub_chapters))
-
+            
         else:
-            # Find sub chapters relevant to each chapter
             for chapter_name in chapter_names:
-                # Get chapter name
-                chapter_name_str = chapter_name.text
-
-                # Get sub chapters
+                chapter_name_str = chapter_name.find("span").text.strip('\r\n\t ')
                 sub_chapters = list()
-
-                # Initialize sub chapter number
                 sub_chapter_number = 1
 
-                # Find sub chapters
                 while True:
-                    # Get next element
                     next_element = chapter_name.next_sibling
 
-                    # If it's None, it's the end of the index, so break
                     if next_element is None:
                         break
 
-                    # If it's a div element, it's a chapter name, so break
-                    if next_element.name == 'div':
+                    if isinstance(next_element, SoupTag) and next_element["class"] == ["widget-toc-chapter"]:
                         break
 
-                    # If it's a dl element, it's a sub chapter
-                    if next_element.name == 'dl':
-                        # Get sub chapter name
-                        sub_chapter_name = next_element.find('dd', class_='subtitle').find('a').text
+                    if isinstance(next_element, SoupTag) and next_element["class"] == ["widget-toc-episode"]:
+                        sub_chapter_name = next_element.find("span", {"class": "widget-toc-episode-titleLabel"}).text.strip('\r\n\t ')
+                        sub_chapter_link = next_element.find("a", {"class": "widget-toc-episode-episodeTitle"})["href"]
+                        sub_chapter_release_date = next_element.find("time", {"class": "widget-toc-episode-datePublished"})["datetime"]
 
-                        # Get sub chapter link
-                        sub_chapter_link = next_element.find('dd', class_='subtitle').find('a')['href']
-
-                        # Get sub chapter release date
-                        sub_chapter_release_date = next_element.find('dt', class_='long_update').text
-
-                        # Append sub chapter
                         sub_chapters.append(SubChapter(
                             novel_code,
                             chapter_number,
@@ -173,51 +170,37 @@ class SyosetuBaseOrigin(BaseOrigin):
                             sub_chapter_link,
                             sub_chapter_name,
                             "",
-                            sub_chapter_release_date
-                        ))
-
-                        # Increment sub chapter number
-                        sub_chapter_number += 1
+                            sub_chapter_release_date))
                         
-                    # Set next element as current element
+                        sub_chapter_number += 1
+
                     chapter_name = next_element
 
-                # Append chapter
                 chapters.append(Chapter(
                     novel_code,
                     chapter_number,
                     chapter_name_str,
                     sub_chapters=sub_chapters))
-
-                # Increment chapter number
+                
                 chapter_number += 1
-            
-        return chapters
 
+        return chapters
+    
     def _get_sub_chapter_contents(self, soup: BeautifulSoup) -> str:
         if not isinstance(soup, BeautifulSoup):
             raise ValueError(f"Soup {soup} should be a BeautifulSoup object")
         
-        sub_chapter_contents = soup.find('div', id='novel_contents').find('div', id='novel_color').find('div', id='novel_honbun').find_all('p')
-
-        # Initialize sub chapter contents
+        sub_chapter_contents = soup.find("div", {"id": "contentMain-inner"}).find("div", {"class": "widget-episodeBody"}).find_all("p")
         sub_chapter_text_contents = ""
 
-        # Process sub chapter contents
         for sub_chapter_content in sub_chapter_contents:
-            # If it's empty, it's a break, so skip it
-            if sub_chapter_content.text == '':
-                continue
-            
-            # If it contains a br element, it's a line skip, so add a line break
-            if sub_chapter_content.find('br') is not None:
-                sub_chapter_text_contents += "\n"
-            # If it contains text, it's a paragraph, so add a paragraph
-            elif sub_chapter_content.text != '':
-                sub_chapter_text_contents += sub_chapter_content.text.strip('\n\t ') + "\n\n"
+            if sub_chapter_content["class"] == ["blank"]:
+                sub_chapter_text_contents += "\n\n"
+            else:
+                sub_chapter_text_contents += sub_chapter_content.text.strip('\r\n\t ') + "\n\n"
 
-        return sub_chapter_text_contents
-    
+        return sub_chapter_text_contents.strip('\r\n\t ')
+        
     def process_targets(self, novel: Novel, targets: dict[str, list[str]]) -> None:
         if not isinstance(novel, Novel):
             raise ValueError(f"Novel {novel} should be a Novel object")
@@ -229,8 +212,6 @@ class SyosetuBaseOrigin(BaseOrigin):
             raise ValueError(f"Targets values {targets.values()} should be lists")
         if not all(isinstance(item, str) for value in targets.values() for item in value):
             raise ValueError(f"Targets items {targets.items()} should be strings")
-
-        url = self.location + novel.novel_code
         
         for chapter in novel.chapters:
             chapter.sub_chapters.sort()
@@ -246,7 +227,7 @@ class SyosetuBaseOrigin(BaseOrigin):
 
                     try:
                         # Get soup
-                        soup = self._get_soup(self.location + sub_chapter.link)
+                        soup = self._get_soup(sub_chapter.link)
 
                         # Get sub chapter contents
                         sub_chapter_contents = self._get_sub_chapter_contents(soup)
@@ -255,8 +236,8 @@ class SyosetuBaseOrigin(BaseOrigin):
                         sub_chapter.contents = sub_chapter_contents
 
                     except Exception as e:
-                        raise Exception("Failed to scrape " + self.location + sub_chapter.link + ": " + str(e))
-
+                        raise Exception("Failed to scrape " + sub_chapter.link + ": " + str(e))
+                    
     def process_novel(self, novel_identifier: str) -> None:
         if not isinstance(novel_identifier, str):
             raise ValueError(f"Novel identifier {novel_identifier} should be a string")

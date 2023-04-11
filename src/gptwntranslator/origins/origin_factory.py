@@ -1,6 +1,7 @@
 
 from gptwntranslator.origins.base_origin import BaseOrigin
 from gptwntranslator.origins.jjwxc_origin import JJWXCOrigin
+from gptwntranslator.origins.kakuyomu_origin import KakuyomuOrigin
 from gptwntranslator.origins.syosetu_ncode_origin import SyosetuNCodeOrigin
 from gptwntranslator.origins.syosetu_novel18_origin import SyosetuNovel18Origin
 
@@ -12,6 +13,7 @@ class OriginFactory:
             SyosetuNCodeOrigin.code: SyosetuNCodeOrigin,
             SyosetuNovel18Origin.code: SyosetuNovel18Origin,
             JJWXCOrigin.code: JJWXCOrigin,
+            KakuyomuOrigin.code: KakuyomuOrigin,
         }
     
     @classmethod

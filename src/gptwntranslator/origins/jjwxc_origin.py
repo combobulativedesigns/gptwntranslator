@@ -1,18 +1,8 @@
 import gzip
 from urllib.parse import urlparse
 from urllib.request import urlopen
-from subprocess import CREATE_NO_WINDOW
 from bs4 import BeautifulSoup
 from bs4.element import Tag as SoupTag
-import chardet
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
-from gptwntranslator.helpers.logger_helper import CustomLogger
 from gptwntranslator.models.chapter import Chapter
 from gptwntranslator.models.novel import Novel
 from gptwntranslator.models.sub_chapter import SubChapter
@@ -115,27 +105,19 @@ class JJWXCOrigin(BaseOrigin):
             raise ValueError(f"Novel code {novel_code} should be a string")
         
         chapters = []
-
         chapter_names = index.find_all("b", {"class": "volumnfont"})
-
         chapter_number = 1
 
         if len(chapter_names) == 0:
             chapter_name = 'Chapters'
-
             sub_chapters =  list()
-
             sub_chapter_number = 1
 
-            ("tr[itemprop=chapter][itemtype='http://schema.org/Chapter']")
             for sub_chapter in index.find_all("tr", {"itemprop": "chapter", "itemtype": "http://schema.org/Chapter"}):
                 
                 # sub_chapter_number = sub_chapter.find("td", {"class": "chapterclick"})['clickchapterid']
-
                 sub_chapter_name = sub_chapter.find_all("td")[2].text.strip('\r\n\t ')
-
                 sub_chapter_link = sub_chapter.find("a", {"itemprop": "url"})["href"]
-
                 sub_chapter_release_date = sub_chapter.find("td", {"align": "center"}).find("span").text.strip('\r\n\t ')
 
                 sub_chapters.append(SubChapter(
@@ -144,8 +126,11 @@ class JJWXCOrigin(BaseOrigin):
                     sub_chapter_number,
                     sub_chapter_link,
                     sub_chapter_name,
+                    "",
                     sub_chapter_release_date
                 ))
+
+                sub_chapter_number += 1
 
             chapters.append(Chapter(
                 novel_code,
@@ -155,15 +140,11 @@ class JJWXCOrigin(BaseOrigin):
             
         else:
             for chapter_name in chapter_names:
-
                 chapter_name_str = chapter_name.text.strip('\r\n\t ')
-
                 chapter_row = chapter_name.parent.parent
-
                 sub_chapters =  list()
 
                 sub_chapter_number = 1
-
                 while True:
                     next_element = chapter_row.next_sibling
 
@@ -179,9 +160,7 @@ class JJWXCOrigin(BaseOrigin):
 
                     if next_element["itemprop"] == "chapter":                
                         sub_chapter_name = next_element.find_all("td")[2].text.strip('\r\n\t ')
-
                         sub_chapter_link = next_element.find("a", {"itemprop": "url"})["href"]
-
                         sub_chapter_release_date = next_element.find_all("td", {"align": "center"})[-1].find("span").text.strip('\r\n\t ')
 
                         sub_chapters.append(SubChapter(
@@ -239,8 +218,6 @@ class JJWXCOrigin(BaseOrigin):
             raise ValueError(f"Targets values {targets.values()} should be lists")
         if not all(isinstance(item, str) for value in targets.values() for item in value):
             raise ValueError(f"Targets items {targets.items()} should be strings")
-        
-        url = self.location + novel.novel_code
         
         for chapter in novel.chapters:
             chapter.sub_chapters.sort()
