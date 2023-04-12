@@ -12,7 +12,8 @@ class PageNovelMgmPurgeNovel(PageBase):
         pass
 
     def render(self, screen, **kwargs) -> tuple[PageBase, dict]:
-        from gptwntranslator.ui.page_novel_selection import PageNovelSelection
+        # from gptwntranslator.ui.page_novel_selection import PageNovelSelection
+        from gptwntranslator.ui.page_novel_list import PageNovelList
         resources = get_resources()
         novel_code = kwargs["novel_url_code"]
         novel_origin = kwargs["novel_origin"]
@@ -71,7 +72,7 @@ class PageNovelMgmPurgeNovel(PageBase):
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
                 last_y += 1
-                target, params = PageNovelSelection, {}
+                target, params = PageNovelList, {"page_index": 0}
             except Exception as e:
                 screen.print_at("failed.", 2 + len(message), last_y)
                 last_y += 1

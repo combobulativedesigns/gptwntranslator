@@ -123,7 +123,7 @@ class JJWXCOrigin(BaseWebOrigin):
                     # sub_chapter_number = sub_chapter.find("td", {"class": "chapterclick"})['clickchapterid']
                     sub_chapter_name = sub_chapter.find_all("td")[2].text.strip('\r\n\t ')
                     sub_chapter_link = sub_chapter.find("a", {"itemprop": "url"})["href"].rstrip("/").split("=")[-1]
-                    sub_chapter_release_date = sub_chapter.find("td", {"align": "center"}).find("span").text.strip('\r\n\t ')
+                    sub_chapter_release_date = sub_chapter.find_all("td", {"align": "center"})[-1].find("span").text.strip('\r\n\t ')
 
                     sub_chapters.append(SubChapter(
                         novel_code,

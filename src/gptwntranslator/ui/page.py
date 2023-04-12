@@ -10,7 +10,7 @@ from gptwntranslator.ui.ui_resources import get_resources
 logger = CustomLogger(__name__)
 
 class Page(PageBase):
-    def __init__(self, messages: list[str], menu_items: list[tuple[int, int, int, str, PageBase, str, bool]], pre_messages: list[str]|NoneType = None, post_messages: list[str]|NoneType = None) -> None:
+    def __init__(self, messages: list[str], menu_items: list[UIMenuItem], pre_messages: list[str]|NoneType = None, post_messages: list[str]|NoneType = None) -> None:
         self.messages = messages
         self.menu_items = menu_items
         self.pre_messages = pre_messages
@@ -60,6 +60,3 @@ class Page(PageBase):
     @abstractmethod
     def process_actions(self, item: UIMenuItem, content) -> tuple[PageBase, dict]:
         pass
-        # if item.page_target is PageReturn:
-        #     return item.page_target, {**item.page_data, **{"return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}}
-        # return item.page_target, {**item.page_data, **{"return_page": self.__class__, "return_kwargs": self.args}}

@@ -776,51 +776,66 @@ class GPTTranslator:
 
         return "\n\n".join(translation.values())
     
-    def _get_sub_chapter_context(self, novel: Novel, chapter_index: int, sub_chapter_index: int) -> tuple[SubChapter, SubChapter]:
+    def _get_sub_chapter_context(self, novel: Novel, sub_chapter: SubChapter) -> tuple[SubChapter, SubChapter]:
         logger.debug(f"Getting sub chapter context.")
         
         # Validate the provided arguments
         if not isinstance(novel, Novel):
             logger.error(f"Novel must be a Novel object")
             raise TypeError("Novel must be a Novel object")
-        if not isinstance(chapter_index, int):
-            logger.error(f"Chapter index must be an integer")
-            raise TypeError("Chapter index must be an integer")
-        if not isinstance(sub_chapter_index, int):
-            logger.error(f"Sub chapter index must be an integer")
-            raise TypeError("Sub chapter index must be an integer")
-
+        if not isinstance(sub_chapter, SubChapter):
+            logger.error(f"Sub chapter must be a SubChapter object")
+            raise TypeError("Sub chapter must be a SubChapter object")
+        
         # Check if the chapter and sub chapter indices are valid
         try:
-            chapter = novel.chapters[chapter_index]
-            sub_chapter = chapter.sub_chapters[sub_chapter_index]
+            chapter = next(i_chapter for i_chapter in novel.chapters if i_chapter.chapter_index == sub_chapter.chapter_index)
+            # sub_chapter = next(sub_chapter for sub_chapter in chapter.sub_chapters if sub_chapter.sub_chapter_index == sub_chapter.sub_chapter_index)
+            # # chapter = novel.chapters[chapter_index]
+            # # sub_chapter = chapter.sub_chapters[sub_chapter_index]
         except IndexError:
             logger.error(f"Invalid chapter or sub chapter index")
             raise GPTTranslatorException("Invalid chapter or sub chapter index")
 
         # Get the previous sub chapters
-        if sub_chapter_index == 0:
-            if chapter_index == 0:
+        if sub_chapter.sub_chapter_index == 1:
+            if sub_chapter.chapter_index == 1:
                 # If the sub chapter is the first sub chapter of the first chapter, there is no previous sub chapter
                 prev_sub_chapter = None
             else:
                 # If the sub chapter is the first sub chapter of a chapter, the previous sub chapter is the last sub chapter of the previous chapter
-                prev_sub_chapter = novel.chapters[chapter_index - 1].sub_chapters[-1]
+                try:
+                    prev_sub_chapter = next(i_chapter for i_chapter in novel.chapters if i_chapter.chapter_index == sub_chapter.chapter_index - 1).sub_chapters[-1]
+                except StopIteration:
+                    prev_sub_chapter = None
+                # prev_sub_chapter = novel.chapters[sub_chapter.chapter_index - 1].sub_chapters[-1]
         else:
             # If the sub chapter is not the first sub chapter of a chapter, the previous sub chapter is the previous sub chapter of the same chapter
-            prev_sub_chapter = chapter.sub_chapters[sub_chapter_index - 1]
+            try:
+                prev_sub_chapter = next(i_sub_chapter for i_sub_chapter in chapter.sub_chapters if i_sub_chapter.sub_chapter_index == sub_chapter.sub_chapter_index - 1)
+            except StopIteration:
+                prev_sub_chapter = None
+            # prev_sub_chapter = chapter.sub_chapters[sub_chapter_index - 1]
 
         # Get the next sub chapters
-        if sub_chapter_index == len(chapter.sub_chapters) - 1:
-            if chapter_index == len(novel.chapters) - 1:
+        if sub_chapter.sub_chapter_index == max(i_sub_chapter.sub_chapter_index for i_sub_chapter in chapter.sub_chapters):
+            if sub_chapter.chapter_index == max(i_chapter.chapter_index for i_chapter in novel.chapters):
                 # If the sub chapter is the last sub chapter of the last chapter, there is no next sub chapter
                 next_sub_chapter = None
             else:
                 # If the sub chapter is the last sub chapter of a chapter, the next sub chapter is the first sub chapter of the next chapter
-                next_sub_chapter = novel.chapters[chapter_index + 1].sub_chapters[0]
+                try:
+                    next_sub_chapter = next(i_chapter for i_chapter in novel.chapters if i_chapter.chapter_index == sub_chapter.chapter_index + 1).sub_chapters[0]
+                except StopIteration:
+                    next_sub_chapter = None
+                # next_sub_chapter = novel.chapters[chapter_index + 1].sub_chapters[0]
         else:
             # If the sub chapter is not the last sub chapter of a chapter, the next sub chapter is the next sub chapter of the same chapter
-            next_sub_chapter = chapter.sub_chapters[sub_chapter_index + 1]
+            try:
+                next_sub_chapter = next(i_sub_chapter for i_sub_chapter in chapter.sub_chapters if i_sub_chapter.sub_chapter_index == sub_chapter.sub_chapter_index + 1)
+            except StopIteration:
+                next_sub_chapter = None
+            # next_sub_chapter = chapter.sub_chapters[sub_chapter_index + 1]
 
         logger.debug(f"Previous sub chapter: {prev_sub_chapter}, Next sub chapter: {next_sub_chapter}")
         return prev_sub_chapter, next_sub_chapter
@@ -931,7 +946,7 @@ class GPTTranslator:
             if self._target_language in sub_chapter.summary:
                 continue
 
-            prev_sub_chapter, next_sub_chapter = self._get_sub_chapter_context(novel, sub_chapter.chapter_index, sub_chapter.sub_chapter_index)
+            prev_sub_chapter, next_sub_chapter = self._get_sub_chapter_context(novel, sub_chapter)
 
             # Get the previous and next lines and summary
             prev_line = prev_sub_chapter.contents.splitlines()[-1] if prev_sub_chapter and prev_sub_chapter.contents else ""
@@ -1018,7 +1033,7 @@ class GPTTranslator:
 
         # Summarize the sub chapters
         for sub_chapter in sub_chapters:
-            prev_sub_chapter, next_sub_chapter = self._get_sub_chapter_context(novel, sub_chapter.chapter_index, sub_chapter.sub_chapter_index)
+            prev_sub_chapter, next_sub_chapter = self._get_sub_chapter_context(novel, sub_chapter)
 
             # Get the previous and next lines and summary
             prev_line = prev_sub_chapter.contents.splitlines()[-1] if prev_sub_chapter and prev_sub_chapter.contents else ""
@@ -1104,7 +1119,7 @@ class GPTTranslator:
             if self._target_language in sub_chapter.translation:
                 continue
 
-            prev_sub_chapter, next_sub_chapter = self._get_sub_chapter_context(novel, sub_chapter.chapter_index, sub_chapter.sub_chapter_index)
+            prev_sub_chapter, next_sub_chapter = self._get_sub_chapter_context(novel, sub_chapter)
 
             # Get the previous and next lines and summary
             prev_line = prev_sub_chapter.contents.splitlines()[-1] if prev_sub_chapter and prev_sub_chapter.contents else ""
