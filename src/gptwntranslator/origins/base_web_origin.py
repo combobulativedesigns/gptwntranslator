@@ -48,7 +48,7 @@ class BaseWebOrigin(BaseOrigin):
             try:
                 html = method(html_bytes)
                 break
-            except UnicodeDecodeError:
+            except (UnicodeDecodeError, gzip.BadGzipFile):
                 continue
         else:
             raise UnicodeDecodeError("Cannot decode the html")

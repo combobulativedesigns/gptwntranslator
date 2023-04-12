@@ -8,6 +8,7 @@ from gptwntranslator.helpers.logger_helper import CustomLogger
 from gptwntranslator.storage.json_storage import JsonStorage, JsonStorageException, JsonStorageFileException, JsonStorageFormatException
 from gptwntranslator.ui.page_exit import PageExit
 from gptwntranslator.ui.page_message import PageMessage
+from gptwntranslator.ui.page_novel_list import PageNovelList
 from gptwntranslator.ui.page_novel_selection import PageNovelSelection
 
 logger = CustomLogger(__name__)
@@ -41,8 +42,8 @@ def _ui(screen):
         try:
             storage.get_data()
             logger.info("Persistent data file loaded successfully.")
-            page = PageNovelSelection
-            parameters = {}
+            page = PageNovelList
+            parameters = {"page_index": 0}
             break
         except JsonStorageFormatException as e:
             logger.error(f"Failed to parse persistent data file. {e}")
@@ -73,7 +74,7 @@ def _ui(screen):
                 f"Failed to find persistent data file.",
                 f"We'll create a new one for you."]
             page = PageMessage
-            parameters = {"messages": messages, "return_page": PageNovelSelection, "return_kwargs": {"novel_objects": []}}
+            parameters = {"messages": messages, "return_page": PageNovelList, "return_kwargs": {"page_index": 0}}
         except JsonStorageException as e:
             logger.error(f"Failed to create persistent data file. {e}")
             messages = [

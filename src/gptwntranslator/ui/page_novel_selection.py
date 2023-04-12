@@ -3,6 +3,7 @@ from gptwntranslator.origins.origin_factory import OriginFactory
 from gptwntranslator.ui.page_base import PageBase
 from gptwntranslator.ui.page_exit import PageExit
 from gptwntranslator.ui.page_novel_lookup import PageNovelLookup
+from gptwntranslator.ui.page_return import PageReturn
 from gptwntranslator.ui.page_type_a import PageTypeA
 
 
@@ -14,7 +15,7 @@ class PageNovelSelection(PageTypeA):
         menu_item_3 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 3, 0, 1, "Search novel", None, None, PageNovelLookup, {"novel_origin": "", "novel_url_code": ""}, None)
         menu_item_1 = UIMenuItem(UIMenuItemType.COMBO_BOX, 0, 0, None, "Novel origin:", menu_item_3, "novel_origin", None, None, menu_item_1_items)
         menu_item_2 = UIMenuItem(UIMenuItemType.TEXT_INPUT, 1, 0, None, "Novel URL code:", menu_item_3, "novel_url_code", None, None, None)
-        menu_item_4 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 5, 0, 0, "Exit", None, None, PageExit, {}, None)
+        menu_item_4 = UIMenuItem(UIMenuItemType.PAGE_NAVIGATION, 5, 0, 0, "Go Back", None, None, PageReturn, {}, None)
 
         menu = {
             "message_lines": [
@@ -36,6 +37,7 @@ class PageNovelSelection(PageTypeA):
         super().__init__(menu)
 
     def process_actions(self, item: UIMenuItem, content) -> tuple[PageBase, dict]:
-        if item.page_target == PageExit:
-            return item.page_target, {}
-        return item.page_target, {**item.page_data, **{"return_page": self.__class__, "return_kwargs": {}}}
+        # if item.page_target is PageReturn:
+        #     return item.page_target, {**item.page_data, **{"return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}}
+        # return item.page_target, {**item.page_data, **{"return_page": self.__class__, "return_kwargs": self.args}}
+        return item.page_target, {**item.page_data, **{"return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}}
