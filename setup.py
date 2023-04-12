@@ -7,7 +7,7 @@ with open("README.md", "r") as readme_file:
 
 setup(
     name="gptwntranslator",
-    version="2.1.0",
+    version="2.1.1",
     author="Rodrigo S. Jauregui",
     author_email="combobulativedesigns@gmail.com",
     description="A web novel translator using OpenAI's GPT API",
@@ -24,8 +24,10 @@ setup(
         "pypandoc==1.11",
         "pypandoc_binary==1.11",
         "PyYAML==6.0",
+        "selenium==4.8.3",
         "spacy==3.5.1",
         "tiktoken==0.3.2",
+        "webdriver_manager==3.8.5",
         "yattag==1.15.1",
         "en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.5.0/en_core_web_sm-3.5.0-py3-none-any.whl",
         "de_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/de_core_news_sm-3.5.0/de_core_news_sm-3.5.0-py3-none-any.whl",
