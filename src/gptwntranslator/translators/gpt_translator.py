@@ -333,13 +333,50 @@ class GPTTranslator:
         string_term_target_language = self._target_language_str.lower() + "_term"
         phonetic_term = "phonetic_for_" + string_term_original_language if self._original_language_str != "Japanese" else "rōmaji_for_" + string_term_original_language
 
+        system_content = f'''
+        You are a translator that translates novels from one language to another.
+
+        You will be provided with:
+        1) Original language
+        2) Destination language
+        3) A chunk of text in the original language
+
+        You will be asked to:
+        1) Generate a term list for the text you are provided
+        2) Focus on proper nouns and technical terms
+        3) Follow the format "- {string_term_original_language} ({phonetic_term}) - {string_term_target_language}"
+        4) Maintain the novel translation format conventions
+
+        Example:
+        [Original language]
+        English
+        [Destination language]
+        Spanish
+        [Text]
+        This is Darth Vader, right hand of the Emperor. His face is obscured by his flowing black robes and grotesque breath mask, which stands out next to the fascist white armored suits of the Imperial stormtroopers. Everyone instinctively backs away from the imposing warrior and a deathly quiet sweeps through the Rebel troops.
+        [End]
+
+        Expected output:
+        - Darth Vader (darth vader) - Darth Vader
+        - Emperor (emperor) - Emperador
+        - stormtroopers (stormtroopers) - soldados imperiales
+        - Rebel troops (rebel troops) - tropas rebeldes
+        '''
+
+        user_content = f'''
+        [Original language]
+        {self._original_language_str}
+        [Destination language]
+        {self._target_language_str}
+        [Text]
+        {chunk.contents}
+        [End]
+        '''
+
         # Build the messages list for the API call
         messages = [
-            {"role": "system", "content": f"You are a {self._original_language_str} to {self._target_language_str} translator."},
-            {"role": "user", "content": 
-                f"Generate a term list for the text I'm about to provide. Mantain {self._original_language_str} novel translation format convetions. Follow the format \"- {string_term_original_language} ({phonetic_term}) - {string_term_target_language}\". Focus on proper nouns and technical terms."},
-            {"role": "assistant", "content": f"Understood. Please provide the text. I'll generate the term list with their translations to {self._target_language_str}."},
-            {"role": "user", "content": chunk.contents}
+            {"role": "system", "content": system_content},
+            {"role": "user", "content": user_content}
         ]
 
         # Call the API
@@ -382,35 +419,101 @@ class GPTTranslator:
             logger.error(f"Translation model ({translation_model}) must be a valid model. Available models: {', '.join(available_models)}")
             raise ValueError(f"Translation model must be a valid model. Available models: {', '.join(available_models)}")
         
+
+        system_message = f'''
+        You are a translator that translates novels from one language to another.
+
+        You will be provided with:
+        1) Original language
+        2) Destination language
+        3) The preceding line before the text
+        4) The following line after the text
+        5) A list of relevant terms and their translations
+        6) A summary of the enclosing section
+        7) A chunk of text in the original language
+
+        You will be asked to:
+        1) Translate the text
+        2) Maintain the novel translation format conventions
+        3) Respect the context provided
+        4) Use the relevant terms list to translate technical terms and proper nouns
+
+        Example:
+        [Original language]
+        English
+        [Destination language]
+        Spanish
+        [Preceding line]
+        This is Darth Vader, right hand of the Emperor.
+        [Following line]
+        Everyone instinctively backs away from the imposing warrior and a deathly quiet sweeps through the Rebel troops.
+        [Relevant terms]
+        - Darth Vader (darth vader) - Darth Pato
+        - stormtroopers (stormtroopers) - muñecos de nieve
+        - Rebel troops (rebel troops) - tropas rebeldes
+        [Summary]
+        A Description of Darth Vader's appearance.
+        [Text]
+        His face is obscured by his flowing black robes and grotesque breath mask, which stands out next to the fascist white armored suits of the Imperial stormtroopers.
+        [End]
+
+        Expected output:
+        Su cara está oculta por sus largas túnicas negras y grotesco respirador, que destaca junto a los trajes blancos de armadura fascistas de los muñecos de nieve imperiales.
+        '''
+
+        user_message = f'''
+        [Original language]
+        {self._original_language_str}
+        [Destination language]
+        {self._target_language_str}
+        [Preceding line]
+        {chunk.prev_line if chunk.prev_line else ""}
+        [Following line]
+        {chunk.next_line}
+        [Relevant terms]
+        {term_lists.for_api(chunk.contents, self._original_language)}
+        [Summary]
+        {summary}
+        [Text]
+        {chunk.contents}
+        [End]
+        '''
+
+        
         # Build the messages to send to the API
         messages = [
-            {"role": "system", "content": f"You are a {self._original_language_str} to {self._target_language_str} translator."},
-            {"role": "user", "content": 
-                f"Translate the chunk of text I'm about to provide. Mantain {self._original_language_str} novel translation format convetions. As context, I'll provide the immediate previous line of the text, the immediate next line of the text, the summary of the enclosing section, and a list of relevant terms and their translations to use. Do not repeat the {self._original_language_str} text, nor clarify your actions."},
-            {"role": "assistant", "content": "Understood. Please provide the previous line."}
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": user_message}
         ]
-        if chunk.prev_line:
-            messages.append({"role": "user", "content": chunk.prev_line})
-            messages.append({"role": "assistant", "content": "Understood. Please provide the next line."})
-        else:
-            messages.append({"role": "user", "content": ""})
-            messages.append({"role": "assistant", "content": "No previous line provided. The text is the first line of the text. Please provide the next line."})
+        # # Build the messages to send to the API
+        # messages = [
+        #     {"role": "system", "content": f"You are a {self._original_language_str} to {self._target_language_str} translator."},
+        #     {"role": "user", "content": 
+        #         f"Translate the chunk of text I'm about to provide. Mantain {self._original_language_str} novel translation format convetions. As context, I'll provide the immediate previous line of the text, the immediate next line of the text, the summary of the enclosing section, and a list of relevant terms and their translations to use. Do not repeat the {self._original_language_str} text, nor clarify your actions."},
+        #     {"role": "assistant", "content": "Understood. Please provide the previous line."}
+        # ]
+        # if chunk.prev_line:
+        #     messages.append({"role": "user", "content": chunk.prev_line})
+        #     messages.append({"role": "assistant", "content": "Understood. Please provide the next line."})
+        # else:
+        #     messages.append({"role": "user", "content": ""})
+        #     messages.append({"role": "assistant", "content": "No previous line provided. The text is the first line of the text. Please provide the next line."})
 
-        if chunk.next_line:
-            messages.append({"role": "user", "content": chunk.next_line})
-            messages.append({"role": "assistant", "content": "Understood. Please provide the summary."})
-        else:
-            messages.append({"role": "user", "content": ""})
-            messages.append({"role": "assistant", "content": "No next line provided. The text is the last line of the text. Please provide the summary."})
-        if summary:
-            messages.append({"role": "user", "content": summary})
-            messages.append({"role": "assistant", "content": "Understood. Please provide the relevant terms."})
-        else:
-            messages.append({"role": "user", "content": ""})
-            messages.append({"role": "assistant", "content": "No summary provided. The text is the first line of the text. Please provide the relevant terms."})
-        messages.append({"role": "user", "content": term_lists.for_api(chunk.contents, self._original_language)})
-        messages.append({"role": "assistant", "content": f"Understood. Please provide the text. I'll translate it to {self._target_language_str}."})
-        messages.append({"role": "user", "content": chunk.contents})
+        # if chunk.next_line:
+        #     messages.append({"role": "user", "content": chunk.next_line})
+        #     messages.append({"role": "assistant", "content": "Understood. Please provide the summary."})
+        # else:
+        #     messages.append({"role": "user", "content": ""})
+        #     messages.append({"role": "assistant", "content": "No next line provided. The text is the last line of the text. Please provide the summary."})
+        # if summary:
+        #     messages.append({"role": "user", "content": summary})
+        #     messages.append({"role": "assistant", "content": "Understood. Please provide the relevant terms."})
+        # else:
+        #     messages.append({"role": "user", "content": ""})
+        #     messages.append({"role": "assistant", "content": "No summary provided. The text is the first line of the text. Please provide the relevant terms."})
+        # messages.append({"role": "user", "content": term_lists.for_api(chunk.contents, self._original_language)})
+        # messages.append({"role": "assistant", "content": f"Understood. Please provide the text. I'll translate it to {self._target_language_str}."})
+        # messages.append({"role": "user", "content": chunk.contents})
 
         # Call the API
         try:
@@ -447,20 +550,57 @@ class GPTTranslator:
         if summarization_model not in available_models:
             logger.error(f"Summarization model ({summarization_model}) must be a valid model. Available models: {', '.join(available_models)}")
             raise ValueError(f"Summarization model must be a valid model. Available models: {', '.join(available_models)}")
+        
+        system_message = f'''
+        You are an assistant updates the summary of an ongoing text.
+
+        You will be provided with:
+        1) The previous summary up to this point.
+        2) The next section of the text to summarize.
+
+        You will be asked to:
+        1) Provide a new summary of the ongoing text.
+        2) Stay within a few lines of text.
+        3) Keep the summary concise.
+
+        Example:
+        [Previous summary]
+        A Description of Darth Vader's appearance.
+        [Next section]
+        Everyone instinctively backs away from the imposing warrior and a deathly quiet sweeps through the Rebel troops.
+        [End]
+
+        Expected output:
+        Darth Vader is introduced and the rebels are scared of him.
+        '''
+
+        user_message = f'''
+        [Previous summary]
+        {previous_summary}
+        [Next section]
+        {chunk}
+        [End]
+        '''
 
         # Build the messages to send to the API
         messages = [
-            {"role": "system", "content": f"You are an assistant that summarizes {self._original_language_str} text in {self._target_language_str}."},
-            {"role": "user", "content": f"You are summarizing a text. Part of this text has already been summarized. I'll provide this previous summary and the proceeding chunk text. Please provide an updated summary of the text. Do not repeat the {self._original_language_str} text, nor clarify your actions."},
-            {"role": "assistant", "content": "Understood. Please provide the previous summary."}
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": user_message}
         ]
-        if previous_summary:
-            messages.append({"role": "user", "content": previous_summary})
-            messages.append({"role": "assistant", "content": f"Understood. Please provide the text. I'll summarize it in {self._target_language_str}."})
-        else:
-            messages.append({"role": "user", "content": ""})
-            messages.append({"role": "assistant", "content": f"No summary provided. The text is the first line of the text. Please provide the text. I'll summarize it in {self._target_language_str}."})
-        messages.append({"role": "user", "content": chunk})
+
+        # # Build the messages to send to the API
+        # messages = [
+        #     {"role": "system", "content": f"You are an assistant that summarizes {self._original_language_str} text in {self._target_language_str}."},
+        #     {"role": "user", "content": f"You are summarizing a text. Part of this text has already been summarized. I'll provide this previous summary and the proceeding chunk text. Please provide an updated summary of the text. Do not repeat the {self._original_language_str} text, nor clarify your actions."},
+        #     {"role": "assistant", "content": "Understood. Please provide the previous summary."}
+        # ]
+        # if previous_summary:
+        #     messages.append({"role": "user", "content": previous_summary})
+        #     messages.append({"role": "assistant", "content": f"Understood. Please provide the text. I'll summarize it in {self._target_language_str}."})
+        # else:
+        #     messages.append({"role": "user", "content": ""})
+        #     messages.append({"role": "assistant", "content": f"No summary provided. The text is the first line of the text. Please provide the text. I'll summarize it in {self._target_language_str}."})
+        # messages.append({"role": "user", "content": chunk})
 
         # Call the API
         try:
@@ -478,7 +618,7 @@ class GPTTranslator:
     def _perform_novel_metadata_action(self, **kwargs) -> None:
         logger.debug(f"Performing novel metadata action.")
 
-        available_models = [self._get_api_model(model)['name'] for model in self._summary_models]
+        available_models = [self._get_api_model(model)['name'] for model in self._metadata_models]
 
         novel = kwargs['novel']
         metadata_model = kwargs['metadata_model']
@@ -506,14 +646,64 @@ class GPTTranslator:
 
         metadata = doc.getvalue()
 
+        system_message = f'''
+        You are a translator that translates novels from one language to another.
+
+        You will be provided with:
+        1) Original language
+        2) Destination language
+        3) The metadata of the novel to translate in XML format.
+
+        You will be asked to:
+        1) Translate the metadata to the destination language.
+        2) Keep the XML format.
+        3) Do not modify the XML structure.
+
+        Example:
+        [Original language]
+        English
+        [Destination language]
+        Spanish
+        [Metadata]
+        <metadata>
+            <title>Star Wars</title>
+            <author>George Lucas</author>
+            <description>A long time ago in a galaxy far, far away...</description>
+        </metadata>
+        [End]
+
+        Expected output:
+        <metadata>
+            <title>Guerra de las Galaxias</title>
+            <author>George Lucas</author>
+            <description>Hace mucho tiempo en una galaxia muy, muy lejana...</description>
+        </metadata>
+        '''
+
+        user_message = f'''
+        [Original language]
+        {self._original_language_str}
+        [Destination language]
+        {self._target_language_str}
+        [Metadata]
+        {metadata}
+        [End]
+        '''
+
         # Build the messages to send to the API
         messages = [
-            {"role": "system", "content": f"You are a {self._original_language_str} to {self._target_language_str} translator."},
-            {"role": "user", "content": 
-                f"You are translating a novel's metadata. I'll provide the novel's metadata in {self._original_language_str}. Please translate the metadata to {self._target_language_str}. Do not repeat the {self._original_language_str} text, nor clarify your actions. Mantain the xml format."},
-            {"role": "assistant", "content": f"Understood. Please provide the metadata in {self._original_language_str}. I'll translate it to {self._target_language_str}."},
-            {"role": "user", "content": f"{metadata}"}
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": user_message}
         ]
+
+        # # Build the messages to send to the API
+        # messages = [
+        #     {"role": "system", "content": f"You are a {self._original_language_str} to {self._target_language_str} translator."},
+        #     {"role": "user", "content": 
+        #         f"You are translating a novel's metadata. I'll provide the novel's metadata in {self._original_language_str}. Please translate the metadata to {self._target_language_str}. Do not repeat the {self._original_language_str} text, nor clarify your actions. Mantain the xml format."},
+        #     {"role": "assistant", "content": f"Understood. Please provide the metadata in {self._original_language_str}. I'll translate it to {self._target_language_str}."},
+        #     {"role": "user", "content": f"{metadata}"}
+        # ]
 
         # Call the API
         try:
@@ -549,7 +739,7 @@ class GPTTranslator:
     def _perform_chapters_metadata_action(self, **kwargs) -> str:
         logger.debug(f"Performing chapters metadata action.")
 
-        available_models = [self._get_api_model(model)['name'] for model in self._summary_models]
+        available_models = [self._get_api_model(model)['name'] for model in self._metadata_models]
 
         novel = kwargs['novel']
         sub_chapters = kwargs['sub_chapters']
@@ -601,14 +791,88 @@ class GPTTranslator:
 
         metadata = doc.getvalue()
 
+        system_message = f'''
+        You are a translator that translates novels from one language to another.
+
+        You will be provided with:
+        1) Original language
+        2) Destination language
+        3) The metadata of the novel to translate in XML format.
+
+        You will be asked to:
+        1) Translate the metadata to the destination language.
+        2) Keep the XML format.
+        3) Do not modify the XML structure.
+
+        Example:
+        [Original language]
+        English
+        [Destination language]
+        Spanish
+        [Metadata]
+        <metadata>
+            <chapter id="1">
+                <title>Prologue</title>
+                <sub_chapter id="1">
+                    <title>The trip</title>
+                </sub_chapter>
+                <sub_chapter id="2">
+                    <title>The thieves</title>
+                </sub_chapter>
+            </chapter>
+            <chapter id="2">
+                <title>Animals</title>
+                <sub_chapter id="1">
+                    <title>The hamster</title>
+                </sub_chapter>
+            </chapter>
+        </metadata>
+        [End]
+
+        Expected output:
+        <metadata>
+            <chapter id="1">
+                <title>Prologo</title>
+                <sub_chapter id="1">
+                    <title>El viaje</title>
+                </sub_chapter>
+                <sub_chapter id="2">
+                    <title>Los ladrones</title>
+                </sub_chapter>
+            </chapter>
+            <chapter id="2">
+                <title>Animales</title>
+                <sub_chapter id="1">
+                    <title>El hámster</title>
+                </sub_chapter>
+            </chapter>
+        </metadata>
+        '''
+
+        user_message = f'''
+        [Original language]
+        {self._original_language_str}
+        [Destination language]
+        {self._target_language_str}
+        [Metadata]
+        {metadata}
+        [End]
+        '''
+
         # Build the messages to send to the API
         messages = [
-            {"role": "system", "content": f"You are a {self._original_language_str} to {self._target_language_str} translator."},
-            {"role": "user", "content": 
-                f"You are translating a novel's metadata. I'll provide the novel's metadata in {self._original_language_str}. Please translate the metadata to {self._target_language_str}. Do not repeat the {self._original_language_str} text, nor clarify your actions. Mantain the xml format."},
-            {"role": "assistant", "content": f"Understood. Please provide the metadata in {self._original_language_str}. I'll translate it to {self._target_language_str}."},
-            {"role": "user", "content": html.escape(metadata)}
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": user_message}
         ]
+
+        # # Build the messages to send to the API
+        # messages = [
+        #     {"role": "system", "content": f"You are a {self._original_language_str} to {self._target_language_str} translator."},
+        #     {"role": "user", "content": 
+        #         f"You are translating a novel's metadata. I'll provide the novel's metadata in {self._original_language_str}. Please translate the metadata to {self._target_language_str}. Do not repeat the {self._original_language_str} text, nor clarify your actions. Mantain the xml format."},
+        #     {"role": "assistant", "content": f"Understood. Please provide the metadata in {self._original_language_str}. I'll translate it to {self._target_language_str}."},
+        #     {"role": "user", "content": html.escape(metadata)}
+        # ]
 
         # Call the API
         try:
