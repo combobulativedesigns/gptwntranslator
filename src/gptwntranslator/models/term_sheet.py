@@ -13,7 +13,7 @@ from gptwntranslator.models.term import Term
 class TermSheet:
     """This class represents a terms sheet."""
 
-    def __init__(self, novel_code: str, terms: dict[str, Term]={}) -> None:
+    def __init__(self, novel_origin: str, novel_code: str, terms: dict[str, Term]={}) -> None:
         """Initialize a terms sheet object.
 
         Parameters
@@ -25,12 +25,19 @@ class TermSheet:
         """
 
         # Validate parameters
+        if not isinstance(novel_origin, str):
+            raise TypeError("Novel origin must be a string")
         if not isinstance(novel_code, str):
             raise TypeError("Novel code must be a string")
         if not isinstance(terms, (NoneType, dict)):
             raise TypeError("Terms must be a dictionary of terms")
+        if not all(isinstance(term, Term) for term in terms.values()):
+            raise TypeError("Terms must be a dictionary of terms by string")
+        if not all(isinstance(term, str) for term in terms.keys()):
+            raise TypeError("Terms must be a dictionary of terms by string")
         
         # Initialize properties
+        self.novel_origin = novel_origin
         self.novel_code = novel_code
         self.terms = terms
 
@@ -52,7 +59,7 @@ class TermSheet:
         terms = copy.deepcopy(self.terms, memo)
 
         # Return the deep copy
-        return TermSheet(self.novel_code, terms=terms)
+        return TermSheet(self.novel_origin, self.novel_code, terms=terms)
 
     def process_new_terms(self, term_list_str: str):
         """Parse a string of terms into a dictionary of terms.
@@ -90,8 +97,9 @@ class TermSheet:
 
             # Add the translation to the term
             language = cf.data.config.translator.target_language
-            if language not in self.terms[original_term].translations:
-                self.terms[original_term].add_translation(language, translated_term)
+            term = copy.deepcopy(self.terms[original_term])
+            term.add_translation(language, translated_term)
+            self.terms[original_term] = term
 
     def update_dimensions(self, novel_str: str, original_language: str) -> None:
         """Update the dimensions of the terms sheet.

@@ -1,7 +1,7 @@
 
 
 from gptwntranslator.helpers.logger_helper import CustomLogger
-from gptwntranslator.helpers.ui_helper import print_title, wait_for_user_input
+from gptwntranslator.helpers.ui_helper import print_messages, print_title, wait_for_user_input
 from gptwntranslator.ui.page_base import PageBase
 from gptwntranslator.ui.ui_resources import get_resources
 
@@ -17,12 +17,20 @@ class PageMessage(PageBase):
 
         last_y = print_title(screen, resources["title"], 0)
 
-        last_y += 1
-        for message in kwargs["messages"]:
-            last_y += 1
-            screen.print_at(message, 2, last_y)
+        # last_y += 1
+        # for message in kwargs["messages"]:
+        #     last_y += 1
+        #     screen.print_at(message, 2, last_y)
 
-        last_y += 2
+        # last_y += 2
+
+        if kwargs["messages"] is not None:
+            last_y += 2
+            last_y = print_messages(screen, kwargs["messages"], 2, last_y)
+        else:
+            last_y += 1
+
+        last_y += 1
 
         logger.debug(f"kwargs: {kwargs}")
 

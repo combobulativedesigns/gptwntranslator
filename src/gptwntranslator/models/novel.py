@@ -9,11 +9,13 @@ from gptwntranslator.models.term_sheet import TermSheet
 class Novel:
     """Model for a japanese web novel."""
 
-    def __init__(self, novel_code: str, title: str, author: str, description: str, original_language: str, title_translation: dict[str, str]={}, author_translation: dict[str, str]={}, author_link: str="", description_translation: dict[str, str]={}, chapters: list[Chapter]=[], terms_sheet: TermSheet|NoneType=None) -> None:
+    def __init__(self, novel_origin: str, novel_code: str, title: str, author: str, description: str, original_language: str, title_translation: dict[str, str]={}, author_translation: dict[str, str]={}, author_link: str="", description_translation: dict[str, str]={}, chapters: list[Chapter]=[], terms_sheet: TermSheet|NoneType=None) -> None:
         """Initialize a novel object.
 
         Parameters
         ----------
+        novel_origin : str
+            The origin of the novel.
         novel_code : str
             The code of the novel.
         title : str
@@ -39,6 +41,8 @@ class Novel:
         """
 
         # Validate parameters
+        if not isinstance(novel_origin, str):
+            raise TypeError("Novel origin must be a string")
         if not isinstance(novel_code, str):
             raise TypeError("Novel code must be a string")
         if not isinstance(title, str):
@@ -77,6 +81,7 @@ class Novel:
             raise TypeError("Terms sheet must be a TermSheet object or None")
 
         # Set attributes
+        self.novel_origin = novel_origin
         self.novel_code = novel_code
         self.title = title
         self.author = author
@@ -87,7 +92,7 @@ class Novel:
         self.author_link = author_link
         self.description_translation = description_translation
         self.chapters = chapters
-        self.terms_sheet = terms_sheet if terms_sheet is not None else TermSheet(novel_code)
+        self.terms_sheet = terms_sheet if terms_sheet is not None else TermSheet(novel_origin, novel_code)
 
     def get_chapter(self, chapter_number: int) -> Chapter:
         """Return the chapter object of the given chapter number.
@@ -143,6 +148,7 @@ class Novel:
 
         # Return a copy of the novel object
         return Novel(
+            self.novel_origin,
             self.novel_code,
             self.title,
             self.author,
@@ -158,11 +164,11 @@ class Novel:
 
     def __str__(self):
         """Return the string representation of a Novel object."""
-        return f"{self.novel_code}"
+        return f"{self.novel_code}-{self.novel_origin}"
     
     def __repr__(self):
         """Return the string representation of a Novel object."""
-        return f"Novel {self.novel_code}"
+        return f"Novel {self.novel_code} from {self.novel_origin}"
     
     def __eq__(self, other):
         """Return True if the two Novel objects are equal.
@@ -175,7 +181,7 @@ class Novel:
 
         if not isinstance(other, Novel):
             raise TypeError("Other object must be a Novel object")
-        return self.novel_code == other.novel_code
+        return self.novel_code == other.novel_code and self.novel_origin == other.novel_origin
     
     def __ne__(self, other):
         """Return True if the two Novel objects are not equal.
@@ -188,4 +194,4 @@ class Novel:
 
         if not isinstance(other, Novel):
             raise TypeError("Other object must be a Novel object")
-        return self.novel_code != other.novel_code
+        return self.novel_code != other.novel_code or self.novel_origin != other.novel_origin

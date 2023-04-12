@@ -1,32 +1,41 @@
-from gptwntranslator.helpers.ui_helper import print_title, wait_for_user_input
+import json
+import os
+from gptwntranslator.helpers.config_helper import Config
+from gptwntranslator.helpers.file_helper import read_file
+from gptwntranslator.helpers.ui_helper import print_messages, print_title, wait_for_user_input
+from gptwntranslator.hooks.object_hook import generic_object_hook
+from gptwntranslator.models.term_sheet import TermSheet
 from gptwntranslator.storage.json_storage import JsonStorage
-from gptwntranslator.translators.gpt_translator import GPTTranslatorSingleton
 from gptwntranslator.ui.page_base import PageBase
 from gptwntranslator.ui.page_exit import PageExit
 from gptwntranslator.ui.page_message import PageMessage
 from gptwntranslator.ui.ui_resources import get_resources
 
 
-class PageNovelTranslateMetadata(PageBase):
+class PageNovelMgmImportSheet(PageBase):
     def __init__(self) -> None:
         pass
+
 
     def render(self, screen, **kwargs) -> tuple[PageBase, dict]:
         resources = get_resources()
         novel_code = kwargs["novel_url_code"]
         novel_origin = kwargs["novel_origin"]
         storage = JsonStorage()
+        config = Config()
+        target_language = config.data.config.translator.target_language
+        input_file = os.path.join(config.vars["input_path"], f"{novel_origin}-{novel_code}-{target_language}-sheet.json")
 
         # Print title
         last_y = print_title(screen, resources["title"], 0)
         
         last_y += 2
-        screen.print_at(f"Translating novel metadata: {novel_code}", 2, last_y)
+        last_y = print_messages(screen, [f"Importing term sheet: {input_file}"], 2, last_y)
 
         while True:
-            last_y += 2
+            last_y += 1
             try:
-                message = "(1/4) Loading novel from local storage... "
+                message = "(1/3) Loading local storage... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 novels = storage.get_data()
@@ -45,11 +54,16 @@ class PageNovelTranslateMetadata(PageBase):
                 break
 
             try:
-                message = "(2/4) Initializing translator... "
+                message = "(2/3) Importing term sheet from json... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
-                translator = GPTTranslatorSingleton()
-                translator.set_original_language(novel.original_language)
+                json_string = read_file(input_file)
+                sheet_new = json.loads(json_string, object_hook=generic_object_hook)
+                if not isinstance(sheet_new, TermSheet):
+                    raise Exception("JSON is not a TermSheet.")
+                if sheet_new.novel_code != novel_code or sheet_new.novel_origin != novel_origin:
+                    raise Exception("Novel code and origin do not match.")
+                novel.terms_sheet = sheet_new
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
                 last_y += 1
@@ -57,36 +71,14 @@ class PageNovelTranslateMetadata(PageBase):
                 screen.print_at("failed.", 2 + len(message), last_y)
                 last_y += 1
                 messages = [
-                    f"Error: Error initializing translator.",
-                    f"Error: {e}"]
-                target = PageMessage
-                params = {"messages": messages, "return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
-                break
-            
-            try:
-                # Translate novel metadata
-                message = "(3/4) Translating novel metadata... "
-                screen.print_at(message, 2, last_y)
-                screen.refresh()
-                exceptions = translator.translate_novel_metadata(novel)
-                if exceptions:
-                    raise Exception("There were errors while translating novel metadata. {}".format(exceptions[0]))
-                else:
-                    screen.print_at("success.", 2 + len(message), last_y)
-                    screen.refresh()
-                    last_y += 1
-            except Exception as e:
-                screen.print_at("failed.", 2 + len(message), last_y)
-                last_y += 1
-                messages = [
-                    f"Error: Error translating novel metadata.",
+                    f"Error: Error importing term sheet from json.",
                     f"Error: {e}"]
                 target = PageMessage
                 params = {"messages": messages, "return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
                 break
 
             try:
-                message = "(4/4) Saving novel to local storage... "
+                message = "(3/3) Saving novel to local storage... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 storage.set_data(novels)

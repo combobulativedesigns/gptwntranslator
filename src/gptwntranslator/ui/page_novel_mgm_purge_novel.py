@@ -1,17 +1,19 @@
-from gptwntranslator.helpers.ui_helper import print_title, wait_for_user_input
+from gptwntranslator.helpers.ui_helper import print_messages, print_title, wait_for_user_input
 from gptwntranslator.storage.json_storage import JsonStorage
-from gptwntranslator.translators.gpt_translator import GPTTranslatorSingleton
 from gptwntranslator.ui.page_base import PageBase
 from gptwntranslator.ui.page_exit import PageExit
 from gptwntranslator.ui.page_message import PageMessage
 from gptwntranslator.ui.ui_resources import get_resources
+from gptwntranslator.ui.page_base import PageBase
 
 
-class PageNovelTranslateMetadata(PageBase):
+class PageNovelMgmPurgeNovel(PageBase):
     def __init__(self) -> None:
         pass
 
     def render(self, screen, **kwargs) -> tuple[PageBase, dict]:
+        # from gptwntranslator.ui.page_novel_selection import PageNovelSelection
+        from gptwntranslator.ui.page_novel_list import PageNovelList
         resources = get_resources()
         novel_code = kwargs["novel_url_code"]
         novel_origin = kwargs["novel_origin"]
@@ -21,16 +23,16 @@ class PageNovelTranslateMetadata(PageBase):
         last_y = print_title(screen, resources["title"], 0)
         
         last_y += 2
-        screen.print_at(f"Translating novel metadata: {novel_code}", 2, last_y)
+        last_y = print_messages(screen, [f"Purging novel"], 2, last_y)
 
         while True:
-            last_y += 2
+            last_y += 1
             try:
-                message = "(1/4) Loading novel from local storage... "
+                message = "(1/3) Loading local storage... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 novels = storage.get_data()
-                novel = [novel for novel in novels if novel.novel_code == novel_code and novel.novel_origin == novel_origin][0]
+                novel_old = [novel for novel in novels if novel.novel_code == novel_code and novel.novel_origin == novel_origin][0]
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
                 last_y += 1
@@ -45,11 +47,10 @@ class PageNovelTranslateMetadata(PageBase):
                 break
 
             try:
-                message = "(2/4) Initializing translator... "
+                message = "(2/3) Purging sheet... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
-                translator = GPTTranslatorSingleton()
-                translator.set_original_language(novel.original_language)
+                novels.remove(novel_old)
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
                 last_y += 1
@@ -57,43 +58,21 @@ class PageNovelTranslateMetadata(PageBase):
                 screen.print_at("failed.", 2 + len(message), last_y)
                 last_y += 1
                 messages = [
-                    f"Error: Error initializing translator.",
-                    f"Error: {e}"]
-                target = PageMessage
-                params = {"messages": messages, "return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
-                break
-            
-            try:
-                # Translate novel metadata
-                message = "(3/4) Translating novel metadata... "
-                screen.print_at(message, 2, last_y)
-                screen.refresh()
-                exceptions = translator.translate_novel_metadata(novel)
-                if exceptions:
-                    raise Exception("There were errors while translating novel metadata. {}".format(exceptions[0]))
-                else:
-                    screen.print_at("success.", 2 + len(message), last_y)
-                    screen.refresh()
-                    last_y += 1
-            except Exception as e:
-                screen.print_at("failed.", 2 + len(message), last_y)
-                last_y += 1
-                messages = [
-                    f"Error: Error translating novel metadata.",
+                    f"Error: Error purging sheet.",
                     f"Error: {e}"]
                 target = PageMessage
                 params = {"messages": messages, "return_page": self.args["return_page"], "return_kwargs": self.args["return_kwargs"]}
                 break
 
             try:
-                message = "(4/4) Saving novel to local storage... "
+                message = "(3/3) Saving novel to local storage... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 storage.set_data(novels)
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
                 last_y += 1
-                target, params = self.args["return_page"], self.args["return_kwargs"]
+                target, params = PageNovelList, {"page_index": 0}
             except Exception as e:
                 screen.print_at("failed.", 2 + len(message), last_y)
                 last_y += 1

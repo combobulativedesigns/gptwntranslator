@@ -22,6 +22,7 @@ class PageNovelTranslating(PageBase):
         resources = get_resources()
         novel_code = kwargs["novel_url_code"]
         targets = kwargs["target"]
+        novel_origin = kwargs["novel_origin"]
         storage = JsonStorage()
 
         # Print title
@@ -55,7 +56,7 @@ class PageNovelTranslating(PageBase):
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
                 novels = storage.get_data()
-                novel_index = next((i for i, n in enumerate(novels) if n.novel_code == novel_code), None)
+                novel_index = next((i for i, n in enumerate(novels) if n.novel_code == novel_code and n.novel_origin == novel_origin), None)
                 if novel_index is None:
                     raise ValueError(f"Novel with code {novel_code} not found in local storage.")
                 novel = novels[novel_index]

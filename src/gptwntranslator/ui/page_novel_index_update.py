@@ -1,5 +1,5 @@
 from gptwntranslator.helpers.ui_helper import print_title, wait_for_user_input
-from gptwntranslator.scrapers.syosetu_scraper import process_novel
+from gptwntranslator.origins.origin_factory import OriginFactory
 from gptwntranslator.storage.json_storage import JsonStorage
 from gptwntranslator.ui.page_base import PageBase
 from gptwntranslator.ui.page_exit import PageExit
@@ -14,7 +14,9 @@ class PageNovelIndexUpdate(PageBase):
     def render(self, screen, **kwargs) -> tuple[PageBase, dict]:
         resources = get_resources()
         novel_code = kwargs["novel_url_code"]
+        novel_origin = kwargs["novel_origin"]
         storage = JsonStorage()
+        origin = OriginFactory.get_origin(novel_origin)
 
         # Print title
         last_y = print_title(screen, resources["title"], 0)
@@ -46,7 +48,7 @@ class PageNovelIndexUpdate(PageBase):
                 message = "(2/3) Downloading novel metadata... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
-                novel = process_novel(novel_code)
+                novel = origin.process_novel(novel_code)
                 screen.print_at("success.", 2 + len(message), last_y)
                 screen.refresh()
                 last_y += 1
@@ -64,7 +66,7 @@ class PageNovelIndexUpdate(PageBase):
                 message = "(3/3) Updating local data... "
                 screen.print_at(message, 2, last_y)
                 screen.refresh()
-                novel_old = [novel for novel in novels if novel.novel_code == novel_code][0]
+                novel_old = [novel for novel in novels if novel.novel_code == novel_code and novel.novel_origin == novel_origin][0]
                 novel_old.title = novel.title
                 novel_old.author = novel.author
                 novel_old.description = novel.description
