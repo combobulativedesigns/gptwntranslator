@@ -16,7 +16,9 @@ gptwntranslator is a web novel translation tool that utilizes OpenAI's GPT model
     - [Modes](#modes)
     - [Interactive Mode](#interactive-mode)
     - [Command Mode](#command-mode)
+    - [Novel Origins](#novel-origins)
     - [Optional Arguments](#optional-arguments)
+    - [Extra Actions](#extra-actions)
     - [Examples](#examples)
 - [Current Limitations](#current-limitations)
 - [Contributing](#contributing)
@@ -26,19 +28,22 @@ gptwntranslator is a web novel translation tool that utilizes OpenAI's GPT model
 ## Capabilities
 ---------------
 
-- Scraping Japanese web novels from Syosetu.
-- Translating Japanese text using OpenAI's advanced AI models.
-- Selection of destination language, if GPT understands it, it can translate to it. With various levels of quality.
+- Scraping web novels from multiple sites.
+- Translating text using OpenAI's advanced AI models.
+- Translation from and to multiple languages.
 - Generating epub files for the translated content.
 - Customizable translation by specifying chapters or sub-chapters.
 - Selection of AI models to use for translation.
 - Optimization of API calls to OpenAI's API.
 - Mix and match of AI models for the various steps of the translation process.
 - Parallelization of the translation process for faster translations.
+- Caching of scraped web novels to avoid unnecessary scraping.
+- Caching of translated text to avoid unnecessary API calls.
+- Exporting / importing of cached data for easy sharing and editing.
 
 ### **Aclaration on Crawling**
 
-Syosetu's robots.txt doesn't specify anything about random user agents. When there are no rules specified for random user agents, it implies that any user agent not specifically mentioned (web crawlers, search engines, or bots) is allowed to crawl the entire website without any restrictions or crawl delays. I'll still ask you not to multibox this thing and scrape the entire site, pretty please.
+All urls the tool scrapes are not covered by the sites' robots.txt files, which implies that the tool is not violating any terms of service. However, I'll still like to ask you not to scrape the entire sites at once. Stay within sane limits and don't abuse the tool.
 
 ### **Cost**
 
@@ -120,7 +125,7 @@ The tool supports two main modes: interactive and command. You can also access t
     Run the tool in command mode by using the 'command' or 'c' command:
 
     ```bash
-    gptwntranslator c ACTION NOVEL_IDENTIFIER [CHAPTERS]
+    gptwntranslator c ACTION NOVEL_ORIGIN NOVEL_IDENTIFIER [CHAPTERS]
     ```
 
 ### **Interactive Mode**
@@ -137,7 +142,7 @@ Command mode requires an action, a novel identifier, and optionally chapters dep
 - translate-chapters (tc): Translate novel chapters
 - export-chapters (ec): Export novel chapters
 
-All actions require a novel identifier. This is given by the url of the novel. For example, given the novel with url https://ncode.syosetu.com/n7133es/, the novel identifier is the last part of the url. In this case, n7133es.
+All actions require a novel origin and identifier. The latter is given by the url of the novel. For example, given the novel with url https://ncode.syosetu.com/n7133es/, the novel identifier is the last part of the url. In this case, n7133es.
 
 Actions that require chapters to be specified will also require a list of chapters to be processed. This actions are 'sc', 'tc', and 'ec'. The chapters can be specified in the following formats:
 
@@ -165,6 +170,15 @@ Translate actions require a previous scrape action. If the chapters are not foun
 
 Export actions require a previous translate action. If the chapters are not found, the tool will terminate. 
 
+### **Novel Origins**
+
+The tool supports the following novel origins:
+
+- syosetu_ncode: Syosetu novel with ncode url (e.g., https://ncode.syosetu.com/n7133et/)
+- syosetu_novel18: Syosetu novel with novel18 url (e.g., https://novel18.syosetu.com/n5590ft/)
+- kakuyomu: Kakuyomu novel (e.g., https://kakuyomu.jp/works/16816927861321881557)
+- jjwxc: JJWXC novel (e.g., https://www.jjwxc.net/onebook.php?novelid=3297507)
+
 ### **Optional Arguments**
 
 Both modes support the following optional arguments:
@@ -181,6 +195,21 @@ Both modes support the following optional arguments:
 
     `-od`, `--output-directory PATH`
 
+- Specify the input directory for importing files (default: ./input)
+
+    `-id`, `--input-directory PATH`
+
+### **Extra Actions**
+
+When using the tool in interactive mode, you can also use navigate the menu to perform the following actions:
+
+- Import / Esport a novel: Import a novel from a file or export a novel to a file.
+- Import / Export a term sheet: Import a term sheet from a file or export a term sheet to a file.
+- Purging a novel's cache:
+    - Purge novel summary: Purge the novel summary from the cache.
+    - Purge novel term sheet: Purge the novel term sheet from the cache.
+    - Purge novel completely: Purge the novel from the cache.
+
 ### **Examples**
 
 Given the novel with the following url: https://ncode.syosetu.com/n7133es/
@@ -188,43 +217,43 @@ Given the novel with the following url: https://ncode.syosetu.com/n7133es/
 1. Scrape novel metadata:
 
     ```bash
-    gptwntranslator c sm n7133es
+    gptwntranslator c sm syosetu_ncode n7133es
     ```
 
 2. Enable verbose output using the -v or --verbose flag:
 
     ```bash
-    gptwntranslator c -v sm n7133es
+    gptwntranslator c -v sm syosetu_ncode n7133es
     ```
 
 3. Scrape novel chapters:
 
     ```bash
-    gptwntranslator c sc n7133es 1-3
+    gptwntranslator c sc syosetu_ncode n7133es 1-3
     ```
 
 4. Translate novel metadata:
 
     ```bash
-    gptwntranslator c tm n7133es
+    gptwntranslator c tm syosetu_ncode n7133es
     ```
 
 5. Translate novel chapters:
 
     ```bash
-    gptwntranslator c tc n7133es 1:1-5
+    gptwntranslator c tc syosetu_ncode n7133es 1:1-5
     ```
 
 6. Export novel chapters:
 
     ```bash
-    gptwntranslator c ec n7133es 1:1-5
+    gptwntranslator c ec syosetu_ncode n7133es 1:1-5
     ```
     
 ## Current Limitations
 ----------------------
 
-- The tool only works with Japanese web novels from Syosetu.
+- ~~The tool only works with Japanese web novels from Syosetu.~~
 - ~~The tool doesn't translate:~~
     - ~~Chapter titles~~
     - ~~Subchapter titles~~
@@ -239,6 +268,8 @@ Given the novel with the following url: https://ncode.syosetu.com/n7133es/
 
 ## Contributing
 ---------------
+
+We could use testing, so if you want to help out, please do. We also need people to verify the quality of translations for most languages.
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
@@ -256,6 +287,10 @@ This project is licensed under the GNU General Public License v3 (GPLv3). See th
 For developing the amazing GPT models.
 - [Syosetu](https://syosetu.com/)
 For providing a great platform for Japanese web novelists.
+- [Kakuyomu](https://kakuyomu.jp/)
+For providing another great platform for Japanese web novelists.
+- [jjwxc](https://www.jjwxc.net)
+For providing a great platform for Chinese web novelists.
 - [ChatGPT](https://chat.openai.com)
 For providing a great amount of help in making this tool. Even this README, wow.
 
