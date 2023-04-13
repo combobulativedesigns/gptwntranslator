@@ -108,10 +108,10 @@ class SyosetuBaseOrigin(BaseWebOrigin):
 
                 # Get sub chapter link
                 sub_chapter_link = sub_chapter.find('dd', class_='subtitle').find('a')['href']
-                sub_chapter_link = sub_chapter_link.split('/')[-1]
+                sub_chapter_link = sub_chapter_link.rstrip('/').split('/')[-1]
 
                 # Get sub chapter release date
-                sub_chapter_release_date = sub_chapter_link.rstrip('/').split('/')[-1]
+                sub_chapter_release_date = sub_chapter.find('dt', class_='long_update').text
 
                 # Append sub chapter
                 sub_chapters.append(SubChapter(
