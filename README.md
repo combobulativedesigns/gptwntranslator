@@ -62,13 +62,14 @@ The tool will also be able to use any other model that OpenAI releases in the fu
 ## Installation
 ---------------
 
-Clone the repository and install the package using the following commands:
-
-```bash
-git clone https://github.com/combobulativedesigns/gptwntranslator.git
-cd gptwntranslator
-pip install .
-```
+1. Go to the sidebar, find the `Releases` section and click on the latest release.
+2. On the release page, download the source code found on the Assets section. If you don't know which file to download, select the Zip one.
+3. Once downloaded, extract the zip to a location of your preference.
+4. Open a terminal inside the extraction folder.
+5. (Optional) Create a virtual environment
+    1. Enter `python -m venv .venv` in the terminal for creating the environment inside a .venv folder.
+    2. Activate the environment by running `.\.venv\Scripts\activate` in the terminal.
+6. Install the program running `python -m pip install .`
 
 ## Configuration
 ----------------
@@ -80,25 +81,23 @@ Before using gptwntranslator, ensure you have set up the configuration file (con
 
 ### **Execution**
 
-Depending on how the tool is being used, and if it was installed or not, the tool can be run in different ways.
+1. With a virtual environment
 
-1. Run the tool as a module:
+If you created a virtual environment while installing, make sure it is activated before running the app by running `.\.venv\Scripts\activate` inside the program folder. Then you can run the program using: 
 
-    ```bash
-    python -m gptwntranslator
-    ```
+```bash
+gptwntranslator
+```
 
-2. Run the tool as a script:
+You can return to the normal python environment once done with the program by running `deactivate` in the terminal where you activated the environment. You can also just close the terminal since activating an environment is only relevant for the terminal where the activation command is run.
 
-    ```bash
-    python src/gptwntranslator/__main__.py
-    ```
+2. As a script
 
-3. Run the tool as a command:
+You can run the program as a script entering the following command inside a terminal located in the program folder:
 
-    ```bash
-    gptwntranslator
-    ```
+```bash
+python src/gptwntranslator/__main__.py
+```
 
 ### **Modes**
 
