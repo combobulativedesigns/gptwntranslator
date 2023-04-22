@@ -28,12 +28,16 @@ class PageNovelList(Page):
         target_language = cf.data.config.translator.target_language
         storage = JsonStorage()
         current_page_index = kwargs["page_index"]
+
         novel_title_length = 60
         novels_per_page_count = 6
         novels = storage.get_data()
         novels_count = len(novels)
+
         novels_page_count = novels_count // novels_per_page_count
-        if novels_count % novels_per_page_count != 0:
+        if novels_page_count == 0:
+            novels_page_count = 1
+        elif novels_count % novels_per_page_count != 0:
             novels_page_count += 1
         current_page_index = current_page_index % novels_page_count
         novels_start_index = current_page_index * novels_per_page_count
