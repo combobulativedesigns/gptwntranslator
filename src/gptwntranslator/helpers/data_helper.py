@@ -44,7 +44,7 @@ def get_targeted_sub_chapters(novel: Novel, targets: dict[str, list[str]]) -> li
         # Check if the chapter is targeted
         if str(chapter.chapter_index) in targets:
             # Check if the chapter has sub chapters
-            if chapter.sub_chapters is not None:
+            if len(targets[str(chapter.chapter_index)]) > 0:
                 # Iterate over the sub chapters
                 for sub_chapter in chapter.sub_chapters:
                     # Check if the sub chapter is targeted
