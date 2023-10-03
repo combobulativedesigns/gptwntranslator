@@ -1,5 +1,8 @@
 from abc import abstractmethod
 import gzip
+import certifi
+import ssl
+import requests
 from typing import Callable
 from urllib.parse import urlparse
 from urllib.request import urlopen
@@ -64,11 +67,13 @@ class BaseWebOrigin(BaseOrigin):
             raise ValueError(f"URL {url} should have a netloc")
         
         try:
-            response = urlopen(url)
+            #response = urlopen(url, context=ssl.create_default_context(cafile=certifi.where()))
+            response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
         except Exception as e:
             raise Exception(f"Cannot open URL {url}") from e
-        html_bytes = response.read()
-        html = self._decode_html(html_bytes)
+        #html_bytes = response.read()
+        #html = self._decode_html(html_bytes)
+        html = response.text
         
         soup = BeautifulSoup(html, "html.parser")
         return soup
