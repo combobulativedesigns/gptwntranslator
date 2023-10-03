@@ -216,25 +216,60 @@
                                 </div>
 
                                 <h5 class="h5 my-4" style="letter-spacing: 0.05em;">
-                                    Novel Selection
+                                    First Initialization
                                 </h5>
 
-
                                 <p class="fs-6" style="text-align: justify;">
-                                    Once the interactive mode is started, the user will be prompted to enter the URL
-                                    code of the web novel they want to translate. The URL code is the part of the
-                                    URL that comes after the domain name. For example, the URL code of
-                                    <a href="https://ncode.syosetu.com/n5177et/">https://ncode.syosetu.com/n5177et/
-                                    </a> is "n5177et".
+                                    On the first time we start the interactive mode, report that it can't find the
+                                    local storage file. This is normal, as the file doesn't exist yet. The tool will
+                                    inform us that it has created the file for us and ask us to continue.
                                 </p>
 
-                                <img src="img/usage_win_entry.png"
-                                    class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+                                <img src="img/usage_win_01.png" class="img-fluid rounded-3 my-3 mx-auto d-block shadow"
+                                    alt="">
+
+                                <h5 class="h5 my-4" style="letter-spacing: 0.05em;">
+                                    Novel List
+                                </h5>
 
                                 <p class="fs-6" style="text-align: justify;">
-                                    Once the code is entered, and the user selects "Search novel" from the menu, the
-                                    tool will try to load the web novel from the local storage. If the web novel is
-                                    not found, the tool will try to download it from the web.
+                                    Once the local storage file is created, and on subsequent runs, the tool will
+                                    take us to the novel list. The novels list is a list of all the web novels that
+                                    have been scraped, allowing us to select one to work on. It also allows us to
+                                    create a new web novel entry by scraping it from the web.
+                                </p>
+
+                                <img src="img/usage_win_02.png" class="img-fluid rounded-3 my-3 mx-auto d-block shadow"
+                                    alt="">
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    Initially, there'll be no local novels so we'll have to scrape one from the web.
+                                    To do this, we select the option "Download a web novel" from the menu. The tool
+                                    will ask us for the URL code of the web novel we want to scrape, and the source
+                                    from which we want to scrape it.</p>
+
+                                <img src="img/usage_win_03.png" class="img-fluid rounded-3 my-3 mx-auto d-block shadow"
+                                    alt="">
+
+                                <p class="fs-6" style="text-align: justify;">We can select the source from a pre set
+                                    list of
+                                    sources, and the URL code will depend on the source we select. Taking the source
+                                    "syosetu", the URL code is the part of the URL that comes after the domain name.
+                                    For example, the URL code of <a
+                                        href="https://ncode.syosetu.com/n5177et/">https://ncode.syosetu.com/n5177et/</a>
+                                    is "n5177et".
+                                </p>
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    Once we enter the URL code and select the source, the tool will try to download
+                                    the web novel from the web. If the web novel is found, the tool will scrape the
+                                    metadata of the novel from the source. The metadata includes the title, author,
+                                    description, etc. The metadata also includes the list of chapters of the web
+                                    novel with their titles, and the list of sub chapters of each chapter.
+                                </p>
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    Once complete the tool will take us to the novel menu.
                                 </p>
 
                                 <h5 class="h5 my-4" style="letter-spacing: 0.05em;">
@@ -246,11 +281,11 @@
                                     novel menu is the main menu of the interactive mode.
                                 </p>
 
-                                <img src="img/usage_win_menu_untranslated.png"
-                                    class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+                                <img src="img/usage_win_04.png" class="img-fluid rounded-3 my-3 mx-auto d-block shadow"
+                                    alt="">
 
                                 <p class="fs-6" style="text-align: justify;">
-                                    The novel menu presents the user with 5 main actions:
+                                    The novel menu presents the user with 6 main actions:
                                 </p>
 
                                 <ul class="fs-6" style="text-align: justify;">
@@ -273,6 +308,12 @@
                                         <b>Export chapters</b>: This option will export selected chapters to a
                                         .epub file.
                                     </li>
+                                    <li>
+                                        <b>Novel Management</b>: This option will take us to a menu where we can
+                                        export/import terms sheet, export/import json entry, and purge the novel from
+                                        the local
+                                        storage.
+                                    </li>
                                 </ul>
 
                                 <h5 class="h5 my-4" style="letter-spacing: 0.05em;">
@@ -293,8 +334,8 @@
                                     chapter targeting at the end of this page.
                                 </p>
 
-                                <img src="img/usage_win_scraping_chapters.png"
-                                    class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+                                <img src="img/usage_win_05.png" class="img-fluid rounded-3 my-3 mx-auto d-block shadow"
+                                    alt="">
 
                                 <p class="fs-6" style="text-align: justify;">
                                     The <strong>Translate metadata</strong> action will translate the metadata of the
@@ -308,8 +349,8 @@
                                     translated metadata in the novel menu.
                                 </p>
 
-                                <img src="img/usage_win_menu_translated.png"
-                                    class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+                                <img src="img/usage_win_06.png" class="img-fluid rounded-3 my-3 mx-auto d-block shadow"
+                                    alt="">
 
                                 <p class="fs-6" style="text-align: justify;">
                                     The <strong>Translate chapters</strong> action will translate a range of chapters
@@ -318,8 +359,8 @@
                                     chapter targeting at the end of this page.
                                 </p>
 
-                                <img src="img/usage_win_translating_chapters.png"
-                                    class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+                                <img src="img/usage_win_07.png" class="img-fluid rounded-3 my-3 mx-auto d-block shadow"
+                                    alt="">
 
                                 <p class="fs-6" style="text-align: justify;">
                                     The <strong>Export chapters</strong> action will export selected chapters to a
@@ -328,8 +369,36 @@
                                     targeting at the end of this page.
                                 </p>
 
-                                <img src="img/usage_win_exporting_chapters.png"
-                                    class="img-fluid rounded-3 my-3 mx-auto d-block shadow" alt="">
+                                <img src="img/usage_win_08.png" class="img-fluid rounded-3 my-3 mx-auto d-block shadow"
+                                    alt="">
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    The <strong>Novel Management</strong> action will take us to a menu where we can
+                                    export/import terms sheet, export/import json entry, and purge the novel from the
+                                    local
+                                    storage.
+                                </p>
+
+                                <img src="img/usage_win_09.png" class="img-fluid rounded-3 my-3 mx-auto d-block shadow"
+                                    alt="">
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    The export options will export the terms sheet or the json entry of the web novel
+                                    into the output directory. The import options will import the terms sheet or the
+                                    json entry of the web novel from the input directory, expecting a file with the name
+                                    source_code-urlcode-langcode-sheet.json, and source_code-urlcode-langcode.json
+                                    respectively.
+                                    For example, the import options will expect a file named
+                                    syosetu_ncode-n5177et-en-sheet.json
+                                    or syosetu_ncode-n5177et-en.json, when importing data for the web novel
+                                    <a href="https://ncode.syosetu.com/n5177et/">https://ncode.syosetu.com/n5177et/</a>.
+                                </p>
+
+                                <p class="fs-6" style="text-align: justify;">
+                                    The purge option will purge the web novel from the local
+                                    storage. This will delete data for the web novel from the local storage, but
+                                    won't delete the output files.
+                                </p>
 
                             </div>
 
